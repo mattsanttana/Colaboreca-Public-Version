@@ -1,0 +1,153 @@
+/* page background color */
+
+body {
+  background-color: rgb(33,36,41);
+}
+
+/* remove scrow from number input */
+
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+/* inicial-page menu button style */
+
+.menu-button {
+  width: 75%;
+  margin-bottom: 15px;
+}
+
+/* inicial-page h1 phrase style */
+
+.login-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+}
+
+/* share-track track-id style */
+
+.track-id {
+  font-size: 50px;
+  margin-bottom: 20px;
+}
+
+/* podium short-character style*/
+
+.short-character {
+  width: 50px;
+  height: auto;
+  border-radius: 50%;
+}
+
+/* podium square rank, point and name style */
+
+.rank-square {
+  background-color: #ffdddd;
+}
+
+.points-square {
+  background-color: #ddffdd;
+}
+
+.name-square {
+  background-color: #ddddff;
+  width: auto;
+  padding: 0 10px;
+}
+
+.rank-square, .points-square, .name-square {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  margin: -9px
+}
+
+.chosen-character {
+  width: 300px;
+  height: auto;
+}
+
+aside .nav-link {
+  transition: background-color 0.3s ease;
+}
+
+aside .nav-link:hover {
+  background-color: #f0f0f0; /* Cor de fundo ao passar o mouse */
+}
+
+.menu-item {
+  font-size: 1.1rem; /* Ajuste o tamanho conforme necessário */
+  padding: 0.70rem 1.20rem;
+}
+
+.rank-square-short, .points-square-short, .name-square-short {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px; /* Ajuste conforme necessário */
+  height: 50px; /* Ajuste conforme necessário */
+  background-color: #f0f0f0; /* Ajuste conforme necessário */
+  border-radius: 8px; /* Ajuste conforme necessário */
+  font-size: 0.9rem; /* Ajuste conforme necessário */
+  margin: -9px
+}
+
+.rank-square-short {
+  background-color: #ffdddd; /* Ajuste conforme necessário */
+}
+
+.points-square-short {
+  background-color: #ddffdd; /* Ajuste conforme necessário */
+}
+
+.name-square-short {
+  background-color: #ddddff; /* Ajuste conforme necessário */
+  width: auto; /* Permitir que o nome ocupe espaço necessário */
+  padding: 0 10px; /* Adicionar padding para diferenciar visualmente do quadrado */
+}
+
+.custom-table {
+  border-collapse: collapse;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.custom-table th, .custom-table td {
+  text-align: left;
+  padding: 8px;
+}
+
+.custom-table th {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+.custom-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.custom-table td img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+/* Estilos para os botões */
+.custom-table .btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+.custom-table .btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}

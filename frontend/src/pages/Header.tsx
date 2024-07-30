@@ -1,0 +1,38 @@
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Navbar, Nav, Button, Modal } from 'react-bootstrap';
+import ShareTrack from './ShareTrack';
+
+const Header = () => {
+  const { trackId } = useParams();
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleClick = () => {
+    setShowPopup(true);
+  }
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+  }
+
+  return (
+    <>
+      <Navbar bg="light" className="justify-content-between" style={{ width: '100%', maxWidth: '100%', margin: '0 auto' }}>
+          <Navbar.Brand className="text-primary" style={{ marginLeft: '30px'}}>COLABORECA</Navbar.Brand>
+          <Nav>
+              <Button onClick={handleClick} style={{ marginRight: '30px'}}>Compartilhar</Button>
+          </Nav>
+      </Navbar>
+      <Modal show={showPopup} onHide={handleClosePopup} size='lg'>
+          <Modal.Header closeButton>
+              <Modal.Title>Compartilhar Pista</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+              <ShareTrack trackId={trackId} />
+          </Modal.Body>
+      </Modal>
+    </>
+  )
+}
+
+export default Header;
