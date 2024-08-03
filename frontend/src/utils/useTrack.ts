@@ -81,6 +81,24 @@ const useTrack = () => {
     }
   }
 
+  const verifyTrackAcess = async (token: string, trckId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/tracks/verify-track-access/${ trckId }`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${ token }`
+        },
+      });
+
+      return {
+        status: response.status,
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const updateTrack = async (trackName: string, token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/tracks`, {
@@ -136,7 +154,16 @@ const useTrack = () => {
     }
   }
 
-  return { createTrack, getTrackById, enterTrack, verifyIfTrackAlreadyBeenCreated, updateTrack, deleteDJ, deleteTrack };
+  return { 
+    createTrack,
+    getTrackById,
+    enterTrack,
+    verifyIfTrackAlreadyBeenCreated,
+    verifyTrackAcess,
+    updateTrack,
+    deleteDJ,
+    deleteTrack
+  };
 }
 
 export default useTrack;

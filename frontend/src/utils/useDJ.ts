@@ -71,7 +71,7 @@ const useDJ = () => {
     }
   }
 
-  const verifyIfDjHasAlreadyBeenCreatedForThisTrack = async (token: string) => {
+  const verifyIfDJHasAlreadyBeenCreatedForThisTrack = async (token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/djs/verify-if-dj-has-already-been-created-for-this-track`, {
         method: 'GET',
@@ -82,6 +82,8 @@ const useDJ = () => {
         });
 
       const data = await response.json();
+
+      console.log(data);
 
       return {
         status: response.status,
@@ -159,7 +161,7 @@ const useDJ = () => {
     getDJById,
     getAllDJs,
     getDJByToken,
-    verifyIfDjHasAlreadyBeenCreatedForThisTrack,
+    verifyIfDJHasAlreadyBeenCreatedForThisTrack,
     verifyIfTheDJIsTheProfileOwner,
     updateDJ,
     deleteDJ 

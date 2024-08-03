@@ -75,7 +75,6 @@ export default class SpotifyActions {
         return;
       }
 
-      console.log('User data:', response.data);
       return response.data;
     } catch (error) {
       const err = error as any; // ou `as Error` se você tiver certeza que é um erro

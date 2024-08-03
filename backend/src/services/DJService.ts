@@ -8,15 +8,10 @@ export default class DJService {
   private djModel = new DJModel();
 
   async createDJ(data: { djName: string, characterPath: string, trackId: number }) {
+    const { djName, trackId, characterPath } = data;
     try {
-      const { djName, trackId, characterPath } = data;
-
-      if (!djName || !trackId || !characterPath) {
-        return { status: 'INVALID_DATA', data: { message: 'This track does not exist' }};
-      }
-      
       const track = await this.trackModel.findOne({ id: trackId }); 
-      
+
       if (!track) {
         return { status: 'UNAUTHORIZED', data: { message: 'This track does not exist'}};
       }
@@ -43,10 +38,6 @@ export default class DJService {
   
   async findAllDJsForTrack(trackId: number) {
     try {
-      if (!trackId) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters'}};
-      }
-      
       const response = await this.djModel.findAll({ trackId });
       
       if (!response) {
@@ -62,10 +53,6 @@ export default class DJService {
 
   async findDJById(djId: number, trackId: number) {
     try {
-      if (!djId || !trackId) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters'}};
-      }
-
       const response = await this.djModel.findOne({ id: djId, trackId });
       
       if (!response) {
@@ -79,12 +66,8 @@ export default class DJService {
     }
   }
 
-  async findDJByToken(authorization: string | undefined) {
+  async findDJByToken(authorization: string) {
     try {
-      if (!authorization) {
-        return { status: 'UNAUTHORIZED', data: { message: 'Missing authorization' }};
-      }
-
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);
@@ -106,12 +89,8 @@ export default class DJService {
     }
   }
 
-  async verifyIfDjHasAlreadyBeenCreatedForThisTrack(authorization: string | undefined) {
+  async verifyIfDjHasAlreadyBeenCreatedForThisTrack(authorization: string) {
     try {
-      if (!authorization) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' }};
-      }
-
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);
@@ -133,12 +112,8 @@ export default class DJService {
     }
   }
 
-  async verifyIfTheDJIsTheProfileOwner(id: number | undefined, authorization: string | undefined) {
+  async verifyIfTheDJIsTheProfileOwner(id: number, authorization: string) {
     try {
-      if (!id || !authorization) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' }};
-      }
-
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);
@@ -164,16 +139,8 @@ export default class DJService {
     }
   }
 
-  async updateDJ(characterPath: string | undefined, djName: string | undefined, authorization: string | undefined) {
+  async updateDJ(characterPath: string, djName: string, authorization: string) {
     try {
-        if (!characterPath && !djName) {
-            return { status: 'INVALID_DATA', data: { message: 'Missing parameters' }};
-        }
-
-        if (!authorization) {
-            return { status: 'UNAUTHORIZED', data: { message: 'Missing authorization' }};
-        }
-
         const token = authorization.split(' ')[1];
 
         const decoded = JWT.verify(token);
@@ -220,12 +187,8 @@ export default class DJService {
     }
   }
 
-  async deleteDJ(authorization: string | undefined) {
+  async deleteDJ(authorization: string) {
     try {
-      if (!authorization) {
-        return { status: 'UNAUTHORIZED', data: { message: 'Missing authorization' }};
-      }
-
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);

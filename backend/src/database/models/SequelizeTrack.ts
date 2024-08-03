@@ -2,7 +2,6 @@ import {
   DataTypes, Model, InferAttributes, InferCreationAttributes
 } from 'sequelize';
 import db from '.';
-import SequelizeDJ from './SequelizeDJ';
 
 class SequelizeTrack extends Model<
   InferAttributes<SequelizeTrack>,

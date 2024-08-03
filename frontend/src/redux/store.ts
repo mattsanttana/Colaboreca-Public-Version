@@ -2,8 +2,8 @@ import { legacy_createStore as createStore } from 'redux';
 import { AnyAction } from 'redux';
 import { composeWithDevTools } from '@redux-devtools/extension';
 import { persistStore, persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
 import { PersistPartial } from 'redux-persist/es/persistReducer';
+import storage from 'redux-persist/lib/storage'
 import rootReducer from './reducers';
 
 export type RootState = {

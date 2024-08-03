@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { connect } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Table, Button, Spinner, Container, Col, Row, Card, Popover, OverlayTrigger } from 'react-bootstrap';
+import { Table, Button, Spinner, Container, Col, Row, Card, Popover, OverlayTrigger, Modal } from 'react-bootstrap';
+import { connect } from 'react-redux';
+import { RootState } from '../redux/store';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import DJ from '../types/DJ';
-import { RootState } from '../redux/store';
 import Header from './Header';
 import Menu from './Menu';
 
@@ -19,8 +19,10 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const [isOwner, setIsOwner] = useState<boolean>(true);
   const [trackFound, setTrackFound] = useState<boolean>(false);
   const [dj, setDJ] = useState<DJ | undefined>(undefined);
-  const [djs, setDjs] = useState<DJ[]>([]);
+  const [djs, setDJs] = useState<DJ[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+  const [selectedDJ, setSelectedDJ] = useState<DJ | null>(null);
 
   const djActions = useDJ();
   const trackActions = useTrack();
@@ -32,13 +34,13 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [fetchedTrack, fetchedDjs] = await Promise.all([
+          const [fetchedTrack, fetchedDJs] = await Promise.all([
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
           ]);
 
           if (fetchedTrack?.status === 200) {
-            setDjs(fetchedDjs);
+            setDJs(fetchedDJs);
             setTrackFound(true);
           }
         } catch (error) {
@@ -94,6 +96,28 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     navigate(profileUrl);
   };
 
+  const handleExpelDJ = (dj: DJ) => {
+    setSelectedDJ(dj);
+    setShowConfirmModal(true);
+  };
+
+  const confirmExpelDJ = () => {
+    if (selectedDJ) {
+      trackActions.deleteDJ(String(selectedDJ.id), trackToken)
+        .then(response => {
+          console.log('DJ expulso com sucesso:', response);
+          setDJs(prevDjs => prevDjs.filter(dj => dj.id !== selectedDJ.id));
+        })
+        .catch(error => {
+          console.error('Erro ao expulsar DJ:', error);
+        })
+        .finally(() => {
+          setShowConfirmModal(false);
+          setSelectedDJ(null);
+        });
+    }
+  };
+
   const renderPopover = (dj: DJ) => (
     <Popover id={`popover-${dj.id}`}>
       <Popover.Body>
@@ -104,83 +128,104 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   );
 
   return (
-    isLoading ? (
-      <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <h1 className='text-light'>Carregando</h1>
-        <Spinner animation="border" className='text-light'/>
-      </Container>
-    ) : trackFound ? (
+    <>
+      {isLoading ? (
+        <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <h1 className='text-light'>Carregando</h1>
+          <Spinner animation="border" className='text-light'/>
+        </Container>
+      ) : trackFound ? (
         <Container>
-        <Header />
-        <Row>
-          {!isOwner && (
-            <Col md={3}>
-              <Menu dj={dj} />
-            </Col>
-          )}
-          <Col>
-            <Card className="text-center">
-              <Card.Body>
-                <Card.Title>DJs na sala:</Card.Title>
-                {djs.length === 0 ? (
-                  <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
-                ) : (
-                  <Table striped bordered hover className="custom-table">
-                    <thead>
-                      <tr>
-                        <th></th>
-                        <th>Ranque</th>
-                        <th>Nome</th>
-                        <th>Pontos</th>
-                        {isOwner && (
-                          <>
-                            <th>Créditos</th>
-                            <th>Ações</th>
-                          </>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {djs.sort((a, b) => a.ranking - b.ranking).map((dj: DJ) => (
-                        <OverlayTrigger
-                          key={dj.id}
-                          trigger="click"
-                          placement="top"
-                          overlay={renderPopover(dj)}
-                          rootClose
-                        >
-                          <tr style={{ cursor: 'pointer' }}>
-                            <td>
-                              <img src={dj.characterPath} alt={dj.djName} className='img-thumbnail' style={{ width: '50px', height: '50px' }} />
-                            </td>
-                            <td>{dj.ranking === 0 ? '-' : dj.ranking}</td>
-                            <td>{dj.djName}</td>
-                            <td>{dj.score}</td>
+          <Header />
+          <Row>
+            {!isOwner && (
+              <Col md={3}>
+                <Menu dj={dj} />
+              </Col>
+            )}
+            <Col>
+              <Card className="text-center">
+                <Card.Body>
+                  <Card.Title>DJs na sala:</Card.Title>
+                  {djs.length === 0 ? (
+                    <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
+                  ) : (
+                    <div className="table-responsive">
+                      <Table striped bordered>
+                        <thead>
+                          <tr>
+                            <th>Personagem</th>
+                            <th>Ranque</th>
+                            <th>Nome</th>
+                            <th>Pontos</th>
                             {isOwner && (
                               <>
-                                <td>{dj.credits}</td>
-                                <td>
-                                  <Button variant="danger" onClick={() => trackActions.deleteDJ(String(dj.id), trackToken)}>Expulsar</Button>
-                                </td>
+                                <th>Ações</th>
                               </>
                             )}
                           </tr>
-                        </OverlayTrigger>
-                      ))}
-                    </tbody>
-                  </Table>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    ) : (
-      <Container className="text-center">
-        <h1>Esta pista não existe</h1>
-        <Button onClick={() => navigate("/")}>Página inicial</Button>
-      </Container>
-    )
+                        </thead>
+                        <tbody>
+                          {djs.sort((a, b) => a.ranking - b.ranking).map((dj: DJ) => (
+                            <tr key={dj.id}>
+                              <td>
+                                <OverlayTrigger
+                                  trigger="click"
+                                  placement="top"
+                                  overlay={renderPopover(dj)}
+                                  rootClose
+                                >
+                                  <img 
+                                    src={dj.characterPath} 
+                                    alt={dj.djName} 
+                                    className='img-thumbnail img-thumbnail-hover' 
+                                    style={{ width: '50px', height: '50px', cursor: 'pointer' }} 
+                                  />
+                                </OverlayTrigger>
+                              </td>
+                              <td>{dj.ranking === 0 ? '-' : dj.ranking}</td>
+                              <td>{dj.djName}</td>
+                              <td>{dj.score}</td>
+                              {isOwner && (
+                                <>
+                                  <td>
+                                    <Button variant="danger" onClick={() => handleExpelDJ(dj)}>Expulsar</Button>
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      ) : (
+        <Container className="text-center">
+          <h1>Esta pista não existe</h1>
+          <Button onClick={() => navigate("/")}>Página inicial</Button>
+        </Container>
+      )}
+
+      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmação</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Você tem certeza que deseja expulsar este DJ?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={confirmExpelDJ}>
+            Expulsar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 };
 

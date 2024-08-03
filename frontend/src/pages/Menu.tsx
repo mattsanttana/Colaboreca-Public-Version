@@ -10,12 +10,12 @@ type Props = {
 
 const Menu: React.FC<Props> = ({ dj }) => {
   return (
-    <aside>
+    <aside className='menu-container'>
       <Container className="p-3 bg-light text-center">
-        <Row className="mb-3">
+        <Row className="mb-3 menu-container">
           <Col>
             <Image src={dj?.characterPath} alt={dj?.djName} className="img-fluid rounded-circle mb-3" />
-            <div className="d-flex justify-content-center align-items-center">
+            <div className="d-flex justify-content-center align-items-center squeres-container">
               <div className="rank-square">{dj?.ranking || '-'}</div>
               <div className="name-square mx-3">{dj?.djName}</div>
               <div className="points-square">{dj?.score} pts</div>

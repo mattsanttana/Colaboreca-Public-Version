@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { Container, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import { saveTrack } from '../redux/actions';
 import { RootState } from '../redux/store';
-import { useNavigate } from 'react-router-dom';
-import { Container, Form, Button, Row, Col, Spinner, Modal } from 'react-bootstrap';
 import { logo } from '../teste_avatares/characterPath';
 import useTrack from '../utils/useTrack';
+import MessagePopup from './MessagePopup';
 
 interface Props {
   code: string;
@@ -16,7 +17,6 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   const [trackName, setTrackName] = useState('');
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [unauthorizedMessage, setUnauthorizedMessage] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
@@ -56,6 +56,12 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
     inputValidation();
   };
 
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && !buttonDisabled) {
+      handleClick();
+    }
+  };
+
   const handleClick = async () => {
     if (trackName && code) {
       const track = await trackActions.createTrack({ trackName, code });
@@ -63,7 +69,8 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
         dispatch(saveTrack(track.data.token));
         navigate(`/track-info/${track.data.id}`);
       } else if (track?.status === 401) {
-        setUnauthorizedMessage(true);
+        setModalMessage('Sua conta do Spotify precisa ser premium para criar uma pista.');
+        setShowModal(true);
       } else {
         setModalMessage('Algo deu errado ao tentar criar a pista, tente novamente');
         setShowModal(true);
@@ -98,6 +105,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
                 placeholder="Nome da Pista"
                 value={trackName}
                 onChange={handleChange}
+                onKeyPress={handleKeyPress}
                 style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
               />
               <Button
@@ -108,25 +116,15 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
               >
                 Criar
               </Button>
-              {unauthorizedMessage && (
-                <div className="text-danger mt-2">
-                  Sua conta do Spotify precisa ser premium para criar uma pista.
-                </div>
-              )}
             </Form.Group>
           </Col>
         </Row>
-        <Modal show={showModal} onHide={handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>Oops...</Modal.Title>
-          </Modal.Header>
-          <Modal.Body className='text-center'>{modalMessage}</Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleClose}>
-              Fechar
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        <MessagePopup
+          show={showModal}
+          handleClose={handleClose}
+          message={modalMessage}
+          redirectTo="/"
+        />
       </Container>
     )
   );

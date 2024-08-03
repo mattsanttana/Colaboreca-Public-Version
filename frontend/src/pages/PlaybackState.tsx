@@ -1,6 +1,6 @@
 import React from 'react';
-import PlayingNow from '../types/PlayingNow';
 import { Card, Button, Container } from 'react-bootstrap';
+import PlayingNow from '../types/PlayingNow';
 
 type Props = {
   playingNow: PlayingNow | null;

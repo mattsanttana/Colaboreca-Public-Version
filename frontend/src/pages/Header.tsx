@@ -20,7 +20,7 @@ const Header = () => {
       <Navbar bg="light" className="justify-content-between" style={{ width: '100%', maxWidth: '100%', margin: '0 auto' }}>
           <Navbar.Brand className="text-primary" style={{ marginLeft: '30px'}}>COLABORECA</Navbar.Brand>
           <Nav>
-              <Button onClick={handleClick} style={{ marginRight: '30px'}}>Compartilhar</Button>
+              <Button onClick={handleClick} style={{ marginRight: '30px'}} variant='primary'>Compartilhar</Button>
           </Nav>
       </Navbar>
       <Modal show={showPopup} onHide={handleClosePopup} size='lg'>

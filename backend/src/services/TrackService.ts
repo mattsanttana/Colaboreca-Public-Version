@@ -1,24 +1,19 @@
 import { Op } from 'sequelize';
-import TrackModel from '../models/TrackModel';
-import DJModel from '../models/DJModel';
 import generateShortId from '../utils/generateShortId';
 import SpotifyActions from '../utils/SpotifyActions';
 import JWT from '../utils/JWT';
+import TrackModel from '../models/TrackModel';
+import DJModel from '../models/DJModel';
 
 export default class TrackService {
   constructor(
     private trackModel: TrackModel = new TrackModel(),
     private djModel: DJModel = new DJModel()
-  ) {}
+  ) { }
 
   async createTrack(data: { trackName: string, code: string }) {
+    const { trackName, code } = data;
     try {
-      const { trackName, code } = data;  
-
-      if (!trackName || !code) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' } };
-      }
-
       let id = generateShortId();
 
       if (!id) {
@@ -46,16 +41,16 @@ export default class TrackService {
           },
         }
       });
-      
+
       let trackWithId = await this.trackModel.findOne({ id });
-      while (trackWithId || id.toString().length !== 6){
+      while (trackWithId || id.toString().length !== 6) {
         id = generateShortId();
         trackWithId = await this.trackModel.findOne({ id });
       }
-      
+
       const track = await this.trackModel.create(id, trackName, spotifyToken);
-    
-      const token = JWT.sign({ id: track.id});
+
+      const token = JWT.sign({ id: track.id });
 
       const response = { id, trackName, token }
 
@@ -68,10 +63,6 @@ export default class TrackService {
 
   async findTrackById(id: number) {
     try {
-      if (!id) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' } };
-      }
-
       const response = await this.trackModel.findOne({ id });
       if (!response) {
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
@@ -84,22 +75,18 @@ export default class TrackService {
     }
   }
 
-  async verifyIfTrackAlreadyBeenCreated(authorization: string | undefined) {
+  async verifyIfTrackAlreadyBeenCreated(authorization: string) {
     try {
-      if (!authorization) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' } };
-      }
-      
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);
 
-      if(typeof decoded === 'string') {
+      if (typeof decoded === 'string') {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
       const track = await this.trackModel.findOne({ id: decoded.id });
-      
+
       if (!track) {
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
@@ -111,17 +98,76 @@ export default class TrackService {
     }
   }
 
-  async deleteTrack(authorization: string | undefined) {
+  async verifyTrackAccess(id: number, authorization: string) {
     try {
-      if (!authorization) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' } };
-      }
-
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);
 
-      if(typeof decoded === 'string') {
+      if (typeof decoded === 'string') {
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
+      }
+
+      if (decoded.id !== id) {
+        return { status: 'UNAUTHORIZED', data: { message: 'Unauthorized' } };
+      }
+
+      return { status: 'OK', data: { message: 'Authorized' } };
+    } catch (error) {
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
+  async updateTrack(trackName: string, authorization: string) {
+    try {
+      const token = authorization.split(' ')[1];
+
+      const decoded = JWT.verify(token);
+
+      if (typeof decoded === 'string') {
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
+      }
+
+      const track = await this.trackModel.findOne({ id: decoded.id });
+
+      if (!track) {
+        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      }
+
+      const now = new Date();
+
+      const updatedFields: Partial<{ trackName: string, updatedAt: Date }> = {};
+      if (trackName !== undefined && trackName !== track.trackName) {
+        updatedFields['trackName'] = trackName;
+        updatedFields['updatedAt'] = now;
+      }
+
+      if (Object.keys(updatedFields).length === 0) {
+        return { status: 'INVALID_DATA', data: { message: 'No fields updated' } };
+      }
+
+      const response = await this.trackModel.update(updatedFields as { trackName: string, updatedAt: Date }, { id: decoded.id });
+
+      if (response[0] === 0) {
+        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      }
+
+      return { status: 'OK', data: { message: 'Track updated' } };
+    } catch (error) {
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
+
+  async deleteTrack(authorization: string) {
+    try {
+      const token = authorization.split(' ')[1];
+
+      const decoded = JWT.verify(token);
+
+      if (typeof decoded === 'string') {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
@@ -140,17 +186,13 @@ export default class TrackService {
     }
   }
 
-  async deleteDJ(id: number, authorization: string | undefined) {
+  async deleteDJ(id: number, authorization: string) {
     try {
-      if (!id || !authorization) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' } };
-      }
-
       const token = authorization.split(' ')[1];
 
       const decoded = JWT.verify(token);
 
-      if(typeof decoded === 'string') {
+      if (typeof decoded === 'string') {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
@@ -160,7 +202,7 @@ export default class TrackService {
         return { status: 'NOT_FOUND', data: { message: 'DJ not found' } };
       }
 
-      const response = await this.djModel.delete({ where: { id } });
+      const response = await this.djModel.delete({ id });
 
       if (response === 0) {
         return { status: 'ERROR', data: { message: 'An error occurred' } };

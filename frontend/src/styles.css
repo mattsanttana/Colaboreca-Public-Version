@@ -1,7 +1,7 @@
 /* page background color */
 
 body {
-  background-color: rgb(33,36,41);
+  background-color: rgb(33, 36, 41);
 }
 
 /* remove scrow from number input */
@@ -44,6 +44,148 @@ input[type=number]::-webkit-inner-spin-button {
 
 /* podium square rank, point and name style */
 
+.rank-square-short,
+.points-square-short,
+.name-square-short {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: -9px
+}
+
+.rank-square-short {
+  background-color: #ffdddd;
+}
+
+.points-square-short {
+  background-color: #ddffdd;
+}
+
+.name-square-short {
+  background-color: #ddddff;
+  width: auto;
+  padding: 0 10px;
+}
+
+/* dj table img style */
+
+.img-thumbnail-hover {
+  transition: filter 0.3s;
+}
+
+.img-thumbnail-hover:hover {
+  filter: brightness(1.3);
+}
+
+/* create dj character style */
+
+.image-style {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.selected-style {
+  border: 2px solid yellow;
+}
+
+.card-style {
+  height: 480px;
+  max-height: 80vh;
+  width: 100%;
+  max-width: 600px;
+  overflow-y: auto;
+  margin: 0 auto;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chosen-character {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+}
+
+.image-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+/* responsive styles */
+@media (max-width: 768px) {
+  .chosen-character {
+    max-width: 150px;
+  }
+
+  .card-style {
+    max-width: 400px;
+  }
+
+  .image-style {
+    width: 120%;
+  }
+}
+
+@media (max-width: 576px) {
+  .chosen-character {
+    max-width: 100px;
+  }
+
+  .card-style {
+    max-width: 400px;
+  }
+
+  .image-style {
+    width: 120%;
+  }
+}
+
+/* menu items style */
+
+aside .nav-link {
+  transition: background-color 0.3s ease;
+}
+
+aside .nav-link:hover {
+  background-color: #f0f0f0;
+}
+
+
+.menu-item {
+  font-size: 1.1rem;
+  padding: 0.70rem 1.20rem;
+}
+
+/* menu profile style */
+
+.menu-container, .squeres-container {
+  will-change: transform;
+}
+
+.rank-square,
+.points-square,
+.name-square {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  font-size: 1.4rem;
+  margin: -9px
+}
+
 .rank-square {
   background-color: #ffdddd;
 }
@@ -58,69 +200,16 @@ input[type=number]::-webkit-inner-spin-button {
   padding: 0 10px;
 }
 
-.rank-square, .points-square, .name-square {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px;
-  height: 50px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  font-size: 1.4rem;
-  margin: -9px
-}
-
-.chosen-character {
-  width: 300px;
-  height: auto;
-}
-
-aside .nav-link {
-  transition: background-color 0.3s ease;
-}
-
-aside .nav-link:hover {
-  background-color: #f0f0f0; /* Cor de fundo ao passar o mouse */
-}
-
-.menu-item {
-  font-size: 1.1rem; /* Ajuste o tamanho conforme necessário */
-  padding: 0.70rem 1.20rem;
-}
-
-.rank-square-short, .points-square-short, .name-square-short {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px; /* Ajuste conforme necessário */
-  height: 50px; /* Ajuste conforme necessário */
-  background-color: #f0f0f0; /* Ajuste conforme necessário */
-  border-radius: 8px; /* Ajuste conforme necessário */
-  font-size: 0.9rem; /* Ajuste conforme necessário */
-  margin: -9px
-}
-
-.rank-square-short {
-  background-color: #ffdddd; /* Ajuste conforme necessário */
-}
-
-.points-square-short {
-  background-color: #ddffdd; /* Ajuste conforme necessário */
-}
-
-.name-square-short {
-  background-color: #ddddff; /* Ajuste conforme necessário */
-  width: auto; /* Permitir que o nome ocupe espaço necessário */
-  padding: 0 10px; /* Adicionar padding para diferenciar visualmente do quadrado */
-}
+/* rank table style */
 
 .custom-table {
   border-collapse: collapse;
   width: 100%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.custom-table th, .custom-table td {
+.custom-table th,
+.custom-table td {
   text-align: left;
   padding: 8px;
 }
@@ -140,7 +229,6 @@ aside .nav-link:hover {
   border-radius: 50%;
 }
 
-/* Estilos para os botões */
 .custom-table .btn-danger {
   background-color: #dc3545;
   border-color: #dc3545;

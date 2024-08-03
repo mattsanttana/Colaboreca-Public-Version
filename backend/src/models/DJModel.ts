@@ -1,5 +1,5 @@
-import SequelizeDJ from '../database/models/SequelizeDJ';
 import { WhereOptions } from 'sequelize';
+import SequelizeDJ from '../database/models/SequelizeDJ';
 
 export default class DJModel {
   private djModel = SequelizeDJ;

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import QRCode from 'qrcode-generator';
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
+import QRCode from 'qrcode-generator';
 
 interface Props {
   trackId: string | undefined;

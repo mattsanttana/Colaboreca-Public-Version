@@ -3,7 +3,7 @@ import TrackService from '../services/TrackService';
 import mapStatusHTTP from '../utils/mapStatusHTTP';
 
 export default class TrackController {
-  constructor(private trackService: TrackService = new TrackService()) {}
+  constructor(private trackService: TrackService = new TrackService()) { }
 
   async createTrack(req: Request, res: Response) {
     const data = req.body;
@@ -23,9 +23,9 @@ export default class TrackController {
       scopes: `user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-playback-position user-read-recently-played user-read-recently-played`,
       redirectURI: 'http://localhost:5173/login'
     }
-    
+
     const URL = `https://accounts.spotify.com/authorize?response_type=code&client_id=${data.clientId}&scope=${encodeURIComponent(data.scopes)}&redirect_uri=${encodeURIComponent(data.redirectURI)}`
-    
+
     res.redirect(URL);
   }
 
@@ -36,20 +36,34 @@ export default class TrackController {
   }
 
   async verifyIfTrackAlreadyBeenCreated(req: Request, res: Response) {
-    const authorization = req.headers.authorization;
+    const authorization = req.headers.authorization || '';
     const response = await this.trackService.verifyIfTrackAlreadyBeenCreated(authorization);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
+  async verifyTrackAccess(req: Request, res: Response) {
+    const { id } = req.params;
+    const authorization = req.headers.authorization || '';
+    const response = await this.trackService.verifyTrackAccess(Number(id), authorization);
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
+  async updateTrack(req: Request, res: Response) {
+    const { trackName } = req.body;
+    const authorization = req.headers.authorization || '';
+    const response = await this.trackService.updateTrack(trackName, authorization);
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
   async deleteTrack(req: Request, res: Response) {
-    const authorization = req.headers.authorization;
+    const authorization = req.headers.authorization || '';
     const response = await this.trackService.deleteTrack(authorization);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
   async deleteDJ(req: Request, res: Response) {
     const { id } = req.params;
-    const authorization = req.headers.authorization;
+    const authorization = req.headers.authorization || '';
     const response = await this.trackService.deleteDJ(Number(id), authorization);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }

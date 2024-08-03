@@ -6,10 +6,6 @@ export default class PlaybackService {
 
   async findPlaybackState(id: number) {
     try {
-      if (!id) {
-        return { status: 'INVALID_DATA', data: { message: 'Missing parameters' } };
-      }
-
       const track = await this.trackModel.findOne({ id });
       
       if (!track) {

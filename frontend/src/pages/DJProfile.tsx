@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import useDJ from '../utils/useDJ';
-import { useParams } from 'react-router-dom';
-import DJ from '../types/DJ';
-import { charactersPaths } from '../teste_avatares/characterPath';
-import Menu from './Menu';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Button, Spinner, Form, Card, Modal } from 'react-bootstrap';
 import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
-import { Container, Row, Col, Button, Spinner, Form, Card, Modal } from 'react-bootstrap';
+import { charactersPaths } from '../teste_avatares/characterPath';
+import useDJ from '../utils/useDJ';
+import DJ from '../types/DJ';
+import Menu from './Menu';
 import Header from './Header';
+import MessagePopup from './MessagePopup';
 
 interface Props {
   token: string;
@@ -21,13 +22,17 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   const [isTrackOwner, setIsTrackOwner] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [showAvatarPopup, setShowAvatarPopup] = useState(false);
+  const [showDeleteConfirmPopup, setShowDeleteConfirmPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [editedCharacterPath, setEditedCharacterPath] = useState<string>('');
   const [editedName, setEditedName] = useState<string>('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showMessagePopup, setShowMessagePopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
 
   const djActions = useDJ();
+  const navigate = useNavigate();
   const intervalId1 = useRef<NodeJS.Timeout | null>(null);
   const avatarRef = useRef<HTMLImageElement>(null);
 
@@ -48,7 +53,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
           djActions.getDJById(djId, trackId),
           djActions.verifyIfTheDJIsTheProfileOwner(djId, token),
         ]);
-        
+
         if (fetchedDJ?.status === 200) {
           setDJ(fetchedDJ.data);
           if (verifyIfDJisOwner) {
@@ -95,7 +100,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
 
   const handleSaveChanges = async () => {
     if (!editedName || !editedCharacterPath) {
-      alert('Por favor, preencha todos os campos.');
+      setPopupMessage('Por favor, preencha todos os campos.');
+      setShowMessagePopup(true);
       return;
     }
 
@@ -104,26 +110,38 @@ const DJProfile: React.FC<Props> = ({ token }) => {
     if (response?.status === 200) {
       setShowPopup(false);
     } else if (response?.status === 400) {
-      alert('Este vulgo já existe');
+      setPopupMessage('Este vulgo já existe');
+      setShowMessagePopup(true);
     } else {
-      alert('Algo deu errado, por favor tente novamente em alguns minutos');
+      setPopupMessage('Algo deu errado, por favor tente novamente em alguns minutos');
+      setShowMessagePopup(true);
     }
   };
 
-  const handleDeleteDJ = async () => {
+  const handleDeleteDJ = () => {
+    setShowDeleteConfirmPopup(true);
+  };
+  
+  const confirmDeleteDJ = async () => {
     if (!djId) {
-      alert('Algo deu errado, por favor tente novamente em alguns minutos');
+      setPopupMessage('Algo deu errado, por favor tente novamente em alguns minutos');
+      setShowMessagePopup(true);
       return;
     }
-
+  
     const response = await djActions.deleteDJ(token);
-
+  
     if (response?.status === 200) {
-      alert('DJ excluído com sucesso');
-      window.location.href = '/';
+      navigate('/');
     } else {
-      alert('Algo deu errado, por favor tente novamente em alguns minutos');
+      setPopupMessage('Algo deu errado, por favor tente novamente em alguns minutos');
+      setShowMessagePopup(true);
     }
+    setShowDeleteConfirmPopup(false);
+  };
+  
+  const cancelDeleteDJ = () => {
+    setShowDeleteConfirmPopup(false);
   };
 
   const handleClosePopup = () => {
@@ -141,6 +159,12 @@ const DJProfile: React.FC<Props> = ({ token }) => {
     setShowAvatarPopup(false);
   };
 
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !isButtonDisabled) {
+      handleSaveChanges();
+    }
+  };
+
   return (
     <Container>
       {isLoading ? (
@@ -156,7 +180,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
             <Modal.Header closeButton>
               <Modal.Title>Editar DJ</Modal.Title>
             </Modal.Header>
-            <Modal.Body className="text-center">
+            <Modal.Body className="text-center" onKeyDown={handleKeyPress}>
               <Form>
                 <div
                   ref={avatarRef}
@@ -189,6 +213,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                     value={editedName}
                     onChange={(e) => setEditedName(e.target.value)}
                     className="text-center"
+                    onKeyDown={handleKeyPress}
                   />
                 </Form.Group>
                 <Button variant="primary" disabled={isButtonDisabled} onClick={handleSaveChanges}>
@@ -218,7 +243,22 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               </div>
             </Modal.Body>
           </Modal>
-
+          <Modal show={showDeleteConfirmPopup} onHide={cancelDeleteDJ}>
+            <Modal.Header closeButton>
+              <Modal.Title>Confirmação de Exclusão</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              Você tem certeza que quer excluir este DJ?
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={cancelDeleteDJ}>
+                Cancelar
+              </Button>
+              <Button variant="danger" onClick={confirmDeleteDJ}>
+                Excluir
+              </Button>
+            </Modal.Footer>
+          </Modal>
           <Header />
           <Row>
             {!isTrackOwner && (
@@ -263,6 +303,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
           </Col>
         </Row>
       )}
+      <MessagePopup show={showMessagePopup} handleClose={() => setShowMessagePopup(false)} message={popupMessage}/>
     </Container>
   );
 };

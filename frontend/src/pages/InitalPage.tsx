@@ -1,8 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Row, Col } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { logo } from '../teste_avatares/characterPath';
-import '../styles.css';
 
 const InitialPage = () => {
   const navigate = useNavigate();

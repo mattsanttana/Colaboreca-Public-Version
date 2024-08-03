@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { RootState } from '../redux/store';
 import PlayingNow from '../types/PlayingNow';
 import DJ from '../types/DJ';
 import PlaybackState from './PlaybackState';
@@ -10,7 +11,6 @@ import Menu from './Menu';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
-import { RootState } from '../redux/store';
 import Queue from './Queue';
 import Header from './Header';
 
@@ -21,8 +21,8 @@ interface Props {
 const Track: React.FC<Props> = ({ token }) => {
     const { trackId } = useParams();
     const [trackFound, setTrackFound] = useState(false);
-    const [djs, setDjs] = useState<DJ[]>([]);
-    const [dj, setDj] = useState<DJ>();
+    const [djs, setDJs] = useState<DJ[]>([]);
+    const [dj, setDJ] = useState<DJ>();
     const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -37,16 +37,22 @@ const Track: React.FC<Props> = ({ token }) => {
             if (trackId) {
                 try {
                     const [
+                        fetchVerifyLogin,
                         fetchedTrack,
-                        fetchedDjs,
+                        fetchedDJs,
                         fetchedDJ,
                         fetchedPlayingNow
                     ] = await Promise.all([
+                        djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
                         trackActions.getTrackById(trackId),
                         djActions.getAllDJs(trackId),
                         djActions.getDJByToken(token),
                         playbackActions.getState(trackId)
                     ]);
+
+                    if (fetchVerifyLogin?.status !== 200) {
+                        navigate('/enter-track');
+                    }
                     
                     if (fetchedDJ.message === 'Invalid token') {
                         navigate('/enter-track')
@@ -54,8 +60,8 @@ const Track: React.FC<Props> = ({ token }) => {
 
                     if (fetchedTrack?.status === 200) {
                         setPlayingNow(fetchedPlayingNow);
-                        setDjs(fetchedDjs);
-                        setDj(fetchedDJ);
+                        setDJs(fetchedDJs);
+                        setDJ(fetchedDJ);
                         setTrackFound(true);
                     } else {
                         setTrackFound(false);
@@ -93,12 +99,16 @@ const Track: React.FC<Props> = ({ token }) => {
                     <Col md={3}>
                         <Menu dj={dj} />
                     </Col>
-                    <Col md={6} className="d-flex flex-column align-items-center">
+                    <Col md={6} className="d-flex flex-column align-items-center playback-state-container">
                         <PlaybackState playingNow={playingNow} isOwner={false} />
                     </Col>
                     <Col md={3}>
-                        <Podium djs={djs} isOwner={false} trackId={trackId} />
-                        <Queue />
+                        <div className="podium-container">
+                            <Podium djs={djs} isOwner={false} trackId={trackId} hasDJs={djs.length > 0} />
+                        </div>
+                        <div className="queue-container">
+                            <Queue />
+                        </div>
                     </Col>
                 </Row>
             </Container>

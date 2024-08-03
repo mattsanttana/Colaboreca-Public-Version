@@ -1,4 +1,4 @@
-import { DataTypes, Model, QueryInterface } from "sequelize";
+import { DataTypes, Model, QueryInterface } from 'sequelize';
 import { IDJ } from '../../interfaces/djs/IDJ';
 
 export default {

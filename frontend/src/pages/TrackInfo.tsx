@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { Container, Button, Spinner, Modal, Form, Row, Col } from 'react-bootstrap';
+import { RootState } from '../redux/store';
 import ShareTrack from './ShareTrack';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
@@ -9,46 +11,14 @@ import DJ from '../types/DJ';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
-import { RootState } from '../redux/store';
-import { Container, Button, Spinner, Modal, Form, Row, Col } from 'react-bootstrap';
+import MessagePopUp from './MessagePopup';
 
 interface Props {
-  token: string;
+  djToken: string;
+  trackToken: string;
 }
 
-interface MessagePopupProps {
-  show: boolean;
-  handleClose: () => void;
-  message: string;
-  redirectTo?: string;
-}
-
-const MessagePopup: React.FC<MessagePopupProps> = ({ show, handleClose, message, redirectTo }) => {
-  const navigate = useNavigate();
-
-  const handleClosePopup = () => {
-    handleClose();
-    if (redirectTo) {
-      navigate(redirectTo);
-    }
-  };
-
-  return (
-    <Modal show={show} onHide={handleClosePopup}>
-      <Modal.Header closeButton>
-        <Modal.Title>Mensagem</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>{message}</Modal.Body>
-      <Modal.Footer>
-        <Button variant="primary" onClick={handleClosePopup}>
-          Fechar
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
-};
-
-const TrackInfo: React.FC<Props> = ({ token }) => {
+const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   const { trackId } = useParams();
   const [trackFound, setTrackFound] = useState<boolean>(false);
   const [trackName, setTrackName] = useState<string>('');
@@ -56,7 +26,7 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [editedTrackName, setEditedTrackName] = useState<string>('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [djs, setDjs] = useState<DJ[]>([]);
+  const [djs, setDJs] = useState<DJ[]>([]);
   const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [messagePopup, setMessagePopup] = useState<{
@@ -82,29 +52,25 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
           const [
             fetchedOwnerTrack,
             fetchedTrack,
-            fetchedDjs,
+            fetchedDJs,
             fetchedPlayingNow
           ] = await Promise.all([
-            trackActions.verifyIfTrackAlreadyBeenCreated(token),
+            trackActions.verifyTrackAcess(trackToken, trackId),
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
             playbackActions.getState(trackId)
           ]);
   
           if (fetchedOwnerTrack?.status !== 200) {
-            setMessagePopup({
-              show: true,
-              message: 'Erro ao tentar conectar a sua conta do Spotify, faça login novamente',
-              redirectTo: '/login'
-            });
+            navigate('/login');
           }
   
           if (fetchedTrack?.status === 200) {
             setPlayingNow(fetchedPlayingNow);
-            setDjs(fetchedDjs);
+            setDJs(fetchedDJs);
             setTrackFound(true);
             setTrackName(fetchedTrack.data.trackName);
-            if (!editedTrackName) { // Adicione esta verificação
+            if (!editedTrackName) {
               setEditedTrackName(fetchedTrack.data.trackName);
             }
           }
@@ -125,7 +91,16 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
     return () => {
       if (intervalId1.current) clearInterval(intervalId1.current);
     };
-  }, [djActions, editedTrackName, navigate, playbackActions, token, trackActions, trackId]);
+  }, [
+    djActions,
+    editedTrackName,
+    navigate,
+    playbackActions,
+    djToken,
+    trackActions,
+    trackId,
+    trackToken
+  ]);
   
   useEffect(() => {
     const isSameAsTrack = trackName === editedTrackName;
@@ -150,30 +125,24 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
       return;
     }
 
-    const response = await trackActions.updateTrack(editedTrackName, token);
+    const response = await trackActions.updateTrack(editedTrackName, trackToken);
 
     if (response?.status === 200) {
       setShowPopup(false);
       setTrackName(editedTrackName);
-    } else if (response?.status === 400) {
-      setMessagePopup({
-        show: true,
-        message: 'Este vulgo já existe',
-        redirectTo: undefined
-      });
     } else {
       setMessagePopup({
         show: true,
-        message: 'Algo deu errado, por favor tente novamente em alguns minutos',
-        redirectTo: undefined
+        message: 'Algo deu errado, por favor faça login novamente',
+        redirectTo: '/login'
       });
     }
   };
 
   const handleDeleteTrack = async () => {
-    const response = await trackActions.deleteTrack(token);
+    const response = await trackActions.deleteTrack(trackToken);
     if (response?.status === 200) {
-      navigate('/');
+      navigate('/login');
     } else {
       setMessagePopup({
         show: true,
@@ -185,7 +154,7 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
 
   return (
     <>
-      <MessagePopup
+      <MessagePopUp
         show={messagePopup.show}
         handleClose={() => setMessagePopup({ ...messagePopup, show: false })}
         message={messagePopup.message}
@@ -205,6 +174,11 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
                   type="text"
                   value={editedTrackName}
                   onChange={(e) => setEditedTrackName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveChanges();
+                    }
+                  }}
                   className="text-center"
                 />
               </Form.Group>
@@ -212,26 +186,26 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
           )}
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-center">
-  {showDeleteConfirmation ? (
-    <>
-      <Button variant="secondary" onClick={() => setShowDeleteConfirmation(false)}>
-        Não
-      </Button>
-      <Button variant="danger" onClick={handleDeleteTrack} className="ms-2">
-        Sim
-      </Button>
-    </>
-  ) : (
-    <>
-      <Button variant="primary" disabled={isButtonDisabled} onClick={handleSaveChanges} className="me-2">
-        Salvar
-      </Button>
-      <Button variant="danger" onClick={() => setShowDeleteConfirmation(true)}>
-        Excluir Pista
-      </Button>
-    </>
-  )}
-</Modal.Footer>
+          {showDeleteConfirmation ? (
+            <>
+              <Button variant="secondary" onClick={() => setShowDeleteConfirmation(false)}>
+                Não
+              </Button>
+              <Button variant="danger" onClick={handleDeleteTrack} className="ms-2">
+                Sim
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="primary" disabled={isButtonDisabled} onClick={handleSaveChanges} className="me-2">
+                Salvar
+              </Button>
+              <Button variant="danger" onClick={() => setShowDeleteConfirmation(true)}>
+                Excluir Pista
+              </Button>
+            </>
+          )}
+        </Modal.Footer>
       </Modal>
       {isLoading ? (
         <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -248,20 +222,15 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
               </Col>
             </Row>
             <PlaybackState playingNow={playingNow} isOwner={true} />
-            <Podium djs={djs} isOwner={true} trackId={trackId} />
+            <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
             <Button variant="secondary" onClick={() => setShowPopup(true)}>
-                Editar/Excluir Pista
+              Editar/Excluir Pista
             </Button>
           </Container>
         </div>
       ) : (
         <Container className="d-flex align-items-center justify-content-center vh-100">
-          <div className="text-light">
-            <h1>Esta pista não existe</h1>
-            <Button variant="primary" onClick={() => navigate("/")}>
-              Página inicial
-            </Button>
-          </div>
+          <h1 className='text-light'>Pista não encontrada</h1>
         </Container>
       )}
     </>
@@ -269,7 +238,8 @@ const TrackInfo: React.FC<Props> = ({ token }) => {
 };
 
 const mapStateToProps = (state: RootState) => ({
-  token: state.trackReducer.token
+  djToken: state.djReducer.token,
+  trackToken: state.trackReducer.token
 });
 
 const TrackInfoConnected = connect(mapStateToProps)(TrackInfo);

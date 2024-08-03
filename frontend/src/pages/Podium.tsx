@@ -1,23 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DJ from '../types/DJ';
 import { Card, ListGroup, ListGroupItem, Button, Container } from 'react-bootstrap';
+import DJ from '../types/DJ';
 
 type Props = {
   djs: DJ[];
   isOwner: boolean;
   trackId: string | undefined;
+  hasDJs: boolean;
 }
 
-const Podium: React.FC<Props> = ({ djs, isOwner, trackId }) => {
+const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
   const navigate = useNavigate();
   const [podium, setPodium] = useState<DJ[]>([]);
   const [preview, setPreview] = useState<DJ[]>([]);
 
   useEffect(() => {
-    const sortedDjs = [...djs].sort((a, b) => b.score - a.score);
-    const newPodium = sortedDjs.filter(dj => dj.ranking > 0).slice(0, 3);
-    const newPreview = sortedDjs.slice(0, 5); // Inclui todos os DJs, mesmo sem pontos ou ranking
+    const sortedDJs = [...djs].sort((a, b) => b.score - a.score);
+    const newPodium = sortedDJs.filter(dj => dj.ranking > 0).slice(0, 3);
+    const newPreview = sortedDJs.slice(0, 5);
     setPodium(newPodium);
     setPreview(newPreview);
   }, [djs]);
@@ -73,9 +74,13 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId }) => {
               <p>Nenhum DJ na sala ainda</p>
             </div>
           )}
-          <Button onClick={ handleClick } variant="primary" className="mt-3">
-            { isOwner ? 'Ver todos os DJs' : 'Ver ranque' }
-          </Button>
+           <div>
+            {hasDJs && (
+              <Button onClick={handleClick} variant="primary" className="mt-3">
+                {isOwner ? 'Ver todos os DJs' : 'Ver ranque'}
+              </Button>
+            )}
+          </div>
         </Card.Body>
       </Card>
     </Container>

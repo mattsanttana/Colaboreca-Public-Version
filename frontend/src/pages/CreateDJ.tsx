@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Container, Button, Form, Row, Col, Image, Spinner, Card } from 'react-bootstrap';
 import { saveDJ } from '../redux/actions';
+import { RootState } from '../redux/store';
 import { charactersPaths } from '../teste_avatares/characterPath';
 import useDJ from '../utils/useDJ';
-import { RootState } from '../redux/store';
-import { Container, Button, Form, Row, Col, Image, Spinner, Card } from 'react-bootstrap';
+import MessagePopup from './MessagePopup';
 
 const randomCharacter = charactersPaths[Math.floor(Math.random() * charactersPaths.length)];
 
@@ -13,31 +14,6 @@ interface CreateDJProps {
   token: string;
   trackId: string;
 }
-
-const imageStyle: React.CSSProperties = {
-  width: '100%',
-  aspectRatio: '1',
-  objectFit: 'cover',
-  cursor: 'pointer',
-};
-
-const selectedStyle: React.CSSProperties = {
-  border: '2px solid yellow',
-};
-
-const cardStyle: React.CSSProperties = {
-  height: '480px',
-  maxHeight: '80vh',
-  width: '100%',
-  maxWidth: '600px',
-  overflowY: 'auto',
-  margin: '0 auto',
-};
-
-const hideScrollbar: React.CSSProperties = {
-  scrollbarWidth: 'none',
-  msOverflowStyle: 'none'
-};
 
 const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   const [djData, setDJData] = useState({
@@ -49,6 +25,8 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   const [phase, setPhase] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredCharacter, setHoveredCharacter] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [popupMessage, setPopupMessage] = useState<string>('');
 
   const djActions = useDJ();
   const navigate = useNavigate();
@@ -56,7 +34,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await djActions.verifyIfDjHasAlreadyBeenCreatedForThisTrack(token);
+      const response = await djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token);
       if (response?.status === 200) {
         navigate(`/track/${response.data}`);
       }
@@ -65,21 +43,17 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
     fetchData();
   }, [navigate, token, djActions]);
 
-  const inputValidation = (name: string) => {
-    if (name.length >= 3 && name.length <= 16) {
+  useEffect(() => {
+    if (djData.name.length >= 3 && djData.name.length <= 16) {
       setButtonDisabled(false);
     } else {
       setButtonDisabled(true);
     }
-  };
+  }, [djData.name]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name: inputName, value } = event.target;
-
-    if (inputName in djData) {
-      setDJData(prevState => ({ ...prevState, [inputName]: value }));
-      inputValidation(value);
-    }
+    setDJData(prevState => ({ ...prevState, [inputName]: value }));
   };
 
   const handleClick = async () => {
@@ -97,11 +71,14 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
         dispatch(saveDJ(dj.data.token));
         navigate(`/track/${trackId}`);
       } else if (dj && dj.status === 400) {
-        alert('Este vulgo já existe');
+        setPopupMessage('Este vulgo já existe');
+        setShowPopup(true);
       } else if (dj && dj.status === 401) {
-        alert('Pista expirada, por favor entre em uma nova pista');
+        setPopupMessage('Pista expirada, por favor entre em uma nova pista');
+        setShowPopup(true);
       } else {
-        alert('Algo deu errado, por favor tente novamente em alguns minutos');
+        setPopupMessage('Algo deu errado, por favor tente novamente em alguns minutos');
+        setShowPopup(true);
         navigate('/');
       }
     }
@@ -111,11 +88,21 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
     setDJData(prevState => ({ ...prevState, selectedCharacterPath: characterPath }));
   };
 
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleClick();
+    }
+  };
+
   const { name, selectedCharacterPath } = djData;
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+  };
 
   return (
     isLoading ? (
-      <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+      <Container className="d-flex justify-content-center align-items-center menu-container">
         <h1 className='text-light'>Carregando</h1>
         <Spinner animation="border" className='text-light'/>
       </Container>
@@ -128,26 +115,23 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
               <h2 className="text-white">{name}</h2>
             </div>
             <h1 className="text-white">Escolha o seu personagem</h1>
-            <Card className="text-center" style={{ ...cardStyle, ...hideScrollbar }}>
+            <Card className="text-center card-style hide-scrollbar">
               <Card.Body>
-                <Row className="image-row justify-content-center">
-                  {charactersPaths.map((character, index) => (
-                    <Col xs={6} sm={4} md={3} lg={2} xl={3} key={index} className="p-2">
-                      <Image
-                        src={character}
-                        alt={`Character ${index}`}
-                        onClick={() => handleClickCharacter(character)}
-                        onMouseEnter={() => setHoveredCharacter(character)}
-                        onMouseLeave={() => setHoveredCharacter(null)}
-                        style={{
-                          ...imageStyle,
-                          ...(djData.selectedCharacterPath === character ? selectedStyle : {}),
-                          ...(hoveredCharacter === character ? { opacity: 0.8 } : {}),
-                        }}
-                      />
-                    </Col>
-                  ))}
-                </Row>
+              <Row className="image-container">
+                {charactersPaths.map((character, index) => (
+                  <Col key={index} className="image-col">
+                    <Image
+                      src={character}
+                      alt={`Character ${index}`}
+                      onClick={() => handleClickCharacter(character)}
+                      onMouseEnter={() => setHoveredCharacter(character)}
+                      onMouseLeave={() => setHoveredCharacter(null)}
+                      className={`image-style ${djData.selectedCharacterPath === character ? 'selected-style' : ''}`}
+                      style={{ opacity: hoveredCharacter === character ? 0.8 : 1 }}
+                    />
+                  </Col>
+                ))}
+              </Row>
               </Card.Body>
             </Card>
             <Button variant="primary" onClick={handleClick} className="mt-3" style={{ width: '100%'}}>Ok</Button>
@@ -161,12 +145,14 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
               name="name"
               value={name}
               onChange={handleChange}
+              onKeyDown={handleKeyPress}
               className="my-3"
               style={{ textAlign: 'center' }}
             />
             <Button variant="primary" onClick={handleClick} disabled={buttonDisabled} style={{ width: '100%'}}>Ok</Button>
           </div>
         )}
+        <MessagePopup show={showPopup} handleClose={handleClosePopup} message={popupMessage} />
       </Container>
     )
   );

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Container, Button, Row, Col } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import CreateTrackConnected from './CreateTrack';
 import { logo } from '../teste_avatares/characterPath';
 
