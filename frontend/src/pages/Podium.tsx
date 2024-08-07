@@ -33,7 +33,10 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
 
   return (
     <Container className="py-4">
-      <Card className="text-center">
+      <Card
+        className="text-center text-light"
+        style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+      >
         <Card.Body>
           <Card.Title>Pódio:</Card.Title>
           { podium.length > 0 ? (
@@ -52,16 +55,23 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
             </div>
           ) : (
             <div>
-              <p>{ isOwner ? 'Ninguém alcançou o pódio ainda' : 'Ninguém alcançou o pódio ainda, adicione músicas à fila e seja o primeiro' }</p>
+              <p>
+                { isOwner ? 'Ninguém alcançou o pódio ainda' :
+                'Ninguém alcançou o pódio ainda, adicione músicas à fila e seja o primeiro' }
+              </p>
             </div>
           )}
           <Card.Title>DJs na sala:</Card.Title>
           { preview.length > 0 ? (
             <ListGroup variant="flush">
               { preview.map((dj: DJ) => (
-                <ListGroupItem key={ dj.id }>
+                <ListGroupItem key={ dj.id } style={{ backgroundColor: '#000000'}}>
                   <div className="d-flex justify-content-center align-items-center">
-                  <img src={ dj?.characterPath } alt={ dj?.djName } className='short-character' style={{ margin: '15px'}} />
+                  <img
+                    src={ dj?.characterPath }
+                    alt={ dj?.djName } className='short-character'
+                    style={{ margin: '15px'}}
+                  />
                     <div className="rank-square-short">{dj?.ranking || '-'}</div>
                     <div className="name-square-short mx-3">{dj?.djName}</div>
                     <div className="points-square-short">{dj?.score} pts</div>

@@ -55,8 +55,11 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
   const trackIdTail = trackId?.slice(-3);
 
   return (
-    <Container className="py-3">
-      <Card className="text-center">
+    <Container>
+       <Card
+        className="text-center text-light"
+        style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
+      >
         <Card.Body>
           <Row className='w-100'>
             <Card.Title>Compartilhe sua pista</Card.Title>
@@ -70,8 +73,11 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
               <Col md={2} className='d-flex justify-content-center align-items-center'></Col>
                 <h1 className='track-id'> { trackIdTail } </h1>
               </Col>
-            <Col md={4} className='d-flex flex-column justify-content-center align-items-center text-center'>
-              <div className="mb-3">{generateQRCode()}</div>
+            <Col
+              md={4}
+              className='d-flex flex-column justify-content-center align-items-center text-center'
+            >
+              <div className="mb-3" style={{backgroundColor: 'white'}}>{generateQRCode()}</div>
             </Col>
           </Row>
           <Button variant="primary" onClick={ handleShare }>

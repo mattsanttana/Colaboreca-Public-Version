@@ -53,7 +53,7 @@ const useDJ = () => {
     }
   }
 
-  const getDJByToken = async (token: string) => {
+  const getDJByToken = async (token: string) => {  
     try {
       const response = await fetch('http://localhost:3001/djs', {
         method: 'GET',
@@ -65,7 +65,10 @@ const useDJ = () => {
 
       const data = await response.json();
 
-      return data;
+      return {
+        status: response.status,
+        data,
+      }
     } catch (error) {
       console.error(error);
     }
@@ -82,8 +85,6 @@ const useDJ = () => {
         });
 
       const data = await response.json();
-
-      console.log(data);
 
       return {
         status: response.status,

@@ -107,6 +107,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
                 onChange={handleChange}
                 onKeyPress={handleKeyPress}
                 style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
+                className="text-center custom-input"
               />
               <Button
                 variant="primary"

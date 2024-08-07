@@ -65,7 +65,11 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
     }
 
     if (phase === 2) {
-      const dj = await djActions.createDJ({ djName: name, characterPath: selectedCharacterPath, trackId });
+      const dj = await djActions.createDJ({
+        djName: name,
+        characterPath: selectedCharacterPath,
+        trackId
+      });
 
       if (dj && dj.status === 201) {
         dispatch(saveDJ(dj.data.token));
@@ -115,7 +119,14 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
               <h2 className="text-white">{name}</h2>
             </div>
             <h1 className="text-white">Escolha o seu personagem</h1>
-            <Card className="text-center card-style hide-scrollbar">
+            <Card
+              className="text-center card-style hide-scrollbar"
+              style={{
+                backgroundColor: '#000000',
+                boxShadow: '0 0 0 0.5px #ffffff',
+                padding: '0'
+                }}
+                >
               <Card.Body>
               <Row className="image-container">
                 {charactersPaths.map((character, index) => (
@@ -126,7 +137,8 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
                       onClick={() => handleClickCharacter(character)}
                       onMouseEnter={() => setHoveredCharacter(character)}
                       onMouseLeave={() => setHoveredCharacter(null)}
-                      className={`image-style ${djData.selectedCharacterPath === character ? 'selected-style' : ''}`}
+                      className={`image-style ${djData.selectedCharacterPath === character ?
+                        'selected-style' : ''}`}
                       style={{ opacity: hoveredCharacter === character ? 0.8 : 1 }}
                     />
                   </Col>
@@ -138,7 +150,12 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
           </div>
         ) : (
           <div className="menu-background text-center">
-            <Image src={selectedCharacterPath} alt="Avatar escolhido" className="chosen-character" roundedCircle />
+            <Image
+              src={selectedCharacterPath}
+              alt="Avatar escolhido"
+              className="chosen-character"
+              roundedCircle
+              />
             <Form.Control
               type="text"
               placeholder="Insira um vulgo"
@@ -146,10 +163,17 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
               value={name}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
-              className="my-3"
+              className="my-3 custom-input"
               style={{ textAlign: 'center' }}
             />
-            <Button variant="primary" onClick={handleClick} disabled={buttonDisabled} style={{ width: '100%'}}>Ok</Button>
+            <Button
+              variant="primary"
+              onClick={handleClick}
+              disabled={buttonDisabled}
+              style={{ width: '100%'}}
+              >
+                Ok
+            </Button>
           </div>
         )}
         <MessagePopup show={showPopup} handleClose={handleClosePopup} message={popupMessage} />

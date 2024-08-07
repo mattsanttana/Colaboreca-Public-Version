@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Table, Button, Spinner, Container, Col, Row, Card, Popover, OverlayTrigger, Modal } from 'react-bootstrap';
+import {
+  Table, Button, Spinner, Container, Col,
+  Row, Card, Popover, OverlayTrigger, Modal
+} from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import useDJ from '../utils/useDJ';
@@ -70,7 +73,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
           setIsOwner(false);
           const DJ = await djActions.getDJByToken(djToken);
           if (DJ) {
-            setDJ(DJ);
+            setDJ(DJ.data);
           }
         }
       } catch (error) {
@@ -91,8 +94,8 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
 
   const handleViewProfile = (djId: string) => {
     const profileUrl = isOwner
-      ? `/track-info/profile/${trackId}/${djId}`  // URL para proprietário
-      : `/track/profile/${trackId}/${djId}`;      // URL para não proprietário
+      ? `/track-info/profile/${trackId}/${djId}`
+      : `/track/profile/${trackId}/${djId}`;
     navigate(profileUrl);
   };
 
@@ -143,9 +146,11 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                 <Menu dj={dj} />
               </Col>
             )}
-            <Col>
-              <Card className="text-center">
-                <Card.Body>
+            <Col className="py-4">
+              <Card className="text-center text-light">
+                <Card.Body
+                  style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
+                >
                   <Card.Title>DJs na sala:</Card.Title>
                   {djs.length === 0 ? (
                     <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
@@ -154,13 +159,13 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                       <Table striped bordered>
                         <thead>
                           <tr>
-                            <th>Personagem</th>
-                            <th>Ranque</th>
-                            <th>Nome</th>
-                            <th>Pontos</th>
+                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Personagem</th>
+                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Ranque</th>
+                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Vulgo</th>
+                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Pontos</th>
                             {isOwner && (
                               <>
-                                <th>Ações</th>
+                                <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Ações</th>
                               </>
                             )}
                           </tr>
@@ -168,7 +173,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                         <tbody>
                           {djs.sort((a, b) => a.ranking - b.ranking).map((dj: DJ) => (
                             <tr key={dj.id}>
-                              <td>
+                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
                                 <OverlayTrigger
                                   trigger="click"
                                   placement="top"
@@ -183,9 +188,9 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                                   />
                                 </OverlayTrigger>
                               </td>
-                              <td>{dj.ranking === 0 ? '-' : dj.ranking}</td>
-                              <td>{dj.djName}</td>
-                              <td>{dj.score}</td>
+                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{dj.ranking === 0 ? '-' : dj.ranking}</td>
+                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{dj.djName}</td>
+                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{dj.score}</td>
                               {isOwner && (
                                 <>
                                   <td>

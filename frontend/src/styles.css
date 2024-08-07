@@ -1,7 +1,15 @@
-/* page background color */
+/* page colors */
 
 body {
-  background-color: rgb(33, 36, 41);
+  background-color: #000000;
+}
+
+.blue-color {
+  background-color: rgb(17, 152, 243)
+}
+
+.yellow-color {
+  color: rgb(252, 198, 2)
 }
 
 /* remove scrow from number input */
@@ -10,7 +18,7 @@ input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
 
-/* inicial-page menu button style */
+/* home-page menu button style */
 
 .menu-button {
   width: 75%;
@@ -154,10 +162,12 @@ input[type=number]::-webkit-inner-spin-button {
 
 aside .nav-link {
   transition: background-color 0.3s ease;
+  border-radius: 15%;
 }
 
 aside .nav-link:hover {
   background-color: #f0f0f0;
+  border-radius: 15%;
 }
 
 
@@ -168,8 +178,14 @@ aside .nav-link:hover {
 
 /* menu profile style */
 
-.menu-container, .squeres-container {
+.menu-container,
+.squeres-container {
   will-change: transform;
+}
+
+.menu-height-container {
+  height: 93vh;
+  overflow-y: auto
 }
 
 .rank-square,
@@ -238,4 +254,33 @@ aside .nav-link:hover {
 .custom-table .btn-danger:hover {
   background-color: #c82333;
   border-color: #bd2130;
+}
+
+/* modal black style */
+
+.custom-modal .modal-content {
+  background-color: black;
+  color: white;
+  box-shadow: 0 0 0 0.5px #ffffff
+}
+
+.custom-input {
+  background-color: black;
+  color: white;
+  border: 1px solid white;
+}
+
+.custom-input::placeholder {
+  color: white;
+}
+
+.custom-input:focus {
+  background-color: black;
+  color: white;
+  border-color: white;
+  outline: none;
+}
+
+.custom-modal-header .btn-close {
+  filter: invert(1);
 }

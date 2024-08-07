@@ -62,7 +62,12 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
           ]);
   
           if (fetchedOwnerTrack?.status !== 200) {
-            navigate('/login');
+            setMessagePopup({
+              show: true,
+              message: 'Você não tem permissão para acessar essa pista',
+              redirectTo: '/login'
+            });
+            return;
           }
   
           if (fetchedTrack?.status === 200) {
@@ -160,8 +165,8 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
         message={messagePopup.message}
         redirectTo={messagePopup.redirectTo}
       />
-      <Modal show={showPopup} onHide={handleClosePopup}>
-        <Modal.Header closeButton>
+      <Modal show={showPopup} onHide={handleClosePopup} className="custom-modal">
+      <Modal.Header closeButton className="custom-modal-header">
           <Modal.Title>{showDeleteConfirmation ? "Excluir Pista" : "Editar Nome da Pista"}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
@@ -179,7 +184,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
                       handleSaveChanges();
                     }
                   }}
-                  className="text-center"
+                  className="text-center custom-input"
                 />
               </Form.Group>
             </Form>
@@ -197,7 +202,12 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             </>
           ) : (
             <>
-              <Button variant="primary" disabled={isButtonDisabled} onClick={handleSaveChanges} className="me-2">
+              <Button
+                variant="primary"
+                disabled={isButtonDisabled}
+                onClick={handleSaveChanges}
+                className="me-2"
+              >
                 Salvar
               </Button>
               <Button variant="danger" onClick={() => setShowDeleteConfirmation(true)}>
@@ -214,9 +224,9 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
         </Container>
       ) : trackFound ? (
         <div>
-          <Container className="py-4 text-light">
+          <Container className="text-light">
             <h1 className="mb-4">Colaboreca</h1>
-            <Row className="mb-4">
+            <Row>
               <Col>
                 <ShareTrack trackId={trackId} />
               </Col>

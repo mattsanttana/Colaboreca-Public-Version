@@ -45,7 +45,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
 
       const menuDJ = await djActions.getDJByToken(token);
       if (menuDJ) {
-        setMenuDJ(menuDJ);
+        setMenuDJ(menuDJ.data);
       }
 
       if (djId && trackId) {
@@ -176,8 +176,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
         </Row>
       ) : dj ? (
         <div>
-          <Modal show={showPopup} onHide={handleClosePopup}>
-            <Modal.Header closeButton>
+          <Modal show={showPopup} onHide={handleClosePopup} className="custom-modal">
+            <Modal.Header closeButton className="custom-modal-header">
               <Modal.Title>Editar DJ</Modal.Title>
             </Modal.Header>
             <Modal.Body className="text-center" onKeyDown={handleKeyPress}>
@@ -189,7 +189,12 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                   onClick={handleShowAvatarPopup}
                   style={{ position: 'relative', cursor: 'pointer' }}
                 >
-                  <img src={editedCharacterPath} alt={editedName} className="mb-3" style={{ width: '200px', borderRadius: '50%' }} />
+                  <img
+                    src={editedCharacterPath}
+                    alt={editedName}
+                    className="mb-3"
+                    style={{ width: '200px', borderRadius: '50%' }}
+                  />
                   {showTooltip && (
                     <div
                       style={{
@@ -212,7 +217,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                     type="text"
                     value={editedName}
                     onChange={(e) => setEditedName(e.target.value)}
-                    className="text-center"
+                    className="text-center custom-input"
                     onKeyDown={handleKeyPress}
                   />
                 </Form.Group>
@@ -225,8 +230,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               </Form>
             </Modal.Body>
           </Modal>
-          <Modal show={showAvatarPopup} onHide={handleCloseAvatarPopup}>
-            <Modal.Header closeButton>
+          <Modal show={showAvatarPopup} onHide={handleCloseAvatarPopup} className="custom-modal">
+            <Modal.Header closeButton className="custom-modal-header">
               <Modal.Title>Escolha seu avatar</Modal.Title>
             </Modal.Header>
             <Modal.Body className="text-center">
@@ -243,8 +248,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               </div>
             </Modal.Body>
           </Modal>
-          <Modal show={showDeleteConfirmPopup} onHide={cancelDeleteDJ}>
-            <Modal.Header closeButton>
+          <Modal show={showDeleteConfirmPopup} onHide={cancelDeleteDJ} className='custom-modal'>
+            <Modal.Header closeButton className='custom-modal-header'>
               <Modal.Title>Confirmação de Exclusão</Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -266,8 +271,11 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                 <Menu dj={menuDJ} />
               </Col>
             )}
-            <Col md={9}>
-              <Card className="text-center">
+            <Col className="py-4" md={9}>
+              <Card
+                className="text-center"
+                style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
+              >
                 <Card.Img
                   variant="top"
                   src={dj.characterPath}
@@ -287,7 +295,10 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                   )}
                 </Card.Body>
               </Card>
-              <Card className="mt-4">
+              <Card
+                className="mt-4 text-light"
+                style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
+              >
                 <Card.Body>
                   <Card.Title>Músicas Tocadas</Card.Title>
                   <Card.Text>Aqui vai ficar a lista de músicas já tocadas por esse DJ</Card.Text>
@@ -303,7 +314,10 @@ const DJProfile: React.FC<Props> = ({ token }) => {
           </Col>
         </Row>
       )}
-      <MessagePopup show={showMessagePopup} handleClose={() => setShowMessagePopup(false)} message={popupMessage}/>
+      <MessagePopup
+        show={showMessagePopup}
+        handleClose={() => setShowMessagePopup(false)} message={popupMessage}
+      />
     </Container>
   );
 };

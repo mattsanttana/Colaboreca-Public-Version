@@ -23,7 +23,7 @@ const Login = () => {
 
   return (
     phase === 1 ? (
-      <Container className='d-flex align-items-center justify-content-center vh-100 bg-dark text-light'>
+      <Container className='d-flex align-items-center justify-content-center vh-100 text-light'>
         <Row className='w-100'>
           <Col md={6} className='d-flex justify-content-center align-items-center'>
             <img

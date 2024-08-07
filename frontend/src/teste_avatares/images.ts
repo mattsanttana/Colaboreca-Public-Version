@@ -25,3 +25,4 @@ export { default as image23 } from './23.jpeg';
 export { default as image24 } from './24.jpeg';
 export { default as image25 } from './25.jpeg';
 export { default as image26 } from './logo/logo.jpeg';
+export { default as image27 } from './background/background.jpeg';

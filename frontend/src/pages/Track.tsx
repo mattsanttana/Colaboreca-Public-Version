@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
@@ -13,6 +13,7 @@ import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
 import Queue from './Queue';
 import Header from './Header';
+import MessagePopup from './MessagePopup';
 
 interface Props {
     token: string;
@@ -25,6 +26,11 @@ const Track: React.FC<Props> = ({ token }) => {
     const [dj, setDJ] = useState<DJ>();
     const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Estados para controlar os popups
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState('');
+    const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
 
     const djActions = useDJ();
     const trackActions = useTrack();
@@ -51,17 +57,21 @@ const Track: React.FC<Props> = ({ token }) => {
                     ]);
 
                     if (fetchVerifyLogin?.status !== 200) {
-                        navigate('/enter-track');
+                        setPopupMessage('Você não está logado, por favor faça login novamente');
+                        setRedirectTo('/enter-track');
+                        setShowPopup(true);
                     }
                     
-                    if (fetchedDJ.message === 'Invalid token') {
-                        navigate('/enter-track')
+                    if (fetchedDJ?.status !== 200) {
+                        setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+                        setRedirectTo('/enter-track');
+                        setShowPopup(true);
                     }
 
                     if (fetchedTrack?.status === 200) {
                         setPlayingNow(fetchedPlayingNow);
                         setDJs(fetchedDJs);
-                        setDJ(fetchedDJ);
+                        setDJ(fetchedDJ?.data);
                         setTrackFound(true);
                     } else {
                         setTrackFound(false);
@@ -86,38 +96,57 @@ const Track: React.FC<Props> = ({ token }) => {
     }, [djActions, playbackActions, token, trackActions, trackId, navigate]);
 
     return (
-        isLoading ? (
-            <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-                <h1 className='text-light'>Carregando</h1>
-                <Spinner animation="border" className='text-light'/>
-            </Container>
-        ) :
-        trackFound && dj ? (
-            <Container>
-                <Header />
-                <Row>
-                    <Col md={3}>
-                        <Menu dj={dj} />
-                    </Col>
-                    <Col md={6} className="d-flex flex-column align-items-center playback-state-container">
-                        <PlaybackState playingNow={playingNow} isOwner={false} />
-                    </Col>
-                    <Col md={3}>
-                        <div className="podium-container">
-                            <Podium djs={djs} isOwner={false} trackId={trackId} hasDJs={djs.length > 0} />
-                        </div>
-                        <div className="queue-container">
-                            <Queue />
-                        </div>
-                    </Col>
-                </Row>
-            </Container>
-        ) : (
-            <Container className="text-center">
-                <h1>Esta pista não existe</h1>
-                <Button onClick={() => navigate("/")}>Página inicial</Button>
-            </Container>
-        )
+        <>
+            <MessagePopup
+                show={showPopup}
+                handleClose={() => setShowPopup(false)}
+                message={popupMessage}
+                redirectTo={redirectTo}
+            />
+            {isLoading ? (
+                <Container
+                  className="d-flex justify-content-center align-items-center"
+                  style={{ height: '100vh' }}
+                >
+                    <h1 className='text-light'>Carregando</h1>
+                    <Spinner animation="border" className='text-light'/>
+                </Container>
+            ) :
+            trackFound && dj ? (
+                <Container>
+                    <Header />
+                    <Row>
+                        <Col md={3}>
+                            <Menu dj={dj} />
+                        </Col>
+                        <Col
+                          md={6}
+                          className="d-flex flex-column align-items-center playback-state-container"
+                        >
+                            <PlaybackState playingNow={playingNow} isOwner={false} />
+                        </Col>
+                        <Col md={3}>
+                            <div className="podium-container">
+                                <Podium
+                                  djs={djs}
+                                  isOwner={false}
+                                  trackId={trackId}
+                                  hasDJs={djs.length > 0}
+                                />
+                            </div>
+                            <div className="queue-container">
+                                <Queue />
+                            </div>
+                        </Col>
+                    </Row>
+                </Container>
+            ) : (
+                <Container className="text-center">
+                    <h1>Esta pista não existe</h1>
+                    <Button onClick={() => navigate("/")}>Página inicial</Button>
+                </Container>
+            )}
+        </>
     );
 };
 

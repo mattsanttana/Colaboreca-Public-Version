@@ -64,6 +64,7 @@ export default class TrackService {
   async findTrackById(id: number) {
     try {
       const response = await this.trackModel.findOne({ id });
+      
       if (!response) {
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }

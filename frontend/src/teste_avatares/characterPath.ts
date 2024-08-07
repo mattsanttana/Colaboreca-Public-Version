@@ -2,6 +2,8 @@ import * as images from './images'
 
 export const logo = images.image26;
 
+export const background = images.image27;
+
 export const charactersPaths = [
   images.image0,
   images.image1,
