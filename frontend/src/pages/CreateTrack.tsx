@@ -40,7 +40,8 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
     };
 
     fetchData();
-  }, [code, trackName, token, trackActions, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const inputValidation = () => {
     if (trackName.length >= 3 && trackName.length <= 16) {

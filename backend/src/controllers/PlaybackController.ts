@@ -16,4 +16,19 @@ export default class TrackController {
     const response = await this.playbackService.findTopTracksInBrazil(trackId);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
+
+  async findTrackBySearch(req: Request, res: Response) {
+    const { trackId } = req.params;
+    const { search } = req.query;
+    const response = await this.playbackService.findTrackBySearch(trackId, search as string);
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
+  async addTrackToQueue(req: Request, res: Response) {
+    const { trackId } = req.params;
+    const { trackURI } = req.body;
+    const { authorization } = req.headers;
+    const response = await this.playbackService.addTrackToQueue(trackId, trackURI, authorization as string);
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
 }

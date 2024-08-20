@@ -125,4 +125,24 @@ export default class Validations {
 
     next();
   }
+
+  static async validateSearchQuery(req: Request, res: Response, next: NextFunction) {
+    const { search } = req.query;
+
+    if (!search) {
+      return res.status(400).json({ message: 'Missing parameters' });
+    }
+
+    next();
+  }
+
+  static async validateTrackURI(req: Request, res: Response, next: NextFunction) {
+    const { trackURI } = req.body;
+
+    if (!trackURI) {
+      return res.status(400).json({ message: 'Missing parameters' });
+    }
+
+    next();
+  }
 }

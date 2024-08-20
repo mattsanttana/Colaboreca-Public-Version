@@ -1,5 +1,6 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model } from 'sequelize';
 import db from '.';
+import SequelizeTrack from './SequelizeTrack';
 
 class SequelizeDJ extends Model<
   InferAttributes<SequelizeDJ>,
@@ -59,5 +60,15 @@ SequelizeDJ.init(
     tableName: 'djs',
     timestamps: false,
   });
+
+SequelizeTrack.hasMany(SequelizeDJ, {
+  foreignKey: 'trackId',
+  as: 'dj',
+});
+
+SequelizeDJ.belongsTo(SequelizeTrack, {
+  foreignKey: 'trackId',
+  as: 'track',
+});
 
 export default SequelizeDJ;

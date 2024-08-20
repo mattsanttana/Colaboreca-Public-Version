@@ -11,7 +11,7 @@ import Menu from './Menu';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
-import Queue from './Queue';
+// import QueuePreview from './QueuePreview';
 import Header from './Header';
 import MessagePopup from './MessagePopup';
 
@@ -135,7 +135,7 @@ const Track: React.FC<Props> = ({ token }) => {
                                 />
                             </div>
                             <div className="queue-container">
-                                <Queue />
+                                {/* <QueuePreview trackId={trackId} /> */}
                             </div>
                         </Col>
                     </Row>

@@ -6,7 +6,7 @@ import db from '.';
 class SequelizeTrack extends Model<
   InferAttributes<SequelizeTrack>,
   InferCreationAttributes<SequelizeTrack>
-  > {
+> {
   declare id: number;
   declare trackName: string;
   declare spotifyToken: string;
@@ -41,7 +41,7 @@ SequelizeTrack.init(
   {
     sequelize: db,
     tableName: 'tracks',
-    timestamps: true,
+    timestamps: false,
   });
 
 export default SequelizeTrack;

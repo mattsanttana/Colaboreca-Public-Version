@@ -13,8 +13,24 @@ router.get(
 );
 
 router.get(
+  '/search/:trackId',
+  Validations.validateTrackId,
+  Validations.validateSearchQuery,
+  (req, res) => playbackController.findTrackBySearch(req, res)
+);
+
+router.post(
+  '/add-to-queue/:trackId',
+  Validations.validateTrackId,
+  Validations.validateToken,
+  Validations.validateTrackURI,
+  (req, res) => playbackController.addTrackToQueue(req, res)
+);
+
+router.get(
   '/:trackId',
   Validations.validateTrackId,
   (req, res) => playbackController.findPlaybackState(req, res)
 );
+
 export default router;

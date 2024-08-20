@@ -24,33 +24,33 @@ export default class DJController {
   }
 
   async findDJByToken(req: Request, res: Response) {
-    const authorization = req.headers.authorization || '';
-    const response = await this.djService.findDJByToken(authorization);
+    const authorization = req.headers.authorization;
+    const response = await this.djService.findDJByToken(authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
   async verifyIfDjHasAlreadyBeenCreatedForThisTrack(req: Request, res: Response) {
-    const authorization = req.headers.authorization || '';
-    const response = await this.djService.verifyIfDjHasAlreadyBeenCreatedForThisTrack(authorization);
+    const authorization = req.headers.authorization;
+    const response = await this.djService.verifyIfDjHasAlreadyBeenCreatedForThisTrack(authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
   async verifyIfTheDJIsTheProfileOwner(req: Request, res: Response) {
     const { id } = req.params;
-    const authorization = req.headers.authorization || '';
-    const response = await this.djService.verifyIfTheDJIsTheProfileOwner(Number(id), authorization);
+    const authorization = req.headers.authorization;
+    const response = await this.djService.verifyIfTheDJIsTheProfileOwner(Number(id), authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
   async updateDJ(req: Request, res: Response) {
     const { characterPath, djName } = req.body;
-    const authorization = req.headers.authorization || '';
-    const response = await this.djService.updateDJ(characterPath, djName, authorization);
+    const authorization = req.headers.authorization;
+    const response = await this.djService.updateDJ(characterPath, djName, authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
   async deleteDJ(req: Request, res: Response) {
-    const authorization = req.headers.authorization || '';
-    const response = await this.djService.deleteDJ(authorization);
+    const authorization = req.headers.authorization;
+    const response = await this.djService.deleteDJ(authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 }

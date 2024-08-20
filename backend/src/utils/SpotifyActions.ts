@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { SpotifyApiResponse, Track } from '../interfaces/spotify_response/getTopTracksInBrazil';
+import { GetTopTracksInBrazilResponse, GetTrackBySearchResponse } from '../interfaces/spotify_response/SpotifyResponse';
+import { IMusic } from '../interfaces/musics/IMusic';
 
 export default class SpotifyActions {
   static async getAccessToken(code: string) {
@@ -23,7 +24,7 @@ export default class SpotifyActions {
       });
 
       if (response.status !== 200) {
-        console.log('Error response from Spotify:', response.data);
+        console.log('Error response from Spotify:', response.status);
         return;
       }
 
@@ -104,7 +105,8 @@ export default class SpotifyActions {
 
   static async getTopTracksInBrazil(token: string) {
     try {
-      const response = await axios.get<SpotifyApiResponse>('https://api.spotify.com/v1/playlists/37i9dQZF1DX0FOF1IUWK1W/tracks', {
+      const response = await axios.get<GetTopTracksInBrazilResponse>(
+        'https://api.spotify.com/v1/playlists/37i9dQZF1DX0FOF1IUWK1W/tracks', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -128,12 +130,117 @@ export default class SpotifyActions {
             const minutes = Math.floor((retryAfterSeconds % 3600) / 60);
             const seconds = retryAfterSeconds % 60;
             console.log(`Retry-After header value: ${retryAfter} seconds`);
-            console.log(`You need to wait ${hours} hours, ${minutes} minutes, and ${seconds} seconds before making new requests.`);
+            console.log(
+              `You need to wait ${hours} hours, ${minutes} minutes, 
+              and ${seconds} seconds before making new requests.`
+            );
           }
         }
       } else {
         console.log('Unexpected error:', error);
       }
+    }
+  }
+
+  static async getUserQueue(token: string) {
+    try {
+      const response = await axios.get('https://api.spotify.com/v1/me/player/queue', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status !== 200) {
+        console.log('Error response from Spotify:', response.data);
+        return;
+      }
+
+      return response.data;
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  static async getTrackBySearch(token: string, query: string) {
+    try {
+      const response = await axios.get<GetTrackBySearchResponse>(
+        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=50`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status !== 200) {
+        console.log('Error response from Spotify:', response.data);
+        return;
+      }
+
+      return response.data.tracks.items;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  static async getQueue(token: string) {
+    try {
+      const response = await axios.get('https://api.spotify.com/v1/me/player/queue', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status !== 200) {
+        console.log('Error response from Spotify:', response.data);
+        return;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  static async addTrackToQueue(token: string, trackURI: string) {
+    try {
+      const response = await axios.post(`https://api.spotify.com/v1/me/player/queue`, null, {
+        params: {
+          uri: trackURI
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error adding track to queue:', error.message);
+    }
+  }
+
+  static async startPlayback(token: string, trackURI: string) {
+    try {
+      const response = await axios.put(
+        'https://api.spotify.com/v1/me/player/play',
+        {
+          uris: [trackURI],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status !== 204) {
+        console.log('Unexpected response from Spotify:', response.data);
+        return;
+      }
+
+      console.log('Playback started successfully');
+      return response.data;
+    } catch (error: any) {
+      console.log('Error starting playback:', error.response?.data || error.message);
     }
   }
 }

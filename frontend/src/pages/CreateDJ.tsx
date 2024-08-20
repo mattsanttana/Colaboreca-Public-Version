@@ -41,7 +41,8 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
       setIsLoading(false);
     };
     fetchData();
-  }, [navigate, token, djActions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (djData.name.length >= 3 && djData.name.length <= 16) {

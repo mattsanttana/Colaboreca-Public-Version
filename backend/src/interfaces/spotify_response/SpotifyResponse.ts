@@ -14,8 +14,14 @@ export interface Track {
   uri: string;
 }
 
-export interface SpotifyApiResponse {
+export interface GetTopTracksInBrazilResponse {
   items: Array<{
     track: Track;
   }>;
+}
+
+export interface GetTrackBySearchResponse {
+  tracks: {
+    items: Array<Track>;
+  };
 }

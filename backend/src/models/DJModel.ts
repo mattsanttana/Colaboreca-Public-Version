@@ -4,7 +4,7 @@ import SequelizeDJ from '../database/models/SequelizeDJ';
 export default class DJModel {
   private djModel = SequelizeDJ;
 
-  async create(djName: string, characterPath: string, trackId: number) {
+  async create(djName: string, characterPath: string, trackId: number, p0?: unknown) {
     const response = await this.djModel.create({ djName, characterPath, trackId });
     return response.get();
   }
@@ -14,17 +14,17 @@ export default class DJModel {
     return djs.map(dj => dj.get());
   }
 
-  async findOne(where: WhereOptions) {
+  async findOne(where: WhereOptions, p0?: unknown) {
     const dj = await this.djModel.findOne({ where });
     return dj?.get();
   }
 
-  async update(data: { djName?: string, characterPath?: string }, where: WhereOptions) {
+  async update(data: { djName?: string; characterPath?: string; }, where: WhereOptions, p0?: unknown) {
     const response = await this.djModel.update(data, { where });
     return response;
   }
 
-  async delete(where: WhereOptions) {
+  async delete(where: WhereOptions, p0?: unknown) {
     const response = await this.djModel.destroy({ where });
     return response;
   }
