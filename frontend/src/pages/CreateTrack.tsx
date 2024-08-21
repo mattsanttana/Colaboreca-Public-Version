@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import { saveTrack } from '../redux/actions';
 import { RootState } from '../redux/store';
-import { logo } from '../teste_avatares/characterPath';
+import { logo } from '../assets/images/characterPath';
 import useTrack from '../utils/useTrack';
 import MessagePopup from './MessagePopup';
 
@@ -97,7 +97,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
             <img 
               src={logo} 
               alt='logo' 
-              className='img-fluid rounded-circle shadow-lg mb-5' 
+              className='img-fluid shadow-lg mb-5' 
               style={{ maxWidth: '300px' }} 
             />
             <Form.Group className="mb-3" style={{ maxWidth: '500px' }}>

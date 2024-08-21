@@ -184,7 +184,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                                     src={dj.characterPath} 
                                     alt={dj.djName} 
                                     className='img-thumbnail img-thumbnail-hover' 
-                                    style={{ width: '50px', height: '50px', cursor: 'pointer' }} 
+                                    style={{ width: '50px', height: '50px', cursor: 'pointer', backgroundColor: '#000000' }} 
                                   />
                                 </OverlayTrigger>
                               </td>

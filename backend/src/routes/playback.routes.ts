@@ -33,4 +33,10 @@ router.get(
   (req, res) => playbackController.findPlaybackState(req, res)
 );
 
+router.get(
+  '/queue/:trackId',
+  Validations.validateTrackId,
+  (req, res) => playbackController.findQueue(req, res)
+);
+
 export default router;

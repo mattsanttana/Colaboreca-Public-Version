@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, ListGroup, ListGroupItem, Button, Container } from 'react-bootstrap';
 import DJ from '../types/DJ';
+import { podium } from '../assets/images/characterPath';
 
 type Props = {
   djs: DJ[];
@@ -12,7 +13,7 @@ type Props = {
 
 const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
   const navigate = useNavigate();
-  const [podium, setPodium] = useState<DJ[]>([]);
+  const [djPodium, setPodium] = useState<DJ[]>([]);
   const [preview, setPreview] = useState<DJ[]>([]);
 
   useEffect(() => {
@@ -38,11 +39,11 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
       >
         <Card.Body>
-          <Card.Title>Pódio:</Card.Title>
-          { podium.length > 0 ? (
+          <img src={ podium }  alt="podium" className='podium-img' />
+          { djPodium.length > 0 ? (
             <div>
               <ListGroup variant="flush">
-                { podium.map((dj: DJ) => (
+                { djPodium.map((dj: DJ) => (
                   <ListGroupItem key={ dj.id }>
                     <div className="d-flex justify-content-center align-items-center">
                       <div className="rank-square-short">{dj?.ranking || '-'}</div>

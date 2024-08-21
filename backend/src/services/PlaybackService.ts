@@ -104,6 +104,65 @@ export default class PlaybackService {
     }
   }
 
+  async findQueue(trackId: string) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
+      const djs = await this.djModel.findAll({ trackId: Number(trackId) }, { transaction });
+  
+      if (!track || !djs) {
+        await transaction.rollback();
+        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      } 
+  
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+  
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
+      const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId)}, { transaction });
+  
+      if (!spotifyQueue || !colaborecaQueue) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
+      }
+  
+      // Construir a fila completa associando DJs e músicas do Spotify
+      const completeQueue = spotifyQueue.queue.map((spotifyTrack: any) => {
+        const responseTrack = {
+          cover: spotifyTrack.album.images[0].url,
+          musicName: spotifyTrack.name,
+          artists: spotifyTrack.artists.map((artist: any) => artist.name),
+        }
+  
+        const correspondingColaborecaTrack = colaborecaQueue.find(
+          (colaborecaTrack: any) => colaborecaTrack.musicURI === spotifyTrack.uri
+        );
+        
+        if (correspondingColaborecaTrack) {
+          // Se encontrar correspondência, adicionar informações do DJ
+          return {
+            addedBy: djs.find((dj: any) => dj.id === correspondingColaborecaTrack.djId)?.djName,
+            characterPath: djs.find((dj: any) => dj.id === correspondingColaborecaTrack.djId)?.characterPath,
+            ...responseTrack
+          };
+        } else {
+          // Caso contrário, a música foi adicionada pelo dono da pista
+          return {
+            addedBy: track.trackName,
+            characterPath: null,
+            ...responseTrack
+          };
+        }
+      });
+  
+      await transaction.commit();
+      return { status: 'OK', data: completeQueue };
+    } catch (error) {
+      await transaction.rollback();
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
   async addTrackToQueue(trackId: string, musicURI: string, authorization: string) {
     const transaction = await this.sequelize.transaction();
 

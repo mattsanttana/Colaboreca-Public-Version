@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button, Spinner, Form, Card, Modal } from 'react-bootstrap';
 import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
-import { charactersPaths } from '../teste_avatares/characterPath';
+import { charactersPaths } from '../assets/images/characterPath';
 import useDJ from '../utils/useDJ';
 import DJ from '../types/DJ';
 import Menu from './Menu';

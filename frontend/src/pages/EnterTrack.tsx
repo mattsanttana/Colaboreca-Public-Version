@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Container, Form, Row, Col } from 'react-bootstrap';
-import { logo } from '../teste_avatares/characterPath';
+import { logo } from '../assets/images/characterPath';
 import CreateDJConnected from './CreateDJ';
 import useTrack from '../utils/useTrack';
 import MessagePopup from './MessagePopup';
@@ -60,7 +60,7 @@ const EnterTrack = () => {
               <img
                 src={logo}
                 alt='logo'
-                className='img-fluid rounded-circle shadow-lg mb-5'
+                className='img-fluid shadow-lg mb-5'
                 style={{ maxWidth: '300px' }}
               />
               <Form.Group className="mb-3" style={{ maxWidth: '500px', margin: '0 auto' }}>

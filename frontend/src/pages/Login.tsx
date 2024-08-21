@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Button, Row, Col } from 'react-bootstrap';
 import CreateTrackConnected from './CreateTrack';
-import { logo } from '../teste_avatares/characterPath';
+import { logo } from '../assets/images/characterPath';
 
 const Login = () => {
   const [code, setCode] = useState('');
@@ -29,7 +29,7 @@ const Login = () => {
             <img
             src={ logo }
             alt='logo'
-            className='img-fluid rounded-circle shadow-lg'
+            className='img-fluid shadow-lg'
             style={{ maxWidth: '350px' }} 
             />
           </Col>

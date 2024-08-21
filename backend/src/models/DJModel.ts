@@ -9,7 +9,7 @@ export default class DJModel {
     return response.get();
   }
 
-  async findAll(where: WhereOptions) {
+  async findAll(where: WhereOptions, po?: unknown) {
     const djs = await this.djModel.findAll({ where });
     return djs.map(dj => dj.get());
   }

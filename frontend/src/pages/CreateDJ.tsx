@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Button, Form, Row, Col, Image, Spinner, Card } from 'react-bootstrap';
 import { saveDJ } from '../redux/actions';
 import { RootState } from '../redux/store';
-import { charactersPaths } from '../teste_avatares/characterPath';
+import { charactersPaths } from '../assets/images/characterPath';
 import useDJ from '../utils/useDJ';
 import MessagePopup from './MessagePopup';
 

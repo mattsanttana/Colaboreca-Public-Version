@@ -142,26 +142,6 @@ export default class SpotifyActions {
     }
   }
 
-  static async getUserQueue(token: string) {
-    try {
-      const response = await axios.get('https://api.spotify.com/v1/me/player/queue', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status !== 200) {
-        console.log('Error response from Spotify:', response.data);
-        return;
-      }
-
-      return response.data;
-
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   static async getTrackBySearch(token: string, query: string) {
     try {
       const response = await axios.get<GetTrackBySearchResponse>(

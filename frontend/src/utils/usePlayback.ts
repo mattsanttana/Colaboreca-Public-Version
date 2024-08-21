@@ -57,7 +57,19 @@ const usePlayback = () => {
     }
   }
 
-  return { getState, getTopTracksInBrazil, getTrackBySearch, addTrackToQueue };
+  const getQueue = async (trackId: string | undefined) => {
+    try {
+      const response = await fetch(`http://localhost:3001/playback/queue/${ trackId }`);
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return { getState, getTopTracksInBrazil, getTrackBySearch, addTrackToQueue, getQueue };
 }
 
 export default usePlayback;

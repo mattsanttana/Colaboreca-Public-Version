@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Row, Col } from 'react-bootstrap';
-import { logo } from '../teste_avatares/characterPath';
+import { logo } from '../assets/images/characterPath';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -12,11 +12,11 @@ const HomePage = () => {
           <img 
             src={logo} 
             alt='logo' 
-            className='img-fluid rounded-circle shadow-lg' 
+            className='img-fluid shadow-lg' 
             style={{ maxWidth: '350px' }} 
           />
         </Col>
-        <Col md={6} className='d-flex flex-column justify-content-center align-items-center text-center'>
+        <Col md={6} className='d-flex flex-column justify-content-center align-items-center'>
             <h1 className='login-title'>Crie ou entre numa pista para começar</h1>
             <Button 
               variant='primary' 
