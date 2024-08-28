@@ -27,3 +27,4 @@ export { default as image25 } from './characters/25.jpeg';
 export { default as image26 } from './logo/logo.png';
 export { default as image27 } from './background/background.png';
 export { default as image28 } from './podium/podium.png';
+export { default as image29 } from './dj_table/dj_table.png';

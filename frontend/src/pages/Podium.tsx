@@ -38,7 +38,7 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
         className="text-center text-light"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
       >
-        <Card.Body>
+        <Card.Body className='hide-scrollbar' style={{height: '400px', overflow: 'auto'}}>
           <img src={ podium }  alt="podium" className='podium-img' />
           { djPodium.length > 0 ? (
             <div>

@@ -59,7 +59,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               as={Link}
-              to={`/track/queue?track-id=${dj?.trackId}`}
+              to={`/track/queue/${dj?.trackId}`}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >

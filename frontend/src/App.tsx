@@ -8,6 +8,7 @@ import TrackInfoConnected from './pages/TrackInfo';
 import TrackConnected from './pages/Track';
 import DJProfileConnected from './pages/DJProfile';
 import AddMusicToQueueConnected from './pages/AddMusicToQueue';
+import QueueConnected from './pages/Queue';
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
       <Route path="/track/ranking/:trackId" element={<DJsConnected />} />
       <Route path="/track/profile/:trackId/:djId" element={<DJProfileConnected />} />
       <Route path="/track/add-music/:trackId" element={<AddMusicToQueueConnected />} />
+      <Route path="/track/queue/:trackId" element={<QueueConnected />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

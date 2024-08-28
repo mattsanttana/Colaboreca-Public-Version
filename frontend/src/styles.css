@@ -208,7 +208,7 @@ aside .nav-link:hover {
 }
 
 .menu-height-container {
-  height: 93vh;
+  height: 90vh;
   overflow-y: auto
 }
 
@@ -307,4 +307,33 @@ aside .nav-link:hover {
 
 .custom-modal-header .btn-close {
   filter: invert(1);
+}
+
+.table-fixed {
+  width: 106%;
+  table-layout: fixed;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dj-table {
+  position: absolute;
+  width: 600px;
+  z-index: 1;
+  left: 50%;
+  top: 550%;
+  transform: translate(-50%, -50%);
+}
+
+.music-inside-table {
+  position: absolute;
+  width: 147px;
+  height: 147px;
+  z-index: 2;
+  left: 280px;
+  top: 639%;
+  transform: translate(-50%, -50%);
 }

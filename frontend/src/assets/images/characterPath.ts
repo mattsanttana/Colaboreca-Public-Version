@@ -1,10 +1,9 @@
 import * as images from './images';
 
 export const logo = images.image26;
-
 export const background = images.image27;
-
 export const podium = images.image28;
+export const djTable = images.image29;
 
 export const charactersPaths = [
   images.image0,
