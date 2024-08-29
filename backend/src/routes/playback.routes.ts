@@ -39,4 +39,10 @@ router.get(
   (req, res) => playbackController.findQueue(req, res)
 );
 
+router.get(
+  '/dj-added-current-song/:trackId',
+  Validations.validateTrackId,
+  (req, res) => playbackController.findDJAddedCurrentMusic(req, res)
+);
+
 export default router;

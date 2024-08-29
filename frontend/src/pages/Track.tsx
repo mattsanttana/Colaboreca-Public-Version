@@ -3,17 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { RootState } from '../redux/store';
-import PlayingNow from '../types/PlayingNow';
-import DJ from '../types/DJ';
-import PlaybackState from './PlaybackState';
-import Podium from './Podium';
-import Menu from './Menu';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
+import PlaybackState from './PlaybackState';
+import Podium from './Podium';
+import Menu from './Menu';
 import QueuePreview from './QueuePreview';
 import Header from './Header';
 import MessagePopup from './MessagePopup';
+import PlayingNow from '../types/PlayingNow';
+import DJ from '../types/DJ';
+import TQueue from '../types/TQueue';
 
 interface Props {
     token: string;
@@ -25,9 +26,8 @@ const Track: React.FC<Props> = ({ token }) => {
     const [djs, setDJs] = useState<DJ[]>([]);
     const [dj, setDJ] = useState<DJ>();
     const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
+    const [queue, setQueue] = useState<TQueue[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    // Estados para controlar os popups
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState('');
     const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
@@ -47,13 +47,15 @@ const Track: React.FC<Props> = ({ token }) => {
                         fetchedTrack,
                         fetchedDJs,
                         fetchedDJ,
-                        fetchedPlayingNow
+                        fetchedPlayingNow,
+                        fetchedQueue
                     ] = await Promise.all([
                         djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
                         trackActions.getTrackById(trackId),
                         djActions.getAllDJs(trackId),
                         djActions.getDJByToken(token),
-                        playbackActions.getState(trackId)
+                        playbackActions.getState(trackId),
+                        playbackActions.getQueue(trackId)
                     ]);
 
                     if (fetchVerifyLogin?.status !== 200) {
@@ -72,6 +74,7 @@ const Track: React.FC<Props> = ({ token }) => {
                         setPlayingNow(fetchedPlayingNow);
                         setDJs(fetchedDJs);
                         setDJ(fetchedDJ?.data);
+                        setQueue(fetchedQueue);
                         setTrackFound(true);
                     } else {
                         setTrackFound(false);
@@ -123,7 +126,7 @@ const Track: React.FC<Props> = ({ token }) => {
                           md={6}
                           className="d-flex flex-column align-items-center playback-state-container"
                         >
-                            <PlaybackState playingNow={playingNow} isOwner={false} />
+                            <PlaybackState playingNow={playingNow} />
                         </Col>
                         <Col md={3}>
                             <div className="podium-container">
@@ -135,7 +138,7 @@ const Track: React.FC<Props> = ({ token }) => {
                                 />
                             </div>
                             <div className="queue-container">
-                                <QueuePreview trackId={trackId} />
+                                <QueuePreview trackId={trackId} queue={queue} />
                             </div>
                         </Col>
                     </Row>

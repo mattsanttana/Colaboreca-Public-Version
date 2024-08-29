@@ -10,7 +10,7 @@ const usePlayback = () => {
     }
   }
 
-  const getTopTracksInBrazil = async (trackId: string | undefined) => {
+  const getTopMusicsInBrazil = async (trackId: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/top-tracks-in-brazil/${ trackId }`);
 
@@ -69,7 +69,19 @@ const usePlayback = () => {
     }
   }
 
-  return { getState, getTopTracksInBrazil, getTrackBySearch, addTrackToQueue, getQueue };
+  const getDJAddedCurrentMusic = async (trackId: string | undefined) => {
+    try {
+      const response = await fetch(`http://localhost:3001/playback/dj-added-current-song/${ trackId }`);
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return { getState, getTopMusicsInBrazil, getTrackBySearch, addTrackToQueue, getQueue, getDJAddedCurrentMusic };
 }
 
 export default usePlayback;

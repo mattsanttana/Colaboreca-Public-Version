@@ -8,9 +8,9 @@ import Menu from './Menu';
 import useDJ from '../utils/useDJ';
 import usePlayback from '../utils/usePlayback';
 import useTrack from '../utils/useTrack';
-import { logo } from '../assets/images/characterPath';
 import DJ from '../types/DJ';
 import TQueue from '../types/TQueue';
+import { logo } from '../assets/images/characterPath';
 
 type Props = {
   token: string;
@@ -115,7 +115,7 @@ const Queue: React.FC<Props> = ({ token }) => {
                                 src={track.cover}
                                 alt={track.musicName}
                                 className="img-thumbnail"
-                                style={{ width: '50px', height: '50px', backgroundColor: '#000000' }}
+                                style={{ width: '70px', height: '70px', backgroundColor: '#000000' }}
                               />
                             </td>
                           </tr>

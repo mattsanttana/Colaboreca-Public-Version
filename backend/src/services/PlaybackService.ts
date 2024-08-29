@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { InferAttributes, Sequelize } from 'sequelize';
 import MusicModel from '../models/MusicModel';
 import TrackModel from '../models/TrackModel';
 import DJModel from '../models/DJModel';
@@ -6,6 +6,7 @@ import SpotifyActions from '../utils/SpotifyActions';
 import JWT from '../utils/JWT';
 import { Track } from '../interfaces/spotify_response/SpotifyResponse';
 import * as config from '../database/config/database';
+import SequelizeMusic from '../database/models/SequelizeMusic';
 
 export default class PlaybackService {
   constructor(
@@ -109,22 +110,22 @@ export default class PlaybackService {
     try {
       const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
       const djs = await this.djModel.findAll({ trackId: Number(trackId) }, { transaction });
-  
+
       if (!track || !djs) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
-      } 
-  
+      }
+
       const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
-  
+
       const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
-      const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId)}, { transaction });
-  
+      const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId) }, { transaction });
+
       if (!spotifyQueue || !colaborecaQueue) {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
-  
+
       // Construir a fila completa associando DJs e músicas do Spotify
       const completeQueue = spotifyQueue.queue.map((spotifyTrack: any) => {
         const responseTrack = {
@@ -132,11 +133,11 @@ export default class PlaybackService {
           musicName: spotifyTrack.name,
           artists: spotifyTrack.artists.map((artist: any) => artist.name),
         }
-  
+
         const correspondingColaborecaTrack = colaborecaQueue.find(
           (colaborecaTrack: any) => colaborecaTrack.musicURI === spotifyTrack.uri
         );
-        
+
         if (correspondingColaborecaTrack) {
           // Se encontrar correspondência, adicionar informações do DJ
           return {
@@ -153,9 +154,95 @@ export default class PlaybackService {
           };
         }
       });
-  
+
       await transaction.commit();
       return { status: 'OK', data: completeQueue };
+    } catch (error) {
+      await transaction.rollback();
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
+  async findDJAddedCurrentMusic(trackId: string) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
+      const djs = await this.djModel.findAll({ trackId: Number(trackId) }, { transaction });
+
+      if (!track || !djs) {
+        await transaction.rollback();
+        return { status: 'NOT_FOUND', data: { message: 'Track or DJs not found' } };
+      }
+
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
+      const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId) }, { transaction });
+
+      if (!spotifyQueue || !colaborecaQueue) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
+      }
+
+      const currentlyPlayingTrack = spotifyQueue.currently_playing;
+
+      if (!currentlyPlayingTrack) {
+        await transaction.commit();
+        return { status: 'NOT_FOUND', data: { message: 'No track currently playing' } };
+      }
+
+      const colaborecaTracksWithURI = colaborecaQueue.filter(
+        (colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri
+      );
+
+      let addedBy;
+      let characterPath;
+
+      if (colaborecaTracksWithURI.length > 0) {
+        // Verificar se todas as ocorrências são do Spotify ou se há alguma do DJ
+        const isAllSpotify = colaborecaTracksWithURI.every(
+          (colaborecaTrack: any) => colaborecaTrack.djId === null
+        );
+
+        if (isAllSpotify) {
+          // Se todas as ocorrências são do Spotify, então consideramos que a música foi adicionada pelo Spotify
+          addedBy = track.trackName;
+          characterPath = null;
+        } else {
+          // Se houver pelo menos uma ocorrência do DJ, considerar a última como a que adicionou a música
+          const lastColaborecaTrack = colaborecaTracksWithURI.reduce((latest, current) => {
+            if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
+              return current;
+            }
+            return latest;
+          }, {} as InferAttributes<SequelizeMusic, { omit: never; }>); // Inicializa com um objeto vazio do tipo correto
+
+          const dj = djs.find((dj: any) => dj.id === lastColaborecaTrack.djId);
+
+          if (dj) {
+            addedBy = dj.djName;
+            characterPath = dj.characterPath;
+          } else {
+            addedBy = track.trackName;
+            characterPath = null;
+          }
+        }
+      } else {
+        addedBy = track.trackName;
+        characterPath = null;
+      }
+
+      await transaction.commit();
+      return {
+        status: 'OK',
+        data: {
+          cover: currentlyPlayingTrack.album.images[0].url,
+          musicName: currentlyPlayingTrack.name,
+          artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),
+          addedBy,
+          characterPath,
+        },
+      };
     } catch (error) {
       await transaction.rollback();
       console.error(error);
@@ -207,7 +294,7 @@ export default class PlaybackService {
 
       const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI);
       console.log(addedToQueue);
-      
+
       if (!addedToQueue) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Player command failed: No active device found' } };

@@ -38,7 +38,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
       try {
         const [fetchedDJ, fetchedGetTopTracksInBrazil] = await Promise.all([
           djActions.getDJByToken(token),
-          playbackActions.getTopTracksInBrazil(trackId),
+          playbackActions.getTopMusicsInBrazil(trackId),
         ]);
 
         if (fetchedDJ?.status === 200) {

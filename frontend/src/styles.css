@@ -243,28 +243,43 @@ aside .nav-link:hover {
 /* rank table style */
 
 .custom-table {
-  border-collapse: collapse;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  .name-square {
+    background-color: #ddddff;
+    width: auto;
+    padding: 0 10px;
+  }
 
-.custom-table th,
-.custom-table td {
-  text-align: left;
-  padding: 8px;
-}
+  /* rank table style */
 
-.custom-table th {
-  background-color: #f8f9fa;
-  color: #333;
-}
+  .custom-table {
+    border-collapse: collapse;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
-.custom-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
+  .custom-table th,
+  .custom-table td {
+    text-align: left;
+    border-collapse: collapse;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
-.custom-table td img {
-  width: 50px;
+  .custom-table th,
+  .custom-table td {
+    text-align: left;
+    padding: 8px;
+  }
+
+  .custom-table th {
+    background-color: #f8f9fa;
+    color: #333;
+  }
+
+  .custom-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
   height: 50px;
   border-radius: 50%;
 }
@@ -320,20 +335,90 @@ aside .nav-link:hover {
 }
 
 .dj-table {
-  position: absolute;
-  width: 600px;
+  position: relative;
+  /* O contêiner pai já está com position: relative */
+  width: 100%;
+  /* A imagem ocupará 100% da largura do contêiner */
+  height: auto;
   z-index: 1;
-  left: 50%;
-  top: 550%;
-  transform: translate(-50%, -50%);
+  /* Camada inferior */
+  margin-top: 25%;
 }
 
 .music-inside-table {
   position: absolute;
-  width: 147px;
-  height: 147px;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 96px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
   z-index: 2;
-  left: 280px;
-  top: 639%;
+  /* Camada superior */
+  top: 81%;
+  /* Ajuste para posicionar verticalmente */
+  left: 183px;
+  /* Centro horizontalmente */
   transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.dj-square {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.0em;
+  background-color: #5da2ba;
+  border-radius: 8px;
+  margin: -9px;
+  width: 50%;
+  /* Largura fixa */
+  height: 60px;
+  /* Altura fixa */
+  overflow: auto;
+  /* Adiciona barra de rolagem quando necessário */
+  padding: 10px;
+  /* Espaçamento interno para que o texto não fique colado nas bordas */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.track-square {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  /* Largura fixa */
+  height: 60px;
+  /* Altura fixa */
+  font-size: 1.4rem;
+  font-weight: bold;
+  top: 70px;
+  background-color: #5da2ba;
+  border-radius: 8px;
+  margin: -9px;
+  overflow: auto;
+  padding: 10px;
+}
+
+.music-square {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.0rem;
+  background-color: #5da2ba;
+  border-radius: 8px;
+  margin: -9px;
+  width: 50%;
+  /* Largura fixa */
+  height: 60px;
+  /* Altura fixa */
+  overflow: auto;
+  /* Permite rolagem quando o conteúdo é maior que o contêiner */
+  padding: 10px;
+  /* Espaçamento interno para que o texto não fique colado nas bordas */
+  box-sizing: border-box;
+  /* Inclui padding e border na largura e altura total */
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

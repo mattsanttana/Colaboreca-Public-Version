@@ -231,7 +231,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
                 <ShareTrack trackId={trackId} />
               </Col>
             </Row>
-            <PlaybackState playingNow={playingNow} isOwner={true} />
+            <PlaybackState playingNow={playingNow}/>
             <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
             <Button variant="secondary" onClick={() => setShowPopup(true)}>
               Editar/Excluir Pista

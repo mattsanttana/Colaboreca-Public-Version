@@ -1,29 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Container, Table, Spinner } from 'react-bootstrap';
-import usePlayback from '../utils/usePlayback';
+import { Card, Button, Container, Table } from 'react-bootstrap';
 import TQueue from '../types/TQueue';
 
 type Props = {
   trackId: string | undefined;
+  queue: TQueue[] | undefined;
 }
 
-const QueuePreview: React.FC<Props> = ({ trackId }) => {
-  const [queue, setQueue] = useState<TQueue[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
+const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
   const navigate = useNavigate();
-  const playbackActions = usePlayback();
-
-  useEffect(() => {
-    const fetchQueue = async () => {
-      const response = await playbackActions.getQueue(trackId);
-      setQueue(response);
-      setIsLoading(false);
-    }
-
-    fetchQueue();
-  }, [playbackActions, trackId]);
 
   const previewQueue = Array.isArray(queue) ? queue.slice(0, 5) : [];
 
@@ -35,14 +21,7 @@ const QueuePreview: React.FC<Props> = ({ trackId }) => {
       >
         <Card.Body className='hide-scrollbar' style={{height: '400px', overflow: 'auto'}}>
           <Card.Title>Fila:</Card.Title>
-          {isLoading ? (
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '100%' }}>
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Carregando...</span>
-              </Spinner>
-            </div>
-          ) : (
-            <div className="table-fixed">
+             <div className="table-fixed">
               <Table striped>
                 <thead>
                   <tr>
@@ -55,13 +34,15 @@ const QueuePreview: React.FC<Props> = ({ trackId }) => {
                   {previewQueue.map((track: TQueue, index: number) => (
                     <tr key={index}>
                       <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{track.musicName}</td>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{track.artists}</td>
+                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
+                        {track.artists.join(', ')}
+                      </td>
                       <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
                         <img 
                           src={track.cover} 
                           alt={track.musicName} 
                           className='img-thumbnail' 
-                          style={{ width: '50px', height: '50px', backgroundColor: '#000000'}} 
+                          style={{ width: '40px', height: '40px', backgroundColor: '#000000'}} 
                         />
                       </td>
                     </tr>
@@ -69,7 +50,6 @@ const QueuePreview: React.FC<Props> = ({ trackId }) => {
                 </tbody>
               </Table>
             </div>
-          )}
           <Button onClick={() => navigate(`/track/queue/${ trackId }`) }>Ver fila completa</Button>
         </Card.Body>
       </Card>

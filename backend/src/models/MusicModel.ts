@@ -3,7 +3,7 @@ import SequelizeMusic from "../database/models/SequelizeMusic";
 export default class MusicModel {
   private musicModel = SequelizeMusic;
 
-  async create( data: { musicURI: string; djId: number; trackId: number; }, p0?: unknown) {
+  async create(data: { musicURI: string; djId: number; trackId: number; }, p0?: unknown) {
     const { musicURI, djId, trackId } = data;
     const response = await this.musicModel.create({
       musicURI,
