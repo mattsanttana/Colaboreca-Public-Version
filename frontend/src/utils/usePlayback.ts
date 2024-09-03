@@ -69,6 +69,18 @@ const usePlayback = () => {
     }
   }
 
+  const getSpotifyQueue = async (trackId: string | undefined) => {
+    try {
+      const response = await fetch(`http://localhost:3001/playback/spotify-queue/${ trackId }`);
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const getDJAddedCurrentMusic = async (trackId: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/dj-added-current-song/${ trackId }`);
@@ -81,7 +93,15 @@ const usePlayback = () => {
     }
   }
 
-  return { getState, getTopMusicsInBrazil, getTrackBySearch, addTrackToQueue, getQueue, getDJAddedCurrentMusic };
+  return {
+    getState,
+    getTopMusicsInBrazil,
+    getTrackBySearch,
+    addTrackToQueue,
+    getQueue,
+    getSpotifyQueue,
+    getDJAddedCurrentMusic 
+  };
 }
 
 export default usePlayback;

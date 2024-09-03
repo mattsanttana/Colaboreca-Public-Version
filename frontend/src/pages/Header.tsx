@@ -31,13 +31,13 @@ const Header = () => {
               </Button>
           </Nav>
       </Navbar>
-      <Modal show={showPopup} onHide={handleClosePopup} size='lg'>
-          <Modal.Header closeButton>
-              <Modal.Title>Compartilhar Pista</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-              <ShareTrack trackId={trackId} />
-          </Modal.Body>
+      <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup} size='lg'>
+        <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
+          <Modal.Title>Compartilhar Pista</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ShareTrack trackId={trackId} />
+        </Modal.Body>
       </Modal>
     </div>
   )

@@ -8,7 +8,7 @@ import Menu from './Menu';
 import useDJ from '../utils/useDJ';
 import usePlayback from '../utils/usePlayback';
 import useTrack from '../utils/useTrack';
-import DJ from '../types/DJ';
+import { DJ } from '../types/DJ';
 import TQueue from '../types/TQueue';
 import { logo } from '../assets/images/characterPath';
 

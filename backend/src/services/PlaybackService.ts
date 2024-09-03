@@ -164,6 +164,34 @@ export default class PlaybackService {
     }
   }
 
+  async findSpotifyQueue(trackId: string) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
+
+      if (!track) {
+        await transaction.rollback();
+        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      }
+
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+
+      const response = await SpotifyActions.getQueue(spotifyToken);
+
+      if (!response) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
+      }
+
+      await transaction.commit();
+      return { status: 'OK', data: response.queue };
+    } catch (error) {
+      await transaction.rollback();
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
   async findDJAddedCurrentMusic(trackId: string) {
     const transaction = await this.sequelize.transaction();
     try {

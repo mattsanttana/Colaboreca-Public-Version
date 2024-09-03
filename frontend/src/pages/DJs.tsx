@@ -8,7 +8,7 @@ import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
-import DJ from '../types/DJ';
+import { DJ } from '../types/DJ';
 import Header from './Header';
 import Menu from './Menu';
 
@@ -216,12 +216,12 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
         </Container>
       )}
 
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
-        <Modal.Header closeButton>
+      <Modal className="custom-modal" show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
+        <Modal.Header closeButton style={{ borderBottom: 'none' }}>
           <Modal.Title>Confirmação</Modal.Title>
         </Modal.Header>
         <Modal.Body>Você tem certeza que deseja expulsar este DJ?</Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ borderTop: 'none' }}>
           <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
             Cancelar
           </Button>

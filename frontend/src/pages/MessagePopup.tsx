@@ -20,12 +20,12 @@ const MessagePopup: React.FC<MessagePopupProps> = ({ show, handleClose, message,
   };
 
   return (
-    <Modal show={show} onHide={handleClosePopup}>
-      <Modal.Header closeButton>
+    <Modal className='custom-modal' show={show} onHide={handleClosePopup}>
+      <Modal.Header closeButton style={{ borderBottom: 'none' }}>
         <Modal.Title>Mensagem</Modal.Title>
       </Modal.Header>
       <Modal.Body>{message}</Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer style={{ borderTop: 'none' }}>
         <Button variant="primary" onClick={handleClosePopup}>
           Fechar
         </Button>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Nav, Image } from 'react-bootstrap';
 import { FaHome, FaUser, FaMusic, FaList, FaChartLine, FaComments } from 'react-icons/fa';
-import DJ from '../types/DJ';
+import { DJ } from '../types/DJ';
 
 type Props = {
   dj: DJ | undefined;

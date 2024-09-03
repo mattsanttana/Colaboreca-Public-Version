@@ -3,11 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Button, Spinner, Modal, Form, Row, Col } from 'react-bootstrap';
 import { RootState } from '../redux/store';
-import ShareTrack from './ShareTrack';
+import ShareTrackInfo from './ShareTrackInfo';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
 import PlayingNow from '../types/PlayingNow';
-import DJ from '../types/DJ';
+import { DJ, DJPlayingNow } from '../types/DJ';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
@@ -28,6 +28,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [djs, setDJs] = useState<DJ[]>([]);
   const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
+  const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [messagePopup, setMessagePopup] = useState<{
     show: boolean;
@@ -53,15 +54,17 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             fetchedOwnerTrack,
             fetchedTrack,
             fetchedDJs,
-            fetchedPlayingNow
+            fetchedPlayingNow,
+            fetchedDJPlayingNow
           ] = await Promise.all([
             trackActions.verifyTrackAcess(trackToken, trackId),
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
-            playbackActions.getState(trackId)
+            playbackActions.getState(trackId),
+            playbackActions.getDJAddedCurrentMusic(trackId)
           ]);
   
-          if (fetchedOwnerTrack?.status !== 200) {
+          if (fetchedOwnerTrack?.status === 401) {
             setMessagePopup({
               show: true,
               message: 'Você não tem permissão para acessar essa pista',
@@ -72,6 +75,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   
           if (fetchedTrack?.status === 200) {
             setPlayingNow(fetchedPlayingNow);
+            setDJPlayingNow(fetchedDJPlayingNow);
             setDJs(fetchedDJs);
             setTrackFound(true);
             setTrackName(fetchedTrack.data.trackName);
@@ -165,8 +169,8 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
         message={messagePopup.message}
         redirectTo={messagePopup.redirectTo}
       />
-      <Modal show={showPopup} onHide={handleClosePopup} className="custom-modal">
-      <Modal.Header closeButton className="custom-modal-header">
+      <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup}>
+      <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
           <Modal.Title>{showDeleteConfirmation ? "Excluir Pista" : "Editar Nome da Pista"}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
@@ -190,7 +194,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             </Form>
           )}
         </Modal.Body>
-        <Modal.Footer className="d-flex justify-content-center">
+        <Modal.Footer className="d-flex justify-content-center" style={{ borderTop: 'none' }}>
           {showDeleteConfirmation ? (
             <>
               <Button variant="secondary" onClick={() => setShowDeleteConfirmation(false)}>
@@ -228,14 +232,11 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             <h1 className="mb-4">Colaboreca</h1>
             <Row>
               <Col>
-                <ShareTrack trackId={trackId} />
+                <ShareTrackInfo trackId={trackId} setShowPopup={setShowPopup} />
               </Col>
             </Row>
-            <PlaybackState playingNow={playingNow}/>
+            <PlaybackState playingNow={playingNow} trackName={ trackName } dj={djPlayingNow}/>
             <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
-            <Button variant="secondary" onClick={() => setShowPopup(true)}>
-              Editar/Excluir Pista
-            </Button>
           </Container>
         </div>
       ) : (

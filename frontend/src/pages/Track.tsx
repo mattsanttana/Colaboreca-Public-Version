@@ -13,8 +13,9 @@ import QueuePreview from './QueuePreview';
 import Header from './Header';
 import MessagePopup from './MessagePopup';
 import PlayingNow from '../types/PlayingNow';
-import DJ from '../types/DJ';
-import TQueue from '../types/TQueue';
+import { DJ, DJPlayingNow } from '../types/DJ';
+import { Music } from '../types/SpotifySearchResponse';
+
 
 interface Props {
     token: string;
@@ -23,10 +24,12 @@ interface Props {
 const Track: React.FC<Props> = ({ token }) => {
     const { trackId } = useParams();
     const [trackFound, setTrackFound] = useState(false);
+    const [trackName, setTrackName] = useState('');
     const [djs, setDJs] = useState<DJ[]>([]);
     const [dj, setDJ] = useState<DJ>();
     const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
-    const [queue, setQueue] = useState<TQueue[]>([]);
+    const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
+    const [queue, setQueue] = useState<Music[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState('');
@@ -43,19 +46,21 @@ const Track: React.FC<Props> = ({ token }) => {
             if (trackId) {
                 try {
                     const [
-                        fetchVerifyLogin,
-                        fetchedTrack,
-                        fetchedDJs,
-                        fetchedDJ,
-                        fetchedPlayingNow,
-                        fetchedQueue
+                      fetchedTrack,
+                      fetchVerifyLogin,
+                      fetchedDJs,
+                      fetchedDJ,
+                      fetchedPlayingNow,
+                      fetchedDJPlayingNow,
+                      fetchedQueue
                     ] = await Promise.all([
-                        djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
-                        trackActions.getTrackById(trackId),
-                        djActions.getAllDJs(trackId),
-                        djActions.getDJByToken(token),
-                        playbackActions.getState(trackId),
-                        playbackActions.getQueue(trackId)
+                      trackActions.getTrackById(trackId),
+                      djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
+                      djActions.getAllDJs(trackId),
+                      djActions.getDJByToken(token),
+                      playbackActions.getState(trackId),
+                      playbackActions.getDJAddedCurrentMusic(trackId),
+                      playbackActions.getSpotifyQueue(trackId)
                     ]);
 
                     if (fetchVerifyLogin?.status !== 200) {
@@ -75,6 +80,8 @@ const Track: React.FC<Props> = ({ token }) => {
                         setDJs(fetchedDJs);
                         setDJ(fetchedDJ?.data);
                         setQueue(fetchedQueue);
+                        setTrackName(fetchedTrack.data.trackName);
+                        setDJPlayingNow(fetchedDJPlayingNow);
                         setTrackFound(true);
                     } else {
                         setTrackFound(false);
@@ -126,7 +133,7 @@ const Track: React.FC<Props> = ({ token }) => {
                           md={6}
                           className="d-flex flex-column align-items-center playback-state-container"
                         >
-                            <PlaybackState playingNow={playingNow} />
+                            <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} />
                         </Col>
                         <Col md={3}>
                             <div className="podium-container">

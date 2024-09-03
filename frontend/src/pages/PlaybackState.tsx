@@ -1,52 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, Container } from 'react-bootstrap';
 import PlayingNow from '../types/PlayingNow';
 import { djTable } from '../assets/images/characterPath';
-import { useParams } from 'react-router-dom';
-import useTrack from '../utils/useTrack';
-import usePlayback from '../utils/usePlayback';
+import { DJPlayingNow } from '../types/DJ';
 
 type Props = {
   playingNow: PlayingNow | null;
-}
+  trackName: string;
+  dj: DJPlayingNow | null;
+};
 
-type DJ = {
-  addedBy: string;
-  characterPath: string;
-}
-
-const PlaybackState: React.FC<Props> = ({ playingNow }) => {
-  const { trackId } = useParams();
-  const [trackName, setTrackName] = useState('');
-  const [dj, setDJ] = useState<DJ | null>(null);
-  
-  const trackActions = useTrack();
-  const playbackActions = usePlayback();
+const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj }) => {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const fetchTrack = async () => {
-      if (trackId) {
-        try {
-          const [fetchedTrack, fetchedQueue] = await Promise.all([
-            trackActions.getTrackById(trackId),
-            playbackActions.getDJAddedCurrentMusic(trackId),
-          ]);
-  
-          if (fetchedTrack?.status === 200) {
-            setTrackName(fetchedTrack.data.trackName);
-          }
-  
-          if (fetchedQueue) {
-            setDJ(fetchedQueue);
-          }
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        }
+    const scrollElement = scrollRef.current;
+    const containerElement = containerRef.current;
+
+    if (scrollElement && containerElement) {
+      const isPlaying = playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track';
+      const scrollWidth = scrollElement.scrollWidth;
+      const containerWidth = containerElement.clientWidth;
+
+      if (isPlaying && scrollWidth > containerWidth) {
+        // Calcula a diferença para saber quanto precisa rolar
+        const scrollAmount = scrollWidth - containerWidth + 20;
+        scrollElement.style.animation = `scroll-text ${scrollAmount / 15}s linear infinite`;
+        scrollElement.style.setProperty('--scroll-distance', `-${scrollAmount}px`);
+      } else {
+        scrollElement.style.animation = 'none'; // Remove a animação se o texto couber ou se não houver música tocando
       }
-    };
-  
-    fetchTrack();
-  }, [trackActions, playbackActions, trackId]);
+    }
+  }, [playingNow]); // Recalcula sempre que 'playingNow' muda
 
   return (
     <Container className="py-4">
@@ -63,13 +49,10 @@ const PlaybackState: React.FC<Props> = ({ playingNow }) => {
                   <div>{dj?.addedBy === trackName ? '-' : dj?.addedBy}</div>
                 </div>
                 <div className="track-square mx-2 hide-scrollbar">{trackName}</div>
-                <div className="music-square mx-2 hide-scrollbar">
+                <div className="music-square mx-2 hide-scrollbar" ref={containerRef}>
                   <div style={{ fontWeight: 'bold' }}>Tocando:</div>
-                  <div>{playingNow.item.name}</div>
-                  <div>
-                    <Card.Text style={{ margin: '2px 0' }}>
-                      {playingNow.item.artists.map((artist: { id: string; name: string }) => artist.name).join(', ')}
-                    </Card.Text>
+                  <div className="music-scroll" ref={scrollRef}>
+                    {playingNow.item.name} - {playingNow.item.artists.map((artist) => artist.name).join(', ')}
                   </div>
                 </div>
               </div>
@@ -94,9 +77,11 @@ const PlaybackState: React.FC<Props> = ({ playingNow }) => {
                   <div>-</div>
                 </div>
                 <div className="track-square mx-2 hide-scrollbar">{trackName}</div>
-                <div className="music-square mx-2 hide-scrollbar">
+                <div className="music-square mx-2 hide-scrollbar" ref={containerRef}>
                   <div style={{ fontWeight: 'bold' }}>Tocando:</div>
-                  <div>Nenhuma música tocando</div>
+                  <div className="music-scroll" ref={scrollRef}>
+                    Nenhuma música tocando
+                  </div>
                 </div>
               </div>
               <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto' }}>

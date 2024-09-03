@@ -166,6 +166,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
               onKeyDown={handleKeyPress}
               className="my-3 custom-input"
               style={{ textAlign: 'center' }}
+              autoComplete="off"
             />
             <Button
               variant="primary"

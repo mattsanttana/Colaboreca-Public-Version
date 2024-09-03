@@ -40,6 +40,12 @@ router.get(
 );
 
 router.get(
+  '/spotify-queue/:trackId',
+  Validations.validateTrackId,
+  (req, res) => playbackController.findSpotifyQueue(req, res)
+);
+
+router.get(
   '/dj-added-current-song/:trackId',
   Validations.validateTrackId,
   (req, res) => playbackController.findDJAddedCurrentMusic(req, res)

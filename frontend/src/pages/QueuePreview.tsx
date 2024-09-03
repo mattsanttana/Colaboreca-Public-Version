@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Container, Table } from 'react-bootstrap';
-import TQueue from '../types/TQueue';
+import { Music } from '../types/SpotifySearchResponse';
 
 type Props = {
   trackId: string | undefined;
-  queue: TQueue[] | undefined;
+  queue: Music[] | undefined;
 }
 
 const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
@@ -31,16 +31,16 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {previewQueue.map((track: TQueue, index: number) => (
+                  {previewQueue.map((track: Music, index: number) => (
                     <tr key={index}>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{track.musicName}</td>
+                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{track.name}</td>
                       <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
-                        {track.artists.join(', ')}
+                        {track.artists.map((artist) => artist.name).join(', ')}
                       </td>
                       <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
                         <img 
-                          src={track.cover} 
-                          alt={track.musicName} 
+                          src={track.album.images[0].url} 
+                          alt={track.name} 
                           className='img-thumbnail' 
                           style={{ width: '40px', height: '40px', backgroundColor: '#000000'}} 
                         />

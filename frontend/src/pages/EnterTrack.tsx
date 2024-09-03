@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Container, Form, Row, Col } from 'react-bootstrap';
-import { logo } from '../assets/images/characterPath';
-import CreateDJConnected from './CreateDJ';
-import useTrack from '../utils/useTrack';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
 import MessagePopup from './MessagePopup';
+import CreateDJConnected from './CreateDJ'
+import useTrack from '../utils/useTrack';
+import { logo } from '../assets/images/characterPath';
 
-const EnterTrack = () => {
+const EnterTrack: React.FC = () => {
   const [trackId, setTrackId] = useState<string>('');
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const [phase, setPhase] = useState<number>(1);
@@ -15,20 +15,29 @@ const EnterTrack = () => {
   const trackActions = useTrack();
 
   const inputValidation = useCallback(() => {
-    setButtonDisabled(!(trackId && trackId.toString().length === 6));
+    setButtonDisabled(!(trackId && trackId.replace(/\s/g, '').length === 6));
   }, [trackId]);
 
   useEffect(() => {
     inputValidation();
   }, [inputValidation]);
 
+  const formatTrackId = (value: string) => {
+    const cleaned = value.replace(/\D/g, '').substring(0, 6); // Remove non-digits and limit to 6 digits
+    const part1 = cleaned.substring(0, 3);
+    const part2 = cleaned.substring(3, 6);
+    return part2 ? `${part1} ${part2}` : part1;
+  };
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTrackId(event.target.value);
+    const formattedValue = formatTrackId(event.target.value);
+    setTrackId(formattedValue);
   };
 
   const handleClick = async () => {
-    if (trackId) {
-      const response = await trackActions.enterTrack(trackId);
+    const cleanedTrackId = trackId.replace(/\s/g, ''); // Remove spaces before sending
+    if (cleanedTrackId) {
+      const response = await trackActions.enterTrack(cleanedTrackId);
       if (response && response.status === 200) {
         setPhase(2);
       } else if (response && response.status === 404) {
@@ -42,7 +51,7 @@ const EnterTrack = () => {
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && trackId.replace(/\s/g, '').length === 6) {
       handleClick();
     }
   };
@@ -63,9 +72,9 @@ const EnterTrack = () => {
                 className='img-fluid shadow-lg mb-5'
                 style={{ maxWidth: '300px' }}
               />
-              <Form.Group className="mb-3" style={{ maxWidth: '500px', margin: '0 auto' }}>
+              <Form.Group className="mb-3" style={{ maxWidth: '500px'}}>
                 <Form.Control
-                  type="number"
+                  type="text"
                   placeholder="Pin da Pista"
                   name="trackId"
                   value={trackId}
@@ -73,6 +82,7 @@ const EnterTrack = () => {
                   onKeyPress={handleKeyPress}
                   style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
                   className="text-center custom-input"
+                  autoComplete="off"
                 />
                 <Button
                   variant="primary"
@@ -85,7 +95,7 @@ const EnterTrack = () => {
               </Form.Group>
             </>
           ) : (
-            <CreateDJConnected trackId={trackId} />
+            <CreateDJConnected trackId={trackId.replace(/\s/g, '')} />
           )}
         </Col>
       </Row>

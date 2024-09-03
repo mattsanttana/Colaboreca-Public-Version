@@ -300,7 +300,7 @@ aside .nav-link:hover {
 .custom-modal .modal-content {
   background-color: black;
   color: white;
-  box-shadow: 0 0 0 0.5px #ffffff
+  box-shadow: 0 0 0 0.5px #ffffff;
 }
 
 .custom-input {
@@ -387,7 +387,7 @@ aside .nav-link:hover {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 300px;
+  width: 50%;
   /* Largura fixa */
   height: 60px;
   /* Altura fixa */
@@ -420,5 +420,29 @@ aside .nav-link:hover {
   box-sizing: border-box;
   /* Inclui padding e border na largura e altura total */
   white-space: nowrap;
-  text-overflow: ellipsis;
+  position: relative;
+  overflow: hidden;
+}
+
+.music-scroll {
+  display: inline-block;
+  white-space: nowrap;
+  /* Mantém o texto em uma única linha */
+  animation: none;
+  /* Aplica a animação de rolagem */
+}
+
+.music-square:hover .music-scroll {
+  animation-play-state: paused;
+  /* Pausa a animação ao passar o mouse */
+}
+
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(var(--scroll-distance));
+  }
 }

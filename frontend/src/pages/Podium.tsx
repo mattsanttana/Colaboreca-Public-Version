@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, ListGroup, ListGroupItem, Button, Container } from 'react-bootstrap';
-import DJ from '../types/DJ';
+import { DJ } from '../types/DJ';
 import { podium } from '../assets/images/characterPath';
 
 type Props = {

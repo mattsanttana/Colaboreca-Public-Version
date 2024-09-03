@@ -1,4 +1,4 @@
-export type Track = {
+export type Music = {
   id: string;
   name: string;
   artists: Array<{
@@ -16,6 +16,6 @@ export type Track = {
 
 export type SpotifyApiResponse = {
   items: Array<{
-    track: Track;
+    track: Music;
   }>;
 }

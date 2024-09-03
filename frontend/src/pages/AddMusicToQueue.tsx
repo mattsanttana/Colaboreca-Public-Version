@@ -6,7 +6,7 @@ import usePlayback from '../utils/usePlayback';
 import useDJ from '../utils/useDJ';
 import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
-import { Track } from '../types/SpotifySearchResponse';
+import { Music } from '../types/SpotifySearchResponse';
 import { useParams } from 'react-router-dom';
 import useDebounce from '../utils/useDebounce';
 
@@ -20,12 +20,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const [dj, setDJ] = useState();
   const [topTracksInBrazil, setTopTracksInBrazil] = useState([]);
   const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<Track[]>([]);
+  const [searchResults, setSearchResults] = useState<Music[]>([]);
   const [isDebouncing, setIsDebouncing] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<Music | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [isAddingTrack, setIsAddingTrack] = useState(false); // Estado para controle de carregamento
-  const [modalMessage, setModalMessage] = useState(''); // Estado para mensagem do modal
+  const [isAddingTrack, setIsAddingTrack] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
 
   const playbackActions = usePlayback();
@@ -96,15 +96,15 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     setSearch(value);
   }
 
-  const handleClick = (track: Track) => {
+  const handleClick = (track: Music) => {
     setSelectedTrack(track);
     setShowModal(true);
   }
 
   const handleConfirmAddTrack = async () => {
     if (selectedTrack) {
-      setIsAddingTrack(true); // Inicia o carregamento
-      setModalMessage(''); // Limpa a mensagem do modal
+      setIsAddingTrack(true);
+      setModalMessage('');
       try {
         const response = await playbackActions.addTrackToQueue(trackId, selectedTrack.uri, token);
         if (response?.status === 409) {
@@ -112,7 +112,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
         } else if (response?.status === 401) {
           setModalMessage('Token inválido, por favor faça login novamente.');
         } else if (response?.status === 404) {
-          setModalMessage('Falha ao tentar reproduzir a música, nenhum dispositivo ativo encontrado.');
+          setModalMessage('Falha ao tentar adicionar a música à fla, nenhum dispositivo ativo encontrado.');
         } else {
           setModalMessage('Música adicionada à fila com sucesso!');
         }
@@ -179,7 +179,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                 <>
                   <h1>Resultados da busca:</h1>
                   <Row>
-                    {searchResults.map((track: Track, index) => (
+                    {searchResults.map((track: Music, index) => (
                       <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
                         <Card
                           className="image-col text-light"
@@ -208,7 +208,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                   <>
                     <h1>Populares no Brasil:</h1>
                     <Row>
-                      {topTracksInBrazil.map((track: Track, index) => (
+                      {topTracksInBrazil.map((track: Music, index) => (
                         <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
                           <Card
                             className="image-col text-light"
@@ -233,10 +233,8 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           </Card>
         </Col>
       </Row>
-
-      {/* Modal de confirmação */}
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
+      <Modal className='custom-modal' show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton style={{ borderBottom: 'none' }}>
           <Modal.Title>Confirmação</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -251,7 +249,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
             </div>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ borderTop: 'none' }}>
           {!isAddingTrack && !isConfirmed && (
             <>
               <Button variant="secondary" onClick={handleCloseModal}>

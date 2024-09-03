@@ -5,7 +5,7 @@ import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
 import { charactersPaths } from '../assets/images/characterPath';
 import useDJ from '../utils/useDJ';
-import DJ from '../types/DJ';
+import { DJ } from '../types/DJ';
 import Menu from './Menu';
 import Header from './Header';
 import MessagePopup from './MessagePopup';
@@ -176,8 +176,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
         </Row>
       ) : dj ? (
         <div>
-          <Modal show={showPopup} onHide={handleClosePopup} className="custom-modal">
-            <Modal.Header closeButton className="custom-modal-header">
+          <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup}>
+            <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
               <Modal.Title>Editar DJ</Modal.Title>
             </Modal.Header>
             <Modal.Body className="text-center" onKeyDown={handleKeyPress}>
@@ -230,8 +230,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               </Form>
             </Modal.Body>
           </Modal>
-          <Modal show={showAvatarPopup} onHide={handleCloseAvatarPopup} className="custom-modal">
-            <Modal.Header closeButton className="custom-modal-header">
+          <Modal className="custom-modal" show={showAvatarPopup} onHide={handleCloseAvatarPopup}>
+            <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
               <Modal.Title>Escolha seu avatar</Modal.Title>
             </Modal.Header>
             <Modal.Body className="text-center">
@@ -248,14 +248,14 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               </div>
             </Modal.Body>
           </Modal>
-          <Modal show={showDeleteConfirmPopup} onHide={cancelDeleteDJ} className='custom-modal'>
-            <Modal.Header closeButton className='custom-modal-header'>
+          <Modal className='custom-modal' show={showDeleteConfirmPopup} onHide={cancelDeleteDJ}>
+            <Modal.Header closeButton className='custom-modal-header' style={{ borderBottom: 'none' }}>
               <Modal.Title>Confirmação de Exclusão</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               Você tem certeza que quer excluir este DJ?
             </Modal.Body>
-            <Modal.Footer>
+            <Modal.Footer style={{ borderTop: 'none' }}>
               <Button variant="secondary" onClick={cancelDeleteDJ}>
                 Cancelar
               </Button>

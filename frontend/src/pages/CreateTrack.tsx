@@ -25,6 +25,15 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    if (trackName.length >= 3 && trackName.length <= 16) {
+      setButtonDisabled(false);
+    } else {
+      setButtonDisabled(true);
+    }
+  }
+  , [trackName]);
+
+  useEffect(() => {
     const fetchData = async () => {
       if (!code) {
         setModalMessage('Erro ao tentar conectar a sua conta do Spotify, faça login novamente');
@@ -43,18 +52,9 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const inputValidation = () => {
-    if (trackName.length >= 3 && trackName.length <= 16) {
-      setButtonDisabled(false);
-    } else {
-      setButtonDisabled(true);
-    }
-  };
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setTrackName(value);
-    inputValidation();
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -72,8 +72,11 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
       } else if (track?.status === 401) {
         setModalMessage('Sua conta do Spotify precisa ser premium para criar uma pista.');
         setShowModal(true);
+      } else if (track?.status === 400) {
+        setModalMessage('O nome da sua pista é muito curto ou muito longo, por favor tente outro.');
+        setShowModal(true);
       } else {
-        setModalMessage('Algo deu errado ao tentar criar a pista, tente novamente');
+        setModalMessage('Algo deu errado ao tentar criar a pista, tente novamente.');
         setShowModal(true);
       }
     }
@@ -109,6 +112,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
                 onKeyPress={handleKeyPress}
                 style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
                 className="text-center custom-input"
+                autoComplete="off"
               />
               <Button
                 variant="primary"
@@ -125,7 +129,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
           show={showModal}
           handleClose={handleClose}
           message={modalMessage}
-          redirectTo="/"
+          redirectTo="/login"
         />
       </Container>
     )

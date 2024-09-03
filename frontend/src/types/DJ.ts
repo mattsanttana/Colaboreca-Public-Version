@@ -1,4 +1,4 @@
-type DJ = {
+export type DJ = {
   id: string;
   djName: string;
   characterPath: string;
@@ -7,4 +7,7 @@ type DJ = {
   trackId: string;
 };
 
-export default DJ;
+export type DJPlayingNow = {
+  addedBy: string;
+  characterPath: string;
+};

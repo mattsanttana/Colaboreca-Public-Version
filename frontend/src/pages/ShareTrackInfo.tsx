@@ -4,9 +4,10 @@ import QRCode from 'qrcode-generator';
 
 interface Props {
   trackId: string | undefined;
+  setShowPopup: (show: boolean) => void;
 }
 
-const ShareTrack: React.FC<Props> = ({ trackId }) => {
+const ShareTrackInfo: React.FC<Props> = ({ trackId, setShowPopup }) => {
   const generateQRCode = useCallback(() => {
     const qr = QRCode(0, 'M');
     qr.addData(`http://localhost:3000/track-info/${trackId}`);
@@ -56,7 +57,7 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
 
   return (
     <Container>
-       <Card
+      <Card
         className="text-center text-light"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
       >
@@ -68,27 +69,32 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
             </Col>
             <Col md={4} className='d-flex justify-content-center align-items-center'>
               <Col md={2} className='d-flex justify-content-center align-items-center'>
-                <h1 className='track-id'> { trackIdHead } </h1>
+                <h1 className='track-id'> {trackIdHead} </h1>
               </Col>
               <Col md={2} className='d-flex justify-content-center align-items-center'></Col>
-                <h1 className='track-id'> { trackIdTail } </h1>
-              </Col>
+              <h1 className='track-id'> {trackIdTail} </h1>
+            </Col>
             <Col
               md={4}
               className='d-flex flex-column justify-content-center align-items-center text-center'
             >
-             <div style={{ backgroundColor: 'white', height: '200px', width: '200px' }}>
+              <div style={{ backgroundColor: 'white', height: '200px', width: '200px' }}>
                 <div className="mb-3" style={{ marginTop: '13px' }}>{generateQRCode()}</div>
               </div>
             </Col>
           </Row>
-          <Button variant="primary" onClick={ handleShare }>
-            Compartilhar
-          </Button>
+          <div className="d-flex justify-content-center mt-3">
+            <Button variant="primary" onClick={handleShare}>
+              Compartilhar
+            </Button>
+            <Button variant="secondary" onClick={() => setShowPopup(true)} className="ms-2">
+              Editar/Excluir Pista
+            </Button>
+          </div>
         </Card.Body>
       </Card>
     </Container>
   );
 };
 
-export default ShareTrack;
+export default ShareTrackInfo;

@@ -30,6 +30,12 @@ export default class TrackController {
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
+  async findSpotifyQueue(req: Request, res: Response) {
+    const { trackId } = req.params;
+    const response = await this.playbackService.findSpotifyQueue(trackId);
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
   async findDJAddedCurrentMusic(req: Request, res: Response) {
     const { trackId } = req.params;
     const response = await this.playbackService.findDJAddedCurrentMusic(trackId);
