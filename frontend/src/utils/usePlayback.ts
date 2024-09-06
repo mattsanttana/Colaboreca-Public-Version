@@ -81,6 +81,18 @@ const usePlayback = () => {
     }
   }
 
+  const getAddedMusicsByDJ = async (djId: string | undefined, trackId: string | undefined) => {
+    try {
+      const response = await fetch(`http://localhost:3001/playback/added-musics-by-dj/${ djId }/${ trackId }`);
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const getDJAddedCurrentMusic = async (trackId: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/dj-added-current-song/${ trackId }`);
@@ -100,6 +112,7 @@ const usePlayback = () => {
     addTrackToQueue,
     getQueue,
     getSpotifyQueue,
+    getAddedMusicsByDJ,
     getDJAddedCurrentMusic 
   };
 }

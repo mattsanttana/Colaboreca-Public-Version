@@ -141,6 +141,7 @@ export default class PlaybackService {
         if (correspondingColaborecaTrack) {
           // Se encontrar correspondência, adicionar informações do DJ
           return {
+            djId: correspondingColaborecaTrack.djId,
             addedBy: djs.find((dj: any) => dj.id === correspondingColaborecaTrack.djId)?.djName,
             characterPath: djs.find((dj: any) => dj.id === correspondingColaborecaTrack.djId)?.characterPath,
             ...responseTrack
@@ -191,6 +192,48 @@ export default class PlaybackService {
       return { status: 'ERROR', data: { message: 'An error occurred' } };
     }
   }
+
+  async findAddedMusicByDJ(djId: string, trackId: string) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
+      const dj = await this.djModel.findOne({ id: Number(djId) }, { transaction });
+  
+      if (!track || !dj) {
+        await transaction.rollback();
+        return { status: 'NOT_FOUND', data: { message: 'DJ or Track not found' } };
+      }
+  
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
+      const colaborecaQueue = await this.musicModel.findAll({ djId: Number(djId), trackId: Number(trackId) }, { transaction });
+  
+      if (!spotifyQueue || !colaborecaQueue) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
+      }
+      
+      const completeQueue = colaborecaQueue.map((colaborecaTrack: any) => {
+        const spotifyTrack = spotifyQueue.queue.find((spotifyTrack: any) => spotifyTrack.uri === colaborecaTrack.musicURI);
+        const trackWasPlayed = !spotifyTrack; // Se a música não estiver na fila, ela foi tocada
+  
+        return {
+          cover: spotifyTrack?.album.images[0].url || null,
+          musicName: spotifyTrack?.name || colaborecaTrack.musicName, // usar o nome da música do colaboreca se não estiver na fila
+          artists: spotifyTrack?.artists.map((artist: any) => artist.name) || colaborecaTrack.artists,
+          wasPlayed: trackWasPlayed, // flag indicando se a música foi tocada
+        };
+      });
+  
+      await transaction.commit();
+      return { status: 'OK', data: completeQueue };
+    } catch (error) {
+      await transaction.rollback();
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+  
 
   async findDJAddedCurrentMusic(trackId: string) {
     const transaction = await this.sequelize.transaction();
@@ -321,12 +364,13 @@ export default class PlaybackService {
       }
 
       const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI);
-      console.log(addedToQueue);
 
       if (!addedToQueue) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Player command failed: No active device found' } };
       }
+
+      await this.trackModel.update({ updatedAt: new Date() }, { id: Number(trackId) }, { transaction });
 
       await transaction.commit();
 

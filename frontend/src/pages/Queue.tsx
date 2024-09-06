@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Col, Container, Row, Spinner, Table } from 'react-bootstrap';
+import { Button, Card, Col, Container, OverlayTrigger, Popover, Row, Spinner, Table } from 'react-bootstrap';
 import Header from './Header';
 import Menu from './Menu';
 import useDJ from '../utils/useDJ';
@@ -62,6 +62,24 @@ const Queue: React.FC<Props> = ({ token }) => {
     }
   }, []);
 
+  const handleViewProfile = (djId: string) => {
+    const profileUrl = isOwner
+      ? `/track-info/profile/${trackId}/${djId}`
+      : `/track/profile/${trackId}/${djId}`;
+    navigate(profileUrl);
+  };
+  
+  const renderPopover = (djId: number) => (
+    <Popover id={`popover-${djId}`}>
+      <Popover.Body>
+        <Button variant="link" onClick={() => handleViewProfile(String(djId))}>Perfil</Button>
+        {(!isOwner && djId !== Number(dj?.id)) && (
+          <Button variant="link" onClick={() => console.log(`Chat com DJ: ${djId}`)}>Chat</Button>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
+
   return (
     <>
       {isLoading ? (
@@ -84,33 +102,84 @@ const Queue: React.FC<Props> = ({ token }) => {
                 style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
               >
                 <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '848px', overflowY: 'auto' }}>
-                  <Card.Title>Fila</Card.Title>
                   <div className="table-responsive">
                     <Table striped>
                       <thead>
                         <tr>
-                          <th className="text-light" style={{ backgroundColor: '#000000' }}>Personagem</th>
-                          <th className="text-light" style={{ backgroundColor: '#000000' }}>Vulgo</th>
-                          <th className="text-light" style={{ backgroundColor: '#000000' }}>Música</th>
-                          <th className="text-light" style={{ backgroundColor: '#000000' }}>Artista</th>
-                          <th className="text-light" style={{ backgroundColor: '#000000' }}>Capa</th>
+                          <th className="text-light" style={{ backgroundColor: '#000000', borderBottom: 'none' }}></th>
+                          <th
+                            className="text-light"
+                            style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                            >
+                              Adicionada por
+                          </th>
+                          <th
+                            className="text-light"
+                            style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                            >
+                              Música
+                          </th>
+                          <th
+                            className="text-light"
+                            style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                            >
+                              Artista
+                          </th>
+                          <th
+                            className="text-light"
+                            style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                            >
+                              Capa
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {queue?.map((track, index) => (
                           <tr key={index}>
-                            <td className="text-light" style={{ backgroundColor: '#000000' }}>
-                              <img
-                                src={track.characterPath || logo}
-                                alt={track.musicName}
-                                className="img-thumbnail img-thumbnail-hover"
-                                style={{ width: '50px', height: '50px', cursor: 'pointer', backgroundColor: '#000000' }}
-                              />
+                            <td className="text-light" style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                              {track.characterPath ? (
+                                <OverlayTrigger
+                                  trigger="click"
+                                  placement="top"
+                                  overlay={renderPopover(track.djId)}
+                                  rootClose
+                                >
+                                  <img
+                                    src={track.characterPath}
+                                    alt={track.musicName}
+                                    className="img-thumbnail img-thumbnail-hover"
+                                    style={{
+                                      width: '50px',
+                                      height: '50px',
+                                      cursor: 'pointer', // Cursor de ponteiro quando o characterPath está presente
+                                      backgroundColor: '#000000',
+                                    }}
+                                  />
+                                </OverlayTrigger>
+                              ) : (
+                                <img
+                                  src={logo} // Usando 'logo' se não houver characterPath
+                                  alt={track.musicName}
+                                  className="img-thumbnail"
+                                  style={{
+                                    width: '50px',
+                                    height: '50px',
+                                    cursor: 'default', // Cursor padrão quando não há characterPath
+                                    backgroundColor: '#000000',
+                                  }}
+                                />
+                              )}
                             </td>
-                            <td className="text-light" style={{ backgroundColor: '#000000' }}>{track.addedBy}</td>
-                            <td className="text-light" style={{ backgroundColor: '#000000' }}>{track.musicName}</td>
-                            <td className="text-light" style={{ backgroundColor: '#000000' }}>{track.artists.join(', ')}</td>
-                            <td className="text-light" style={{ backgroundColor: '#000000' }}>
+                            <td className="text-light" style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                              {track.addedBy}
+                            </td>
+                            <td className="text-light" style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                              {track.musicName}
+                            </td>
+                            <td className="text-light" style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                              {track.artists.join(', ')}
+                            </td>
+                            <td className="text-light" style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
                               <img
                                 src={track.cover}
                                 alt={track.musicName}

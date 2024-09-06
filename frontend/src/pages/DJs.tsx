@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Table, Button, Spinner, Container, Col,
@@ -30,21 +30,32 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const djActions = useDJ();
   const trackActions = useTrack();
   const navigate = useNavigate();
-  const intervalId1 = useRef<null | NodeJS.Timeout>(null);
-  const intervalId2 = useRef<null | NodeJS.Timeout>(null);
+
+  useEffect(() => {
+    const pageType = window.location.pathname.split('/')[1];
+    if (pageType !== 'track-info') {
+      setIsOwner(false);
+    }
+  }
+  , []);
 
   useEffect(() => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [fetchedTrack, fetchedDJs] = await Promise.all([
+          const [fetchedTrack, fetchedDJs, fetchedDJ] = await Promise.all([
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
+            djActions.getDJByToken(djToken)
           ]);
-
+    
           if (fetchedTrack?.status === 200) {
             setDJs(fetchedDJs);
             setTrackFound(true);
+          }
+    
+          if (fetchedDJ?.status === 200) {
+            setDJ(fetchedDJ.data);
           }
         } catch (error) {
           console.error("Error fetching data:", error);
@@ -52,45 +63,10 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
           setIsLoading(false);
         }
       }
-    };
-
+    }
     fetchData();
-
-    intervalId1.current = setInterval(() => {
-      fetchData();
-    }, 5000);
-
-    return () => {
-      if (intervalId1.current) clearInterval(intervalId1.current);
-    };
-  }, [djActions, trackActions, trackId]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const pageType = window.location.pathname.split('/')[1];
-        if (pageType !== 'track-info') {
-          setIsOwner(false);
-          const DJ = await djActions.getDJByToken(djToken);
-          if (DJ) {
-            setDJ(DJ.data);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-
-    intervalId2.current = setInterval(() => {
-      fetchData();
-    }, 5000);
-
-    return () => {
-      if (intervalId2.current) clearInterval(intervalId2.current);
-    };
-  }, [djActions, djToken]);
+  }
+  , [trackId, trackActions, djActions, djToken]);
 
   const handleViewProfile = (djId: string) => {
     const profileUrl = isOwner
@@ -121,14 +97,16 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     }
   };
 
-  const renderPopover = (dj: DJ) => (
-    <Popover id={`popover-${dj.id}`}>
-      <Popover.Body>
-        <Button variant="link" onClick={() => handleViewProfile(String(dj.id))}>Perfil</Button>
-        <Button variant="link" onClick={() => console.log(`Chat com DJ: ${dj.djName}`)}>Chat</Button>
-      </Popover.Body>
-    </Popover>
-  );
+  const renderPopover = (pDJ: DJ) => (
+  <Popover id={`popover-${pDJ.id}`}>
+    <Popover.Body>
+      <Button variant="link" onClick={() => handleViewProfile(String(pDJ.id))}>Perfil</Button>
+      {(!isOwner && pDJ.id !== dj?.id) && (
+        <Button variant="link" onClick={() => console.log(`Chat com DJ: ${pDJ.djName}`)}>Chat</Button>
+      )}
+    </Popover.Body>
+  </Popover>
+);
 
   return (
     <>
@@ -156,16 +134,40 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                     <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
                   ) : (
                     <div className="table-responsive">
-                      <Table striped bordered>
+                      <Table striped>
                         <thead>
                           <tr>
-                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Personagem</th>
-                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Ranque</th>
-                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Vulgo</th>
-                            <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Pontos</th>
+                            <th
+                              className={'text-light'}
+                              style={{ backgroundColor: '#000000',
+                              borderBottom: 'none' }}
+                              >
+                            </th>
+                            <th
+                              className={'text-light'}
+                              style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                              >
+                                Ranque
+                            </th>
+                            <th
+                              className={'text-light'}
+                              style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                              >
+                                Vulgo
+                            </th>
+                            <th
+                              className={'text-light'}
+                              style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                              >
+                                Pontos
+                            </th>
                             {isOwner && (
                               <>
-                                <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Ações</th>
+                                <th
+                                className={'text-light'}
+                                style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                                >
+                                </th>
                               </>
                             )}
                           </tr>
@@ -173,7 +175,10 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                         <tbody>
                           {djs.sort((a, b) => a.ranking - b.ranking).map((dj: DJ) => (
                             <tr key={dj.id}>
-                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
+                              <td
+                                className={'text-light'}
+                                style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                              >
                                 <OverlayTrigger
                                   trigger="click"
                                   placement="top"
@@ -188,12 +193,30 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                                   />
                                 </OverlayTrigger>
                               </td>
-                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{dj.ranking === 0 ? '-' : dj.ranking}</td>
-                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{dj.djName}</td>
-                              <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{dj.score}</td>
+                              <td
+                                className={'text-light'}
+                                style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                                >
+                                  {dj.ranking === 0 ? '-' : dj.ranking}
+                              </td>
+                              <td
+                                className={'text-light'}
+                                style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                                >
+                                  {dj.djName}
+                              </td>
+                              <td
+                                className={'text-light'}
+                                style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                                >
+                                  {dj.score}
+                              </td>
                               {isOwner && (
                                 <>
-                                  <td>
+                                  <td
+                                    className={'text-light'}
+                                    style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                                    >
                                     <Button variant="danger" onClick={() => handleExpelDJ(dj)}>Expulsar</Button>
                                   </td>
                                 </>

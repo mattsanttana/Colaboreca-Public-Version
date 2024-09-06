@@ -23,6 +23,13 @@ export default class DJService {
         return { status: 'UNAUTHORIZED', data: { message: 'This track does not exist' } };
       }
 
+      const djExists = await this.djModel.findOne({ djName, trackId }, { transaction });
+
+      if (djExists) {
+        await transaction.rollback();
+        return { status: 'CONFLICT', data: { message: 'DJ already exists' } };
+      }
+
       const dj = await this.djModel.create(djName, characterPath, trackId, { transaction });
 
       const token = JWT.sign({ id: dj.id, trackId });
@@ -38,9 +45,6 @@ export default class DJService {
     } catch (error) {
       await transaction.rollback();
       console.error(error);
-      if (error instanceof UniqueConstraintError) {
-        return { status: 'CONFLICT', data: { message: 'DJ already exists' } };
-      }
       return { status: 'ERROR', data: { message: 'An error occurred' } };
     }
   }

@@ -66,7 +66,7 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
           { preview.length > 0 ? (
             <ListGroup variant="flush">
               { preview.map((dj: DJ) => (
-                <ListGroupItem key={ dj.id } style={{ backgroundColor: '#000000'}}>
+                <ListGroupItem key={ dj.id } style={{ backgroundColor: '#000000', borderBottom: 'none'}}>
                   <div className="d-flex justify-content-center align-items-center">
                   <img
                     src={ dj?.characterPath }

@@ -14,7 +14,7 @@ export default class MusicModel {
     return response.get();
   }
 
-  async findAll(where?: { trackId?: number; }, p0?: unknown) {
+  async findAll(where?: { djId?: number, trackId?: number }, p0?: unknown) {
     if (where) {
       const musics = await this.musicModel.findAll({ where });
       return musics.map(music => music.get());

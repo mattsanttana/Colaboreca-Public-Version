@@ -40,9 +40,9 @@ export default class TrackService {
 
       await this.trackModel.delete({
         where: {
-          createdAt: {
-            [Op.lt]: new Date(new Date().getTime() - 12 * 60 * 60 * 1000),
-          },
+          updatedAt: {
+            [Op.lt]: new Date(new Date().getTime() - 1000 * 60 * 60 * 6)
+          }
         }
       }, { transaction });
 

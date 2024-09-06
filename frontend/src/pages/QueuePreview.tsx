@@ -25,19 +25,24 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
               <Table striped>
                 <thead>
                   <tr>
-                    <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Música</th>
-                    <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Artista</th>
-                    <th className={'text-light'} style={{ backgroundColor: '#000000' }}>Capa</th>
+                    <th className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
+                    <th className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
+                    <th className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
                   </tr>
                 </thead>
                 <tbody>
                   {previewQueue.map((track: Music, index: number) => (
                     <tr key={index}>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>{track.name}</td>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
+                      <td
+                        className={'text-light'}
+                        style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                        >
+                          {track.name}
+                      </td>
+                      <td className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
                         {track.artists.map((artist) => artist.name).join(', ')}
                       </td>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000' }}>
+                      <td className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
                         <img 
                           src={track.album.images[0].url} 
                           alt={track.name} 

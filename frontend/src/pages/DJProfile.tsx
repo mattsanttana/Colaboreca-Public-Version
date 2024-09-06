@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Spinner, Form, Card, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Spinner, Form, Card, Modal, Table } from 'react-bootstrap';
 import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
 import { charactersPaths } from '../assets/images/characterPath';
 import useDJ from '../utils/useDJ';
+import usePlayback from '../utils/usePlayback';
 import { DJ } from '../types/DJ';
 import Menu from './Menu';
 import Header from './Header';
@@ -30,55 +31,25 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showMessagePopup, setShowMessagePopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [musics, setMusics] = useState([]);
 
   const djActions = useDJ();
+  const playbackActions = usePlayback();
   const navigate = useNavigate();
-  const intervalId1 = useRef<NodeJS.Timeout | null>(null);
   const avatarRef = useRef<HTMLImageElement>(null);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const pageType = window.location.pathname.split('/')[1];
-      if (pageType !== 'track-info') {
-        setIsTrackOwner(false);
-      }
+  useEffect(() => {
+    const pageType = window.location.pathname.split('/')[1];
+    const isSameAsDJ = editedCharacterPath === dj?.characterPath && editedName === dj?.djName;
+    const isNameTooShort = editedName.length < 3;
+    const isNameTooBig = editedName.length > 16;
 
-      const menuDJ = await djActions.getDJByToken(token);
-      if (menuDJ) {
-        setMenuDJ(menuDJ.data);
-      }
-
-      if (djId && trackId) {
-        const [fetchedDJ, verifyIfDJisOwner] = await Promise.all([
-          djActions.getDJById(djId, trackId),
-          djActions.verifyIfTheDJIsTheProfileOwner(djId, token),
-        ]);
-
-        if (fetchedDJ?.status === 200) {
-          setDJ(fetchedDJ.data);
-          if (verifyIfDJisOwner) {
-            setIsOwner(verifyIfDJisOwner);
-          }
-        }
-      }
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setIsLoading(false);
+    setIsButtonDisabled(isSameAsDJ || isNameTooShort || isNameTooBig);
+  
+    if (pageType !== 'track-info') {
+      setIsTrackOwner(false);
     }
-  }, [djActions, token, djId, trackId]);
 
-  useEffect(() => {
-    fetchData();
-
-    intervalId1.current = setInterval(fetchData, 5000);
-
-    return () => {
-      if (intervalId1.current) clearInterval(intervalId1.current);
-    };
-  }, [fetchData]);
-
-  useEffect(() => {
     if (editedCharacterPath === '' && editedName === '' && dj) {
       setEditedCharacterPath(dj?.characterPath || '');
       setEditedName(dj?.djName || '');
@@ -86,11 +57,38 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   }, [dj, editedCharacterPath, editedName]);
 
   useEffect(() => {
-    const isSameAsDJ = editedCharacterPath === dj?.characterPath && editedName === dj?.djName;
-    const isNameTooShort = editedName.length < 3;
-    const isNameTooBig = editedName.length > 16;
-    setIsButtonDisabled(isSameAsDJ || isNameTooShort || isNameTooBig);
-  }, [editedCharacterPath, editedName, dj]);
+    const fetchData = async () => {
+      if (djId && trackId) {
+        try {
+          const [fetchedDJ, fetchedMenuDJ, fetchedVerifyIfDJIsOwner, fetchedAddedMusicByDJ] = await Promise.all([
+            djActions.getDJById(djId, trackId),
+            djActions.getDJByToken(token),
+            djActions.verifyIfTheDJIsTheProfileOwner(djId, token),
+            playbackActions.getAddedMusicsByDJ(djId, trackId),
+          ]);
+  
+          if (fetchedVerifyIfDJIsOwner) {
+            setIsOwner(fetchedVerifyIfDJIsOwner);
+          }
+  
+          if (fetchedDJ?.status === 200) {
+            setDJ(fetchedDJ.data);
+            setMusics(fetchedAddedMusicByDJ);
+        }
+  
+          if (fetchedMenuDJ?.status === 200) {
+            setMenuDJ(fetchedMenuDJ.data);
+          }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }
+    fetchData();
+
+  }, [djActions, djId, playbackActions, token, trackId]);
 
   const handleClickCharacter = (event: React.MouseEvent<HTMLImageElement>) => {
     const target = event.target as HTMLImageElement;
@@ -124,7 +122,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   
   const confirmDeleteDJ = async () => {
     if (!djId) {
-      setPopupMessage('Algo deu errado, por favor tente novamente em alguns minutos');
+      setPopupMessage('Algo deu errado, por favor tente novamente em alguns estantes');
       setShowMessagePopup(true);
       return;
     }
@@ -134,7 +132,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
     if (response?.status === 200) {
       navigate('/');
     } else {
-      setPopupMessage('Algo deu errado, por favor tente novamente em alguns minutos');
+      setPopupMessage('Algo deu errado, por favor tente novamente em alguns estantes');
       setShowMessagePopup(true);
     }
     setShowDeleteConfirmPopup(false);
@@ -300,8 +298,18 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                 style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
               >
                 <Card.Body>
-                  <Card.Title>Músicas Tocadas</Card.Title>
-                  <Card.Text>Aqui vai ficar a lista de músicas já tocadas por esse DJ</Card.Text>
+                  <Card.Title>Músicas Adicionadas:</Card.Title>
+                    <div className='table-responsive'>
+                      <Table striped>
+                        <thead>
+                          <tr class>
+                            <th>Nome</th>
+                            <th>Artista</th>
+                            <th>Álbum</th>
+                          </tr>
+                        </thead>
+                      </Table>
+                    </div>               
                 </Card.Body>
               </Card>
             </Col>

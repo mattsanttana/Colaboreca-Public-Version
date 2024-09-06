@@ -13,7 +13,6 @@ export default {
       djName: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         field: 'dj_name',
       },
       characterPath: {

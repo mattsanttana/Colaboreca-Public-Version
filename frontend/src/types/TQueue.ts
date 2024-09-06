@@ -1,4 +1,5 @@
 type TQueue = {
+  djId: number;
   addedBy: string;
   characterPath: string;
   cover: string;

@@ -42,6 +42,12 @@ export default class TrackController {
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
+  async findAddedMusicByDJ(req: Request, res: Response) {
+    const { djId, trackId } = req.params;
+    const response = await this.playbackService.findAddedMusicByDJ(djId, trackId);
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
   async addTrackToQueue(req: Request, res: Response) {
     const { trackId } = req.params;
     const { trackURI } = req.body;

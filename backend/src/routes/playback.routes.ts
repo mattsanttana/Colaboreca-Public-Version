@@ -46,6 +46,13 @@ router.get(
 );
 
 router.get(
+  'added-music-by-dj/:djId/track/:trackId',
+  Validations.validateDJId,
+  Validations.validateTrackId,
+  (req, res) => playbackController.findAddedMusicByDJ(req, res)
+)
+
+router.get(
   '/dj-added-current-song/:trackId',
   Validations.validateTrackId,
   (req, res) => playbackController.findDJAddedCurrentMusic(req, res)
