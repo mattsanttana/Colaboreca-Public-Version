@@ -10,6 +10,7 @@ import { DJ } from '../types/DJ';
 import Menu from './Menu';
 import Header from './Header';
 import MessagePopup from './MessagePopup';
+import { DJMusic } from '../types/SpotifySearchResponse';
 
 interface Props {
   token: string;
@@ -31,7 +32,9 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showMessagePopup, setShowMessagePopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
-  const [musics, setMusics] = useState([]);
+  const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
+  const [musics, setMusics] = useState<DJMusic[]>([]);
+  const [filter, setFilter] = useState<string>('1');
 
   const djActions = useDJ();
   const playbackActions = usePlayback();
@@ -60,25 +63,42 @@ const DJProfile: React.FC<Props> = ({ token }) => {
     const fetchData = async () => {
       if (djId && trackId) {
         try {
-          const [fetchedDJ, fetchedMenuDJ, fetchedVerifyIfDJIsOwner, fetchedAddedMusicByDJ] = await Promise.all([
-            djActions.getDJById(djId, trackId),
+          const [fetchVerifyLogin, fetchedMenuDJ, fetchedDJ, fetchedVerifyIfDJIsOwner, fetchedAddedMusicByDJ] = await Promise.all([
+            djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
             djActions.getDJByToken(token),
+            djActions.getDJById(djId, trackId),
             djActions.verifyIfTheDJIsTheProfileOwner(djId, token),
             playbackActions.getAddedMusicsByDJ(djId, trackId),
           ]);
+
+          if (fetchVerifyLogin?.status !== 200) {
+            setPopupMessage('Você não está logado, por favor faça login novamente');
+            setRedirectTo('/enter-track');
+            setShowMessagePopup(true);
+        }
+        
+        if (fetchedDJ?.status !== 200) {
+            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+            setRedirectTo('/enter-track');
+            setShowMessagePopup(true);
+        }
+
+          if (fetchedMenuDJ?.status === 200) {
+            setMenuDJ(fetchedMenuDJ.data);
+          }
+
+          if (fetchedDJ?.status === 200) {
+            setDJ(fetchedDJ.data);
+        }
   
           if (fetchedVerifyIfDJIsOwner) {
             setIsOwner(fetchedVerifyIfDJIsOwner);
           }
   
-          if (fetchedDJ?.status === 200) {
-            setDJ(fetchedDJ.data);
+          if (fetchedAddedMusicByDJ) {
             setMusics(fetchedAddedMusicByDJ);
         }
   
-          if (fetchedMenuDJ?.status === 200) {
-            setMenuDJ(fetchedMenuDJ.data);
-          }
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -86,9 +106,13 @@ const DJProfile: React.FC<Props> = ({ token }) => {
         }
       }
     }
+    
     fetchData();
 
-  }, [djActions, djId, playbackActions, token, trackId]);
+  }, [djActions, djId, playbackActions, token, trackId]);    
+
+  const playedMusics = musics.filter((music) => music.wasPlayed);
+  const notPlayedMusics = musics.filter((music) => !music.wasPlayed);
 
   const handleClickCharacter = (event: React.MouseEvent<HTMLImageElement>) => {
     const target = event.target as HTMLImageElement;
@@ -107,6 +131,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
 
     if (response?.status === 200) {
       setShowPopup(false);
+      setIsLoading(true);
+      window.location.reload();
     } else if (response?.status === 400) {
       setPopupMessage('Este vulgo já existe');
       setShowMessagePopup(true);
@@ -280,41 +306,97 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                   className="img-fluid rounded-circle mb-3"
                   style={{ width: '300px', margin: '0 auto' }}
                 />
-                <Card.Body>
+                <Card.Body style={{height: '530px', overflow: 'auto'}}>
                   <div className="d-flex justify-content-center align-items-center mb-3">
                     <div className="rank-square">{dj?.ranking || '-'}</div>
                     <div className="name-square mx-3">{dj?.djName}</div>
                     <div className="points-square">{dj?.score} pts</div>
                   </div>
                   {isOwner && !isTrackOwner && (
-                    <Button variant="primary" onClick={() => setShowPopup(true)}>
+                    <Button variant="primary" style={{margin: '10px'}} onClick={() => setShowPopup(true)}>
                       Editar/Excluir DJ
                     </Button>
                   )}
-                </Card.Body>
-              </Card>
-              <Card
-                className="mt-4 text-light"
-                style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
-              >
-                <Card.Body>
-                  <Card.Title>Músicas Adicionadas:</Card.Title>
+                  <Card.Title className="mt-4, text-light" style={{margin: '10px'}}>Músicas adicionadas:</Card.Title>
+                    <Form.Select
+                      className='text-light'
+                      style={{backgroundColor: '#000000', width: '140px', float: 'right'}}
+                      onChange={(e) => setFilter(e.target.value)}
+                    >
+                      <option value="1">Todas</option>
+                      <option value="2">Tocadas</option>
+                      <option value="3">Não tocadas</option>
+                    </Form.Select>
+                    {musics.length > 0 ? (
                     <div className='table-responsive'>
-                      <Table striped>
+                      <Table striped className='text-light'>
                         <thead>
-                          <tr class>
-                            <th>Nome</th>
-                            <th>Artista</th>
-                            <th>Álbum</th>
+                          <tr>
+                            <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
+                            <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
+                            <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
                           </tr>
                         </thead>
+                        <tbody>
+                          {filter === '1' ? (
+                            musics.map((music, index) => (
+                              <tr key={index}>
+                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
+                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
+                                <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                                  <img
+                                    src={music.cover}
+                                    alt={music.name}
+                                    className='img-thumbnail'
+                                    style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : filter === '2' ? (
+                            playedMusics.map((music, index) => (
+                              <tr key={index}>
+                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
+                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
+                                <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                                  <img
+                                    src={music.cover}
+                                    alt={music.name}
+                                    className='img-thumbnail'
+                                    style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            notPlayedMusics.map((music, index) => (
+                              <tr key={index}>
+                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
+                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
+                                <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                                  <img
+                                    src={music.cover}
+                                    alt={music.name}
+                                    className='img-thumbnail'
+                                    style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
                       </Table>
-                    </div>               
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className='text-light' style={{ margin: '100px' }}>Nenhuma música adicionada.</h4>
+                    </div>
+                  )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </div>
       ) : (
         <Row className="justify-content-center">
           <Col xs={12} className="text-center">
@@ -324,11 +406,13 @@ const DJProfile: React.FC<Props> = ({ token }) => {
       )}
       <MessagePopup
         show={showMessagePopup}
-        handleClose={() => setShowMessagePopup(false)} message={popupMessage}
+        handleClose={() => setShowMessagePopup(false)}
+        message={popupMessage}
+        redirectTo={redirectTo}
       />
     </Container>
   );
-};
+}
 
 const mapStateToProps = (state: RootState) => ({
   token: state.djReducer.token,

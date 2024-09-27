@@ -19,6 +19,7 @@ const App = () => {
       <Route path="/track-info/:trackId" element={<TrackInfoConnected />} />
       <Route path="/track-info/djs/:trackId" element={<DJsConnected />} />
       <Route path="/track-info/profile/:trackId/:djId" element={<DJProfileConnected />} />
+      <Route path="/track-info/queue/:trackId" element={<QueueConnected  />} />
       <Route path="/track/:trackId" element={<TrackConnected />} />
       <Route path="/track/ranking/:trackId" element={<DJsConnected />} />
       <Route path="/track/profile/:trackId/:djId" element={<DJProfileConnected />} />

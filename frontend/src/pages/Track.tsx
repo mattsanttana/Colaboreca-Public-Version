@@ -47,7 +47,7 @@ const Track: React.FC<Props> = ({ token }) => {
                 try {
                     const [
                       fetchedTrack,
-                      fetchVerifyLogin,
+                      fetchedVerifyLogin,
                       fetchedDJs,
                       fetchedDJ,
                       fetchedPlayingNow,
@@ -63,7 +63,7 @@ const Track: React.FC<Props> = ({ token }) => {
                       playbackActions.getSpotifyQueue(trackId)
                     ]);
 
-                    if (fetchVerifyLogin?.status !== 200) {
+                    if (fetchedVerifyLogin?.status !== 200) {
                         setPopupMessage('Você não está logado, por favor faça login novamente');
                         setRedirectTo('/enter-track');
                         setShowPopup(true);
@@ -107,55 +107,55 @@ const Track: React.FC<Props> = ({ token }) => {
 
     return (
         <>
-            <MessagePopup
-                show={showPopup}
-                handleClose={() => setShowPopup(false)}
-                message={popupMessage}
-                redirectTo={redirectTo}
-            />
-            {isLoading ? (
-                <Container
-                  className="d-flex justify-content-center align-items-center"
-                  style={{ height: '100vh' }}
+          <MessagePopup
+            show={showPopup}
+            handleClose={() => setShowPopup(false)}
+            message={popupMessage}
+            redirectTo={redirectTo}
+          />
+          {isLoading ? (
+            <Container
+              className="d-flex justify-content-center align-items-center"
+              style={{ height: '100vh' }}
+            >
+              <h1 className='text-light'>Carregando</h1>
+              <Spinner animation="border" className='text-light'/>
+            </Container>
+          ) :
+          trackFound && dj ? (
+            <Container>
+              <Header />
+              <Row>
+                <Col md={3}>
+                  <Menu dj={dj} />
+                </Col>
+                <Col
+                  md={6}
+                  className="d-flex flex-column align-items-center playback-state-container"
                 >
-                    <h1 className='text-light'>Carregando</h1>
-                    <Spinner animation="border" className='text-light'/>
-                </Container>
-            ) :
-            trackFound && dj ? (
-                <Container>
-                    <Header />
-                    <Row>
-                        <Col md={3}>
-                            <Menu dj={dj} />
-                        </Col>
-                        <Col
-                          md={6}
-                          className="d-flex flex-column align-items-center playback-state-container"
-                        >
-                            <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} />
-                        </Col>
-                        <Col md={3}>
-                            <div className="podium-container">
-                                <Podium
-                                  djs={djs}
-                                  isOwner={false}
-                                  trackId={trackId}
-                                  hasDJs={djs.length > 0}
-                                />
-                            </div>
-                            <div className="queue-container">
-                                <QueuePreview trackId={trackId} queue={queue} />
-                            </div>
-                        </Col>
-                    </Row>
-                </Container>
-            ) : (
-                <Container className="text-center">
-                    <h1>Esta pista não existe</h1>
-                    <Button onClick={() => navigate("/")}>Página inicial</Button>
-                </Container>
-            )}
+                  <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} />
+                </Col>
+                <Col md={3}>
+                  <div className="podium-container">
+                    <Podium
+                      djs={djs}
+                      isOwner={false}
+                      trackId={trackId}
+                      hasDJs={djs.length > 0}
+                    />
+                  </div>
+                  <div className="queue-container">
+                      <QueuePreview trackId={trackId} queue={queue} />
+                  </div>
+                </Col>
+              </Row>
+            </Container>
+        ) : (
+            <Container className="text-center">
+              <h1>Esta pista não existe</h1>
+              <Button onClick={() => navigate("/")}>Página inicial</Button>
+            </Container>
+          )}
         </>
     );
 };

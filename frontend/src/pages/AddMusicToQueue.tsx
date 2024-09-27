@@ -3,22 +3,24 @@ import { Card, Col, Container, Form, Row, Spinner, Modal, Button } from 'react-b
 import Header from './Header';
 import Menu from './Menu';
 import usePlayback from '../utils/usePlayback';
+import MessagePopup from './MessagePopup';
 import useDJ from '../utils/useDJ';
 import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import { Music } from '../types/SpotifySearchResponse';
 import { useParams } from 'react-router-dom';
 import useDebounce from '../utils/useDebounce';
+import { DJ } from '../types/DJ';
 
 interface Props {
   token: string;
 }
 
 const AddMusicToQueue: React.FC<Props> = ({ token }) => {
-  const { trackId } = useParams();
+  const { trackId } = useParams<{ trackId: string }>();
   const [isLoading, setIsLoading] = useState(true);
-  const [dj, setDJ] = useState();
-  const [topTracksInBrazil, setTopTracksInBrazil] = useState([]);
+  const [dj, setDJ] = useState<DJ>();
+  const [topTracksInBrazil, setTopTracksInBrazil] = useState<Music[]>([]);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<Music[]>([]);
   const [isDebouncing, setIsDebouncing] = useState(false);
@@ -27,6 +29,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const [isAddingTrack, setIsAddingTrack] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
 
   const playbackActions = usePlayback();
   const djActions = useDJ();
@@ -36,10 +41,25 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [fetchedDJ, fetchedGetTopTracksInBrazil] = await Promise.all([
+        const [fetchedVerifyLogin, fetchedDJ, fetchedGetTopTracksInBrazil] = await Promise.all([
+          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
           djActions.getDJByToken(token),
           playbackActions.getTopMusicsInBrazil(trackId),
         ]);
+
+        if (fetchedVerifyLogin?.status !== 200) {
+          setPopupMessage('Você não está logado, por favor faça login novamente');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+          return;
+        }
+      
+        if (fetchedDJ?.status !== 200) {
+          setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+          return;
+        }
 
         if (fetchedDJ?.status === 200) {
           setDJ(fetchedDJ.data);
@@ -60,8 +80,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     };
 
     fetchData();
+  
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [djActions, token, trackId]);
 
   useEffect(() => {
     if (debouncedSearch.trim() === '') {
@@ -89,11 +110,10 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
     fetchSearchResults();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
+  }, [debouncedSearch, trackId]);
 
-  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setSearch(value);
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
   }
 
   const handleClick = (track: Music) => {
@@ -106,13 +126,20 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
       setIsAddingTrack(true);
       setModalMessage('');
       try {
-        const response = await playbackActions.addTrackToQueue(trackId, selectedTrack.uri, token);
+        const response = await playbackActions.addTrackToQueue(
+          trackId,
+          selectedTrack.album.images[0].url,
+          selectedTrack.name,
+          selectedTrack.artists.map((artist) => artist.name).join(', '),
+          selectedTrack.uri,
+          token
+        );
         if (response?.status === 409) {
           setModalMessage('Essa música já está na fila, por favor adicione outra.');
         } else if (response?.status === 401) {
           setModalMessage('Token inválido, por favor faça login novamente.');
         } else if (response?.status === 404) {
-          setModalMessage('Falha ao tentar adicionar a música à fla, nenhum dispositivo ativo encontrado.');
+          setModalMessage('Falha ao tentar adicionar a música à fila, nenhum dispositivo ativo encontrado.');
         } else {
           setModalMessage('Música adicionada à fila com sucesso!');
         }
@@ -120,7 +147,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
         console.error(error);
         setModalMessage('Ocorreu um erro ao adicionar a música à fila.');
       } finally {
-        setIsAddingTrack(false); // Encerra o carregamento
+        setIsAddingTrack(false);
       }
     }
   }
@@ -136,138 +163,148 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     setIsConfirmed(false);
   }
 
-  return isLoading ? (
-    <Container
-      className="d-flex justify-content-center align-items-center"
-      style={{ height: '100vh' }}
-    >
-      <h1 className="text-light">Carregando</h1>
-      <Spinner animation="border" className="text-light" />
-    </Container>
-  ) : (
-    <Container>
-      <Header />
-      <Row>
-        <Col md={3}>
-          <Menu dj={dj} />
-        </Col>
-        <Col className="py-4" md={9}>
-          <Card className="text-center text-light" style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}>
-            <Card.Body
-              className="hide-scrollbar"
-              style={{ width: '100%', height: '870px', overflowY: 'auto' }}
-            >
-              <Form.Control
-                type="text"
-                placeholder="Pesquisar"
-                value={search}
-                onChange={handleChange}
-                className="my-3 custom-input"
-                style={{ 
-                  textAlign: 'center', 
-                  position: 'sticky',
-                  top: '0px',
-                  zIndex: 1000,
-                  backgroundColor: '#000000'
-                }}
-              />
-              {isDebouncing ? (
-                <div className="d-flex justify-content-center align-items-center my-4">
-                  <Spinner animation="border" className="text-light" />
-                </div>
-              ) : searchResults.length > 0 ? (
-                <>
-                  <h1>Resultados da busca:</h1>
-                  <Row>
-                    {searchResults.map((track: Music, index) => (
-                      <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
-                        <Card
-                          className="image-col text-light"
-                          style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
-                          onClick={() => handleClick(track)}
-                        >
-                          <Card.Img variant="top" src={track.album.images[0].url} />
-                          <Card.Body>
-                            <Card.Title>{track.name}</Card.Title>
-                            <Card.Text>
-                              {track.artists.map((artist) => artist.name).join(', ')}
-                            </Card.Text>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                  {isDebouncing && (
+  return (
+    <>
+      <MessagePopup
+        show={showPopup}
+        handleClose={() => setShowPopup(false)}
+        message={popupMessage}
+        redirectTo={redirectTo}
+      />
+      {isLoading ? (
+        <Container
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: '100vh' }}
+        >
+          <h1 className="text-light">Carregando</h1>
+          <Spinner animation="border" className="text-light" />
+        </Container>
+      ) : (
+        <Container>
+          <Header />
+          <Row>
+            <Col md={3}>
+              <Menu dj={dj} />
+            </Col>
+            <Col className="py-4" md={9}>
+              <Card className="text-center text-light" style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}>
+                <Card.Body
+                  className="hide-scrollbar"
+                  style={{ width: '100%', height: '845px', overflowY: 'auto' }}
+                >
+                  <Form.Control
+                    type="text"
+                    placeholder="Pesquisar"
+                    value={search}
+                    onChange={handleChange}
+                    className="my-3 custom-input"
+                    style={{ 
+                      textAlign: 'center', 
+                      position: 'sticky',
+                      top: '0px',
+                      zIndex: 1000,
+                      backgroundColor: '#000000'
+                    }}
+                  />
+                  {isDebouncing ? (
                     <div className="d-flex justify-content-center align-items-center my-4">
                       <Spinner animation="border" className="text-light" />
                     </div>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      <h1>Resultados da busca:</h1>
+                      <Row>
+                        {searchResults.map((track: Music, index) => (
+                          <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                            <Card
+                              className="image-col text-light"
+                              style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+                              onClick={() => handleClick(track)}
+                            >
+                              <Card.Img variant="top" src={track.album.images[0].url} />
+                              <Card.Body>
+                                <Card.Title>{track.name}</Card.Title>
+                                <Card.Text>
+                                  {track.artists.map((artist) => artist.name).join(', ')}
+                                </Card.Text>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                      {isDebouncing && (
+                        <div className="d-flex justify-content-center align-items-center my-4">
+                          <Spinner animation="border" className="text-light" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    !isDebouncing && (
+                      <>
+                        <h1>Populares no Brasil:</h1>
+                        <Row>
+                          {topTracksInBrazil.map((track: Music, index) => (
+                            <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                              <Card
+                                className="image-col text-light"
+                                style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+                                onClick={() => handleClick(track)}
+                              >
+                                <Card.Img variant="top" src={track.album.images[0].url} />
+                                <Card.Body>
+                                  <Card.Title>{track.name}</Card.Title>
+                                  <Card.Text>
+                                    {track.artists.map((artist) => artist.name).join(', ')}
+                                  </Card.Text>
+                                </Card.Body>
+                              </Card>
+                            </Col>
+                          ))}
+                        </Row>
+                      </>
+                    )
                   )}
-                </>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <Modal className='custom-modal' show={showModal} onHide={handleCloseModal}>
+            <Modal.Header closeButton style={{ borderBottom: 'none' }}>
+              <Modal.Title>Confirmação</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              {isAddingTrack ? (
+                <div className="d-flex justify-content-center align-items-center">
+                  <Spinner animation="border" className="text-dark" />
+                  <span className="ml-3">Adicionando à fila...</span>
+                </div>
               ) : (
-                !isDebouncing && (
-                  <>
-                    <h1>Populares no Brasil:</h1>
-                    <Row>
-                      {topTracksInBrazil.map((track: Music, index) => (
-                        <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
-                          <Card
-                            className="image-col text-light"
-                            style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
-                            onClick={() => handleClick(track)}
-                          >
-                            <Card.Img variant="top" src={track.album.images[0].url} />
-                            <Card.Body>
-                              <Card.Title>{track.name}</Card.Title>
-                              <Card.Text>
-                                {track.artists.map((artist) => artist.name).join(', ')}
-                              </Card.Text>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
-                  </>
-                )
+                <div>
+                  <p>{modalMessage || `Deseja adicionar a música "${selectedTrack?.name}" à fila?`}</p>
+                </div>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <Modal className='custom-modal' show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton style={{ borderBottom: 'none' }}>
-          <Modal.Title>Confirmação</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {isAddingTrack ? (
-            <div className="d-flex justify-content-center align-items-center">
-              <Spinner animation="border" className="text-dark" />
-              <span className="ml-3">Adicionando à fila...</span>
-            </div>
-          ) : (
-            <div>
-              <p>{modalMessage || `Deseja adicionar a música "${selectedTrack?.name}" à fila?`}</p>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer style={{ borderTop: 'none' }}>
-          {!isAddingTrack && !isConfirmed && (
-            <>
-              <Button variant="secondary" onClick={handleCloseModal}>
-                Cancelar
-              </Button>
-              <Button variant="primary" onClick={handleConfirm}>
-                Confirmar
-              </Button>
-            </>
-          )}
-          {isConfirmed && (
-            <Button variant="primary" onClick={handleCloseModal}>
-              Fechar
-            </Button>
-          )}
-        </Modal.Footer>
-      </Modal>
-    </Container>
+            </Modal.Body>
+            <Modal.Footer style={{ borderTop: 'none' }}>
+              {!isAddingTrack && !isConfirmed && (
+                <>
+                  <Button variant="secondary" onClick={handleCloseModal}>
+                    Cancelar
+                  </Button>
+                  <Button variant="primary" onClick={handleConfirm}>
+                    Confirmar
+                  </Button>
+                </>
+              )}
+              {isConfirmed && (
+                <Button variant="primary" onClick={handleCloseModal}>
+                  Fechar
+                </Button>
+              )}
+            </Modal.Footer>
+          </Modal>
+        </Container>
+      )}
+    </>
   );
 }
 

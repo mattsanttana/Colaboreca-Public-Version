@@ -12,6 +12,8 @@ import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
 import MessagePopUp from './MessagePopup';
+import QueuePreview from './QueuePreview';
+import { Music } from '../types/SpotifySearchResponse';
 
 interface Props {
   djToken: string;
@@ -29,6 +31,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   const [djs, setDJs] = useState<DJ[]>([]);
   const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
   const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
+  const [queue, setQueue] = useState<Music[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [messagePopup, setMessagePopup] = useState<{
     show: boolean;
@@ -55,13 +58,15 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             fetchedTrack,
             fetchedDJs,
             fetchedPlayingNow,
-            fetchedDJPlayingNow
+            fetchedDJPlayingNow,
+            fetchedQueue
           ] = await Promise.all([
             trackActions.verifyTrackAcess(trackToken, trackId),
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
             playbackActions.getState(trackId),
-            playbackActions.getDJAddedCurrentMusic(trackId)
+            playbackActions.getDJAddedCurrentMusic(trackId),
+            playbackActions.getSpotifyQueue(trackId)
           ]);
   
           if (fetchedOwnerTrack?.status === 401) {
@@ -77,6 +82,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             setPlayingNow(fetchedPlayingNow);
             setDJPlayingNow(fetchedDJPlayingNow);
             setDJs(fetchedDJs);
+            setQueue(fetchedQueue);
             setTrackFound(true);
             setTrackName(fetchedTrack.data.trackName);
             if (!editedTrackName) {
@@ -237,6 +243,9 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             </Row>
             <PlaybackState playingNow={playingNow} trackName={ trackName } dj={djPlayingNow}/>
             <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
+            <div className="queue-container">
+              <QueuePreview trackId={trackId} queue={queue} />
+            </div>
           </Container>
         </div>
       ) : (

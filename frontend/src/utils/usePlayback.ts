@@ -40,23 +40,6 @@ const usePlayback = () => {
     }
   }
 
-  const addTrackToQueue = async (trackId: string | undefined, trackURI: string, token: string) => {
-    try {
-      const response = await fetch(`http://localhost:3001/playback/add-to-queue/${ trackId }`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${ token }`
-        },
-        body: JSON.stringify({ trackURI })
-      });
-
-      return response;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   const getQueue = async (trackId: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/queue/${ trackId }`);
@@ -105,15 +88,39 @@ const usePlayback = () => {
     }
   }
 
+  const addTrackToQueue = async (
+    trackId: string | undefined,
+    cover: string,
+    name: string,
+    artists: string,
+    musicURI: string,
+    token: string
+  ) => {
+    try {
+      const response = await fetch(`http://localhost:3001/playback/add-to-queue/${ trackId }`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${ token }`
+        },
+        body: JSON.stringify({ cover, name, artists, musicURI })
+      });
+
+      return response;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return {
     getState,
     getTopMusicsInBrazil,
     getTrackBySearch,
-    addTrackToQueue,
     getQueue,
     getSpotifyQueue,
     getAddedMusicsByDJ,
-    getDJAddedCurrentMusic 
+    getDJAddedCurrentMusic,
+    addTrackToQueue
   };
 }
 

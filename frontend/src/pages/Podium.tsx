@@ -68,11 +68,11 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
               { preview.map((dj: DJ) => (
                 <ListGroupItem key={ dj.id } style={{ backgroundColor: '#000000', borderBottom: 'none'}}>
                   <div className="d-flex justify-content-center align-items-center">
-                  <img
-                    src={ dj?.characterPath }
-                    alt={ dj?.djName } className='short-character'
-                    style={{ margin: '15px'}}
-                  />
+                    <img
+                      src={ dj?.characterPath }
+                      alt={ dj?.djName } className='short-character'
+                      style={{ margin: '15px'}}
+                    />
                     <div className="rank-square-short">{dj?.ranking || '-'}</div>
                     <div className="name-square-short mx-3">{dj?.djName}</div>
                     <div className="points-square-short">{dj?.score} pts</div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Container, Table } from 'react-bootstrap';
 import { Music } from '../types/SpotifySearchResponse';
@@ -9,7 +9,19 @@ type Props = {
 }
 
 const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
+  const [isOwner, setIsOwner] = useState<boolean>(true);
+  
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const pageType = window.location.pathname.split('/')[1];
+    if (pageType !== 'track-info') {
+      setIsOwner(false);
+    }
+  }
+  , []);
+
+  const redirectLink = isOwner ? `/track-info/queue/${ trackId }` : `/track/queue/${ trackId }`;
 
   const previewQueue = Array.isArray(queue) ? queue.slice(0, 5) : [];
 
@@ -25,24 +37,24 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
               <Table striped>
                 <thead>
                   <tr>
-                    <th className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
-                    <th className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
-                    <th className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
+                    <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
+                    <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
+                    <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
                   </tr>
                 </thead>
                 <tbody>
                   {previewQueue.map((track: Music, index: number) => (
                     <tr key={index}>
                       <td
-                        className={'text-light'}
+                        className='text-light'
                         style={{ backgroundColor: '#000000', borderBottom: 'none' }}
                         >
                           {track.name}
                       </td>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                      <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
                         {track.artists.map((artist) => artist.name).join(', ')}
                       </td>
-                      <td className={'text-light'} style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                      <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
                         <img 
                           src={track.album.images[0].url} 
                           alt={track.name} 
@@ -55,7 +67,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
                 </tbody>
               </Table>
             </div>
-          <Button onClick={() => navigate(`/track/queue/${ trackId }`) }>Ver fila completa</Button>
+          <Button onClick={() => navigate(redirectLink) }>Ver fila completa</Button>
         </Card.Body>
       </Card>
     </Container>

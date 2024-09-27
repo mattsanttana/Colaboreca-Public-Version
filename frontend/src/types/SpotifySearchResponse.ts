@@ -14,6 +14,13 @@ export type Music = {
   uri: string;
 }
 
+export type DJMusic = {
+  cover: string;
+  name: string;
+  artists: string[];
+  wasPlayed: boolean;
+}
+
 export type SpotifyApiResponse = {
   items: Array<{
     track: Music;

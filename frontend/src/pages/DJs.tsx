@@ -11,6 +11,7 @@ import useTrack from '../utils/useTrack';
 import { DJ } from '../types/DJ';
 import Header from './Header';
 import Menu from './Menu';
+import MessagePopup from './MessagePopup';
 
 interface Props {
   trackToken: string;
@@ -26,6 +27,9 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [selectedDJ, setSelectedDJ] = useState<DJ | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
 
   const djActions = useDJ();
   const trackActions = useTrack();
@@ -43,19 +47,29 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [fetchedTrack, fetchedDJs, fetchedDJ] = await Promise.all([
+          const [fetchedTrack, fetchedVerifyLogin, fetchedDJs, fetchedDJ] = await Promise.all([
             trackActions.getTrackById(trackId),
+            djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
             djActions.getAllDJs(trackId),
             djActions.getDJByToken(djToken)
           ]);
+
+          if (fetchedVerifyLogin?.status !== 200) {
+            setPopupMessage('Você não está logado, por favor faça login novamente');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+        }
+
+          if (fetchedDJ?.status !== 200) {
+            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+        }
     
           if (fetchedTrack?.status === 200) {
+            setDJ(fetchedDJ?.data);
             setDJs(fetchedDJs);
             setTrackFound(true);
-          }
-    
-          if (fetchedDJ?.status === 200) {
-            setDJ(fetchedDJ.data);
           }
         } catch (error) {
           console.error("Error fetching data:", error);
@@ -110,6 +124,12 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
 
   return (
     <>
+      <MessagePopup
+        show={showPopup}
+        handleClose={() => setShowPopup(false)}
+        message={popupMessage}
+        redirectTo={redirectTo}
+      />
       {isLoading ? (
         <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
           <h1 className='text-light'>Carregando</h1>
@@ -138,34 +158,33 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                         <thead>
                           <tr>
                             <th
-                              className={'text-light'}
-                              style={{ backgroundColor: '#000000',
-                              borderBottom: 'none' }}
-                              >
+                              className='text-light'
+                              style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                            >
                             </th>
                             <th
-                              className={'text-light'}
+                              className='text-light'
                               style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                              >
-                                Ranque
+                            >
+                              Ranque
                             </th>
                             <th
-                              className={'text-light'}
+                              className='text-light'
                               style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                              >
-                                Vulgo
+                            >
+                              Vulgo
                             </th>
                             <th
-                              className={'text-light'}
+                              className='text-light'
                               style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                              >
-                                Pontos
+                            >
+                              Pontos
                             </th>
                             {isOwner && (
                               <>
                                 <th
-                                className={'text-light'}
-                                style={{ backgroundColor: '#000000', borderBottom: 'none' }}
+                                  className='text-light'
+                                  style={{ backgroundColor: '#000000', borderBottom: 'none' }}
                                 >
                                 </th>
                               </>
@@ -176,7 +195,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                           {djs.sort((a, b) => a.ranking - b.ranking).map((dj: DJ) => (
                             <tr key={dj.id}>
                               <td
-                                className={'text-light'}
+                                className='text-light'
                                 style={{ backgroundColor: '#000000', borderBottom: 'none' }}
                               >
                                 <OverlayTrigger
@@ -194,29 +213,29 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                                 </OverlayTrigger>
                               </td>
                               <td
-                                className={'text-light'}
+                                className='text-light'
                                 style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                                >
-                                  {dj.ranking === 0 ? '-' : dj.ranking}
+                              >
+                                {dj.ranking === 0 ? '-' : dj.ranking}
                               </td>
                               <td
-                                className={'text-light'}
+                                className='text-light'
                                 style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                                >
-                                  {dj.djName}
+                              >
+                                {dj.djName}
                               </td>
                               <td
-                                className={'text-light'}
+                                className='text-light'
                                 style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                                >
-                                  {dj.score}
+                              >
+                                {dj.score}
                               </td>
                               {isOwner && (
                                 <>
                                   <td
-                                    className={'text-light'}
+                                    className='text-light'
                                     style={{ backgroundColor: '#000000', borderBottom: 'none' }}
-                                    >
+                                  >
                                     <Button variant="danger" onClick={() => handleExpelDJ(dj)}>Expulsar</Button>
                                   </td>
                                 </>
