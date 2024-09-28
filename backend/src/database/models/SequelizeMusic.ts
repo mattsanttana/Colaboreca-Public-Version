@@ -8,6 +8,9 @@ class SequelizeMusic extends Model<
   InferCreationAttributes<SequelizeMusic>
 > {
   declare id?: number;
+  declare cover: string;
+  declare name: string;
+  declare artists: string;
   declare musicURI: string;
   declare djId: number;
   declare trackId: number;
@@ -21,6 +24,21 @@ SequelizeMusic.init(
       primaryKey: true,
       unique: true,
       autoIncrement: true,
+    },
+    cover: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: 'cover',
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: 'name',
+    },
+    artists: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: 'artists',
     },
     musicURI: {
       type: DataTypes.STRING,

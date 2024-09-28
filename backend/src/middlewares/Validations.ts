@@ -136,13 +136,13 @@ export default class Validations {
     next();
   }
 
-  static async validateTrackURI(req: Request, res: Response, next: NextFunction) {
-    const { trackURI } = req.body;
+  static async validateCreateMusic(req: Request, res: Response, next: NextFunction) {
+    const { cover, name, artists, musicURI } = req.body;
 
-    if (!trackURI) {
+    if (!cover || !name || !artists || !musicURI) {
       return res.status(400).json({ message: 'Missing parameters' });
     }
-
+  
     next();
   }
 }

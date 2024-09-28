@@ -19,14 +19,6 @@ router.get(
   (req, res) => playbackController.findTrackBySearch(req, res)
 );
 
-router.post(
-  '/add-to-queue/:trackId',
-  Validations.validateTrackId,
-  Validations.validateToken,
-  Validations.validateTrackURI,
-  (req, res) => playbackController.addTrackToQueue(req, res)
-);
-
 router.get(
   '/:trackId',
   Validations.validateTrackId,
@@ -46,16 +38,24 @@ router.get(
 );
 
 router.get(
-  'added-music-by-dj/:djId/track/:trackId',
+  '/added-musics-by-dj/:djId/:trackId',
   Validations.validateDJId,
   Validations.validateTrackId,
-  (req, res) => playbackController.findAddedMusicByDJ(req, res)
+  (req, res) => playbackController.findAddedMusicsByDJ(req, res)
 )
 
 router.get(
   '/dj-added-current-song/:trackId',
   Validations.validateTrackId,
   (req, res) => playbackController.findDJAddedCurrentMusic(req, res)
+);
+
+router.post(
+  '/add-to-queue/:trackId',
+  Validations.validateTrackId,
+  Validations.validateToken,
+  Validations.validateCreateMusic,
+  (req, res) => playbackController.addTrackToQueue(req, res)
 );
 
 export default router;

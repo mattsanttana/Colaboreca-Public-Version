@@ -10,6 +10,21 @@ export default {
         allowNull: false,
         primaryKey: true,
       },
+      cover: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: 'cover',
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: 'name',
+      },
+      artists: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: 'artists',
+      },
       musicURI: {
         type: DataTypes.STRING,
         allowNull: false,
