@@ -180,17 +180,17 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           <Spinner animation="border" className="text-light" />
         </Container>
       ) : (
-        <Container>
-          <Header />
+        <Container style={{ position: 'relative' }}>
+          <Header dj={dj}/>
           <Row>
-            <Col md={3}>
+            <Col md={3} className="d-none d-md-block">
               <Menu dj={dj} />
             </Col>
             <Col className="py-4" md={9}>
               <Card className="text-center text-light" style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}>
                 <Card.Body
                   className="hide-scrollbar"
-                  style={{ width: '100%', height: '845px', overflowY: 'auto' }}
+                  style={{ width: '100%', height: '845px', overflowY: 'auto', padding: '0px' }}
                 >
                   <Form.Control
                     type="text"

@@ -12,6 +12,8 @@ import { DJ } from '../types/DJ';
 import Header from './Header';
 import Menu from './Menu';
 import MessagePopup from './MessagePopup';
+import Podium from './Podium';
+import TrackInfoMenu from './TrackInfoMenu';
 
 interface Props {
   trackToken: string;
@@ -36,40 +38,55 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const pageType = window.location.pathname.split('/')[1];
-    if (pageType !== 'track-info') {
-      setIsOwner(false);
-    }
-  }
-  , []);
+    const fetchInitialData = async () => {
+      const pageType = window.location.pathname.split('/')[1];
+  
+      if (pageType !== 'track-info') {
+        setIsOwner(false);
+  
+        const [fetchVerifyLogin, fetchedMenuDJ] = await Promise.all([
+          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
+          djActions.getDJByToken(djToken),
+        ]);
+  
+        if (fetchVerifyLogin?.status !== 200 || fetchedMenuDJ?.status !== 200) {
+          setPopupMessage('Você não é um DJ desta pista, por favor faça login novamente');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+        } else {
+          setDJ(fetchedMenuDJ.data);
+        }
+      } else {
+        setIsOwner(true);
+  
+        if (trackId) {
+          const verifyOwnerLogin = await trackActions.verifyTrackAcess(trackToken, trackId);
+  
+          if (verifyOwnerLogin?.status !== 200) {
+            setPopupMessage('Você não tem permissão para acessar essa pista');
+            setRedirectTo('/login');
+            setShowPopup(true);
+          }
+        }
+      }
+    };
+  
+    fetchInitialData();
+
+  }, [djActions, djToken, trackActions, trackId, trackToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [fetchedTrack, fetchedVerifyLogin, fetchedDJs, fetchedDJ] = await Promise.all([
+          const [fetchedTrack, fetchedDJs] = await Promise.all([
             trackActions.getTrackById(trackId),
-            djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
             djActions.getAllDJs(trackId),
-            djActions.getDJByToken(djToken)
           ]);
-
-          if (fetchedVerifyLogin?.status !== 200) {
-            setPopupMessage('Você não está logado, por favor faça login novamente');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-        }
-
-          if (fetchedDJ?.status !== 200) {
-            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-        }
     
           if (fetchedTrack?.status === 200) {
-            setDJ(fetchedDJ?.data);
-            setDJs(fetchedDJs);
             setTrackFound(true);
+            setDJs(fetchedDJs);
           }
         } catch (error) {
           console.error("Error fetching data:", error);
@@ -80,7 +97,8 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     }
     fetchData();
   }
-  , [trackId, trackActions, djActions, djToken]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  , [trackId, djToken]);
 
   const handleViewProfile = (djId: string) => {
     const profileUrl = isOwner
@@ -137,20 +155,30 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
         </Container>
       ) : trackFound ? (
         <Container>
-          <Header />
+          <Header dj={dj}/>
           <Row>
-            {!isOwner && (
-              <Col md={3}>
-                <Menu dj={dj} />
-              </Col>
-            )}
+          {isOwner ? (
+            <Col md={3} className="d-none d-md-block">
+              <TrackInfoMenu trackId={trackId} />
+            </Col>
+          ) : (
+            <Col md={3} className="d-none d-md-block">
+              <Menu dj={dj} />
+            </Col>
+          )}
             <Col className="py-4">
               <Card className="text-center text-light">
                 <Card.Body
-                  style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
+                  style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0', width: '100%', height: '845px', overflowY: 'auto' }}
                 >
-                  <Card.Title>DJs na sala:</Card.Title>
-                  {djs.length === 0 ? (
+                  <Podium
+                    djs={djs}
+                    isOwner={false}
+                    trackId={trackId}
+                    hasDJs={djs.length > 0}
+                  />
+                  <Card.Title>Ranque</Card.Title>
+                  {djs?.length === 0 ? (
                     <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
                   ) : (
                     <div className="table-responsive">

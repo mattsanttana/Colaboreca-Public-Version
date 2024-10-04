@@ -11,16 +11,19 @@ import Menu from './Menu';
 import Header from './Header';
 import MessagePopup from './MessagePopup';
 import { DJMusic } from '../types/SpotifySearchResponse';
+import useTrack from '../utils/useTrack';
+import TrackInfoMenu from './TrackInfoMenu';
 
 interface Props {
-  token: string;
+  djToken: string;
+  trackToken: string;
 }
 
-const DJProfile: React.FC<Props> = ({ token }) => {
+const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   const { trackId, djId } = useParams();
   const [menuDJ, setMenuDJ] = useState<DJ>();
   const [dj, setDJ] = useState<DJ>();
-  const [isOwner, setIsOwner] = useState(false);
+  const [isOwner, setIsOwner] = useState<boolean | undefined>(false);
   const [isTrackOwner, setIsTrackOwner] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [showAvatarPopup, setShowAvatarPopup] = useState(false);
@@ -37,79 +40,104 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   const [filter, setFilter] = useState<string>('1');
 
   const djActions = useDJ();
+  const trackActions = useTrack();
   const playbackActions = usePlayback();
   const navigate = useNavigate();
   const avatarRef = useRef<HTMLImageElement>(null);
+  const cacheRef = useRef<{ [key: string]: { dj: DJ, isOwner: boolean, musics: DJMusic[] } }>({});
 
   useEffect(() => {
-    const pageType = window.location.pathname.split('/')[1];
+    const fetchInitialData = async () => {
+      const pageType = window.location.pathname.split('/')[1];
+  
+      if (pageType !== 'track-info') {
+        setIsTrackOwner(false);
+
+        const [fetchVerifyLogin, fetchedMenuDJ] = await Promise.all([
+          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
+          djActions.getDJByToken(djToken),
+        ]);
+
+        if (fetchVerifyLogin?.status !== 200 || fetchedMenuDJ?.status !== 200) {
+          setPopupMessage('Você não é um DJ desta pista, por favor faça login novamente');
+          setRedirectTo('/enter-track');
+          setShowMessagePopup(true);
+        } else {
+          setMenuDJ(fetchedMenuDJ.data);
+        }
+      } else {
+        setIsTrackOwner(true);
+
+        if (trackId) {
+          const verifyOwnerLogin = await trackActions.verifyTrackAcess(trackToken, trackId);
+
+          if (verifyOwnerLogin?.status === 401) {
+            setPopupMessage('Você não tem permissão para acessar essa pista');
+            setRedirectTo('/login');
+            setShowMessagePopup(true);
+          }
+        }
+      }
+    };
+
+    fetchInitialData();
+  }, [djActions, djToken, trackActions, trackId, trackToken]);
+
+  useEffect(() => {
     const isSameAsDJ = editedCharacterPath === dj?.characterPath && editedName === dj?.djName;
     const isNameTooShort = editedName.length < 3;
     const isNameTooBig = editedName.length > 16;
 
     setIsButtonDisabled(isSameAsDJ || isNameTooShort || isNameTooBig);
-  
-    if (pageType !== 'track-info') {
-      setIsTrackOwner(false);
-    }
 
     if (editedCharacterPath === '' && editedName === '' && dj) {
       setEditedCharacterPath(dj?.characterPath || '');
       setEditedName(dj?.djName || '');
     }
-  }, [dj, editedCharacterPath, editedName]);
+  }
+  , [dj, editedCharacterPath, editedName]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (djId && trackId) {
+        const cacheKey = `dj_${djId}_track_${trackId}`;
+        if (cacheRef.current[cacheKey]) {
+          const cachedData = cacheRef.current[cacheKey];
+          setDJ(cachedData.dj);
+          setIsOwner(cachedData.isOwner);
+          setMusics(cachedData.musics);
+          setIsLoading(false);
+          return;
+        }
+
         try {
-          const [fetchVerifyLogin, fetchedMenuDJ, fetchedDJ, fetchedVerifyIfDJIsOwner, fetchedAddedMusicByDJ] = await Promise.all([
-            djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
-            djActions.getDJByToken(token),
+          const [fetchedDJ, fetchedVerifyIfDJIsOwner, fetchedAddedMusicByDJ] = await Promise.all([
             djActions.getDJById(djId, trackId),
-            djActions.verifyIfTheDJIsTheProfileOwner(djId, token),
+            djActions.verifyIfTheDJIsTheProfileOwner(djId, djToken),
             playbackActions.getAddedMusicsByDJ(djId, trackId),
           ]);
 
-          if (fetchVerifyLogin?.status !== 200) {
-            setPopupMessage('Você não está logado, por favor faça login novamente');
-            setRedirectTo('/enter-track');
-            setShowMessagePopup(true);
-        }
-        
-        if (fetchedDJ?.status !== 200) {
-            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-            setRedirectTo('/enter-track');
-            setShowMessagePopup(true);
-        }
-
-          if (fetchedMenuDJ?.status === 200) {
-            setMenuDJ(fetchedMenuDJ.data);
-          }
-
           if (fetchedDJ?.status === 200) {
-            setDJ(fetchedDJ.data);
-        }
-  
-          if (fetchedVerifyIfDJIsOwner) {
-            setIsOwner(fetchedVerifyIfDJIsOwner);
+            const data = {
+              dj: fetchedDJ.data,
+              isOwner: fetchedVerifyIfDJIsOwner || false,
+              musics: fetchedAddedMusicByDJ,
+            };
+            cacheRef.current[cacheKey] = data; // Cache the result
+            setDJ(data.dj);
+            setIsOwner(data.isOwner);
+            setMusics(data.musics);
           }
-  
-          if (fetchedAddedMusicByDJ) {
-            setMusics(fetchedAddedMusicByDJ);
-        }
-  
         } catch (error) {
-            console.error("Error fetching data:", error);
+          console.error("Error fetching data:", error);
         } finally {
           setIsLoading(false);
         }
       }
-    }
-    
-    fetchData();
+    };
 
-  }, [djActions, djId, playbackActions, token, trackId]);    
+    fetchData();
+  }, [djId, trackId, djToken, djActions, playbackActions]);    
 
   const playedMusics = musics.filter((music) => music.wasPlayed);
   const notPlayedMusics = musics.filter((music) => !music.wasPlayed);
@@ -127,7 +155,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
       return;
     }
 
-    const response = await djActions.updateDJ(editedName, editedCharacterPath, token);
+    const response = await djActions.updateDJ(editedName, editedCharacterPath, djToken);
 
     if (response?.status === 200) {
       setShowPopup(false);
@@ -153,7 +181,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
       return;
     }
   
-    const response = await djActions.deleteDJ(token);
+    const response = await djActions.deleteDJ(djToken);
   
     if (response?.status === 200) {
       navigate('/');
@@ -288,10 +316,14 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               </Button>
             </Modal.Footer>
           </Modal>
-          <Header />
+          <Header dj={dj}/>
           <Row>
-            {!isTrackOwner && (
-              <Col md={3}>
+            {isTrackOwner ? (
+              <Col md={3} className="d-none d-md-block">
+                <TrackInfoMenu trackId={trackId} />
+              </Col>
+            ) : (
+              <Col md={3} className="d-none d-md-block">
                 <Menu dj={menuDJ} />
               </Col>
             )}
@@ -317,75 +349,77 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                       Editar/Excluir DJ
                     </Button>
                   )}
-                  <Card.Title className="mt-4, text-light" style={{margin: '10px'}}>Músicas adicionadas:</Card.Title>
-                    <Form.Select
-                      className='text-light'
-                      style={{backgroundColor: '#000000', width: '140px', float: 'right'}}
-                      onChange={(e) => setFilter(e.target.value)}
-                    >
-                      <option value="1">Todas</option>
-                      <option value="2">Tocadas</option>
-                      <option value="3">Não tocadas</option>
-                    </Form.Select>
+                  <Card.Title className="mt-4 text-light" style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <Form.Select
+                        className='text-light'
+                        style={{ backgroundColor: '#000000', width: '140px' }}
+                        onChange={(e) => setFilter(e.target.value)}
+                      >
+                        <option value="1">Todas</option>
+                        <option value="2">Tocadas</option>
+                        <option value="3">Não tocadas</option>
+                      </Form.Select>
+                    </div>
                     {musics.length > 0 ? (
-                    <div className='table-responsive'>
-                      <Table striped className='text-light'>
-                        <thead>
-                          <tr>
-                            <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
-                            <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
-                            <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filter === '1' ? (
-                            musics.map((music, index) => (
-                              <tr key={index}>
-                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
-                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
-                                <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
-                                  <img
-                                    src={music.cover}
-                                    alt={music.name}
-                                    className='img-thumbnail'
-                                    style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
-                                  />
-                                </td>
-                              </tr>
-                            ))
-                          ) : filter === '2' ? (
-                            playedMusics.map((music, index) => (
-                              <tr key={index}>
-                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
-                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
-                                <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
-                                  <img
-                                    src={music.cover}
-                                    alt={music.name}
-                                    className='img-thumbnail'
-                                    style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
-                                  />
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            notPlayedMusics.map((music, index) => (
-                              <tr key={index}>
-                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
-                                <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
-                                <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
-                                  <img
-                                    src={music.cover}
-                                    alt={music.name}
-                                    className='img-thumbnail'
-                                    style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
-                                  />
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </Table>
+                      <div className='table-responsive'>
+                        <Table striped className='text-light'>
+                          <thead>
+                            <tr>
+                              <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
+                              <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
+                              <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filter === '1' ? (
+                              musics.map((music, index) => (
+                                <tr key={index}>
+                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
+                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
+                                  <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                                    <img
+                                      src={music.cover}
+                                      alt={music.name}
+                                      className='img-thumbnail'
+                                      style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
+                                    />
+                                  </td>
+                                </tr>
+                              ))
+                            ) : filter === '2' ? (
+                              playedMusics.map((music, index) => (
+                                <tr key={index}>
+                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
+                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
+                                  <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                                    <img
+                                      src={music.cover}
+                                      alt={music.name}
+                                      className='img-thumbnail'
+                                      style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
+                                    />
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              notPlayedMusics.map((music, index) => (
+                                <tr key={index}>
+                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
+                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
+                                  <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
+                                    <img
+                                      src={music.cover}
+                                      alt={music.name}
+                                      className='img-thumbnail'
+                                      style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
+                                    />
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </Table>
                     </div>
                   ) : (
                     <div>
@@ -415,7 +449,8 @@ const DJProfile: React.FC<Props> = ({ token }) => {
 }
 
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token,
+  djToken: state.djReducer.token,
+  trackToken: state.trackReducer.token
 });
 
 const DJProfileConnected = connect(mapStateToProps)(DJProfile);

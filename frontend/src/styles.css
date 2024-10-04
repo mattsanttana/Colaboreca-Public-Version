@@ -4,6 +4,7 @@ body {
   background-color: #000000;
   position: relative;
   z-index: 0;
+  overflow: hidden;
 }
 
 body::before {
@@ -51,6 +52,7 @@ input[type=number]::-webkit-inner-spin-button {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   margin-bottom: 20px;
   margin-left: 70px;
+  text-align: left;
 }
 
 /* share-track track-id style */
@@ -209,7 +211,7 @@ aside .nav-link:hover {
 
 .menu-height-container {
   height: 90vh;
-  overflow-y: auto
+  overflow-y: auto;
 }
 
 .rank-square,
@@ -453,4 +455,26 @@ aside .nav-link:hover {
   z-index: 1000;
   background-color: #000000;
   /* Ajuste o valor do z-index conforme necessário */
+}
+
+.slide-menu.open {
+  transform: translateX(0);
+}
+
+.slide-menu {
+  transform: translateX(-100%);
+}
+
+/* Track.css */
+@media (max-width: 768px) {
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #000;
+    z-index: 1000;
+    padding: 20px;
+  }
 }

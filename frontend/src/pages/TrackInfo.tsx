@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Button, Spinner, Modal, Form, Row, Col } from 'react-bootstrap';
 import { RootState } from '../redux/store';
-import ShareTrackInfo from './ShareTrackInfo';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
 import PlayingNow from '../types/PlayingNow';
@@ -14,6 +13,8 @@ import usePlayback from '../utils/usePlayback';
 import MessagePopUp from './MessagePopup';
 import QueuePreview from './QueuePreview';
 import { Music } from '../types/SpotifySearchResponse';
+import Header from './Header';
+import TrackInfoMenu from './TrackInfoMenu';
 
 interface Props {
   djToken: string;
@@ -69,7 +70,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             playbackActions.getSpotifyQueue(trackId)
           ]);
   
-          if (fetchedOwnerTrack?.status === 401) {
+          if (fetchedOwnerTrack?.status !== 200) {
             setMessagePopup({
               show: true,
               message: 'Você não tem permissão para acessar essa pista',
@@ -234,18 +235,27 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
         </Container>
       ) : trackFound ? (
         <div>
-          <Container className="text-light">
-            <h1 className="mb-4">Colaboreca</h1>
+          <Container>
+            <Header trackInfoShowPopup={setShowPopup} />
             <Row>
-              <Col>
-                <ShareTrackInfo trackId={trackId} setShowPopup={setShowPopup} />
+              <Col md={3} className="d-none d-md-block">
+                <TrackInfoMenu trackId={trackId}/>
+              </Col>
+              <Col
+                md={6}
+                className="d-flex flex-column align-items-center playback-state-container"
+              >
+                <PlaybackState playingNow={playingNow} trackName={ trackName } dj={djPlayingNow}/>
+              </Col>
+              <Col md={3} className="d-none d-md-block">
+                <div className="podium-container">
+                  <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
+                </div>
+                <div className="queue-container">
+                  <QueuePreview trackId={trackId} queue={queue} />
+                </div>
               </Col>
             </Row>
-            <PlaybackState playingNow={playingNow} trackName={ trackName } dj={djPlayingNow}/>
-            <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
-            <div className="queue-container">
-              <QueuePreview trackId={trackId} queue={queue} />
-            </div>
           </Container>
         </div>
       ) : (

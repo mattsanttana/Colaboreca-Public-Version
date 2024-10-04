@@ -15,12 +15,14 @@ import { logo } from '../assets/images/characterPath';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import TrackInfoMenu from './TrackInfoMenu';
 
 type Props = {
-  token: string;
+  djToken: string;
+  trackToken: string;
 };
 
-const Queue: React.FC<Props> = ({ token }) => {
+const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const { trackId } = useParams();
   const navigate = useNavigate();
   const [isOwner, setIsOwner] = useState<boolean>(true);
@@ -40,15 +42,45 @@ const Queue: React.FC<Props> = ({ token }) => {
   const playbackActions = usePlayback();
 
   useEffect(() => {
-    const pageType = window.location.pathname.split('/')[1];
-    if (pageType !== 'track-info') {
-      setIsOwner(false);
-    }
-  }, []);
+    const fetchInitialData = async () => {
+      const pageType = window.location.pathname.split('/')[1];
+  
+      if (pageType !== 'track-info') {
+        setIsOwner(false);
+
+        const [fetchVerifyLogin, fetchedMenuDJ] = await Promise.all([
+          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
+          djActions.getDJByToken(djToken),
+        ]);
+
+        if (fetchVerifyLogin?.status !== 200 || fetchedMenuDJ?.status !== 200) {
+          setPopupMessage('Você não é um DJ desta pista, por favor faça login novamente');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+        } else {
+          setDJ(fetchedMenuDJ.data);
+        }
+      } else {
+        setIsOwner(true);
+
+        if (trackId) {
+          const verifyOwnerLogin = await trackActions.verifyTrackAcess(trackToken, trackId);
+          
+          if (verifyOwnerLogin?.status !== 200) {
+            setPopupMessage('Você não tem permissão para acessar essa pista');
+            setRedirectTo('/login');
+            setShowPopup(true);
+          }
+        }
+      }
+    };
+
+    fetchInitialData();
+  }, [djActions, djToken, trackActions, trackId, trackToken]);
 
   useEffect(() => {
     const fetchQueue = async () => {
-      if (trackId && token) {
+      if (trackId && djToken) {
         const cacheKey = `queue_${trackId}`;
         if (cacheRef.current[cacheKey]) {
           setQueue(cacheRef.current[cacheKey]);
@@ -57,29 +89,13 @@ const Queue: React.FC<Props> = ({ token }) => {
         }
 
         try {
-          const [fetchedTrack, fetchedVerifyLogin, fetchedDJ, fetchedQueue] = await Promise.all([
+          const [fetchedTrack, fetchedQueue] = await Promise.all([
             trackActions.getTrackById(trackId),
-            djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
-            djActions.getDJByToken(token),
             playbackActions.getQueue(trackId),
           ]);
 
-          if (!isOwner) {
-            if (fetchedVerifyLogin?.status !== 200) {
-              setPopupMessage('Você não está logado, por favor faça login novamente');
-              setRedirectTo('/enter-track');
-              setShowPopup(true);
-            }
-            if (fetchedDJ?.status !== 200) {
-              setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-              setRedirectTo('/enter-track');
-              setShowPopup(true);
-            }
-          }
-
-          if (fetchedTrack?.status === 200 && fetchedDJ?.status === 200 && fetchedQueue) {
+          if (fetchedTrack?.status === 200 && fetchedQueue) {
             setTrackFound(true);
-            setDJ(fetchedDJ.data);
             setQueue(fetchedQueue);
             cacheRef.current[cacheKey] = fetchedQueue; // Cache the result
           }
@@ -96,7 +112,7 @@ const Queue: React.FC<Props> = ({ token }) => {
     const intervalId = setInterval(fetchQueue, 60000); // Aumente o intervalo para 60 segundos
 
     return () => clearInterval(intervalId);
-  }, [djActions, isOwner, playbackActions, token, trackActions, trackId]);
+  }, [djActions, isOwner, playbackActions, djToken, trackActions, trackId]);
 
   // Função para pular para o item clicado no carrossel
   const handleTrackClick = (index: number) => {
@@ -146,26 +162,30 @@ const Queue: React.FC<Props> = ({ token }) => {
         </Container>
       ) : trackFound ? (
         <Container>
-          <Header />
+          <Header dj={dj} />
           <Row>
-            {!isOwner && (
-              <Col md={3}>
-                <Menu dj={dj} />
-              </Col>
-            )}
-            <Col md={isOwner ? 12 : 9} className="py-4">
+          {isOwner ? (
+            <Col md={3} className="d-none d-md-block">
+              <TrackInfoMenu trackId={trackId} />
+            </Col>
+          ) : (
+            <Col md={3} className="d-none d-md-block">
+              <Menu dj={dj} />
+            </Col>
+          )}
+            <Col md={9} className="py-4">
               <Card
                 className="text-center text-light"
                 style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
               >
-                <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '848px', overflow: 'auto', padding: '0%' }}>
+                <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '848px', overflow: 'auto', paddingTop: '0%' }}>
                   {queue.length > 0 ? (
                     <div>
                       <div className="mx-auto sticky-carousel d-flex justify-content-center">
                         <div style={{ maxWidth: '300px', marginTop: '10px' }}>
                           <Slider {...settings} ref={sliderRef}>
                             {queue.map((track, index) => (
-                              <div key={index} className="text-light" style={{ padding: '20px' }}>
+                              <div key={index}  style={{ padding: '20px' }}>
                                 <div className="d-flex justify-content-center">
                                   <img src={track.cover} alt={track.musicName} style={{ width: '200px', height: '200px' }} />
                                 </div>
@@ -177,9 +197,9 @@ const Queue: React.FC<Props> = ({ token }) => {
                           </Slider>
                         </div>
                       </div>
-                    <Row style={{marginLeft: '100px'}}>
+                    <Row>
                       {queue.map((track, index) => (
-                        <Col md={6} key={index} onClick={() => handleTrackClick(index)}>
+                        <Col md={4} key={index} onClick={() => handleTrackClick(index)}>
                           <ListGroupItem className="mb-3" style={{ backgroundColor: '#000000', borderBottom: 'none', cursor: 'pointer'}}>
                             <div className="d-flex justify-content-left align-items-center" style={{ border: currentTrackIndex === index ? '2px solid white' : 'none'}}>
                               {track.characterPath ? (
@@ -230,7 +250,7 @@ const Queue: React.FC<Props> = ({ token }) => {
                     </Row>
                   </div>
                   ) : (
-                    <h3 className="text-light" style={{marginTop: '40%'}}>A fila está vazia no momento.</h3>
+                    <h3 className="text-light" style={{marginTop: '40%'}}>Dispositivo desconectado</h3>
                   )}
                 </Card.Body>
               </Card>
@@ -247,7 +267,8 @@ const Queue: React.FC<Props> = ({ token }) => {
 };
 
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token,
+  djToken: state.djReducer.token,
+  trackToken: state.trackReducer.token,
 });
 
 const QueueConnected = connect(mapStateToProps)(Queue);
