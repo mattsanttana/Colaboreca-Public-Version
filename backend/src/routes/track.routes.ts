@@ -37,7 +37,7 @@ router.get(
 
 router.get(
   '/verify-track-access/:id',
-  Validations.validateID,
+  Validations.validateId,
   Validations.validateToken,
   (req, res) => trackController.verifyTrackAccess(req, res)
 );
@@ -49,14 +49,14 @@ router.get(
 
 router.delete(
   '/:id',
-  Validations.validateID,
+  Validations.validateId,
   Validations.validateToken,
   (req, res) => trackController.deleteDJ(req, res) // Mantido deleteDJ
 );
 
 router.get(
   '/:id',
-  Validations.validateID,
+  Validations.validateId,
   (req, res) => trackController.findTrackById(req, res)
 );
 

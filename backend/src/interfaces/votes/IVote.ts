@@ -1,11 +1,9 @@
 import { Identifiable } from "..";
 
+export type Vote = 'very_good' | 'good' | 'normal' | 'bad' | 'very_bad';
+
 export interface IVote extends Identifiable {
-  voterId: number;
-  veryGood: number;
-  good: number;
-  normal: number;
-  bad: number;
-  veryBad: number;
+  djId: number;
   musicId: number;
+  vote: Vote;
 }

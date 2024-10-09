@@ -38,7 +38,7 @@ router.get(
 
 router.get(
   '/verify-if-the-dj-is-the-profile-owner/:id',
-  Validations.validateID,
+  Validations.validateId,
   Validations.validateToken,
   (req, res) => djController.verifyIfTheDJIsTheProfileOwner(req, res)
 );

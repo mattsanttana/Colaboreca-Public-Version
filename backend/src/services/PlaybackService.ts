@@ -131,7 +131,7 @@ export default class PlaybackService {
         const responseTrack = {
           cover: spotifyTrack.album.images[0].url,
           musicName: spotifyTrack.name,
-          artists: spotifyTrack.artists.map((artist: any) => artist.name),
+          artists: spotifyTrack.artists.map((artist: any) => artist.name).join(', '),
         }
 
         const correspondingColaborecaTrack = colaborecaQueue.find(
@@ -307,6 +307,7 @@ export default class PlaybackService {
       return {
         status: 'OK',
         data: {
+          musicId: colaborecaQueue.find((colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri)?.id,
           cover: currentlyPlayingTrack.album.images[0].url,
           musicName: currentlyPlayingTrack.name,
           artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),

@@ -69,7 +69,7 @@ export default class Validations {
     next();
   }
 
-  static async validateID(req: Request, res: Response, next: NextFunction) {
+  static async validateId(req: Request, res: Response, next: NextFunction) {
     const { id } = req.params;
 
     if (!id) {

@@ -305,6 +305,13 @@ aside .nav-link:hover {
   box-shadow: 0 0 0 0.5px #ffffff;
 }
 
+.custom-modal .modal-content .dj-square,
+.custom-modal .modal-content .track-square,
+.custom-modal .modal-content .music-square {
+  color: #000000;
+  /* Torna a fonte preta */
+}
+
 .custom-input {
   background-color: black;
   color: white;
@@ -477,4 +484,33 @@ aside .nav-link:hover {
     z-index: 1000;
     padding: 20px;
   }
+}
+
+.thermometer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.thermometer {
+  width: 100%;
+  margin: 20px 0;
+  position: relative;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.labels span {
+  font-size: 14px;
+  width: 20%;
+  /* Cada label ocupa proporcionalmente 20% do espaço */
+}
+
+.highlight {
+  font-weight: bold; /* Ou use 'font-size: larger;' para aumentar o tamanho */
 }

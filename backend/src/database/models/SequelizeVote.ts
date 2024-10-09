@@ -1,19 +1,17 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model } from 'sequelize';
 import db from '.';
 import SequelizeMusic from './SequelizeMusic';
+import { Vote } from '../../interfaces/votes/IVote';
+import SequelizeDJ from './SequelizeDJ';
 
 class SequelizeVote extends Model<
   InferAttributes<SequelizeVote>,
   InferCreationAttributes<SequelizeVote>
   > {
   declare id?: number;
-  declare voterId: number;
-  declare veryGood: number;
-  declare good: number;
-  declare normal: number;
-  declare bad: number;
-  declare veryBad: number;
+  declare djId: number;
   declare musicId: number;
+  declare vote: Vote
 }
 
 SequelizeVote.init(
@@ -25,37 +23,19 @@ SequelizeVote.init(
       unique: true,
       autoIncrement: true,
     },
-    voterId: {
+    djId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'voter_id',
-    },
-    veryGood: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'very_good',
-    },
-    good: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    normal: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    bad: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    veryBad: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: 'very_bad',
+      field: 'dj_id',
     },
     musicId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'music_id',
+    },
+    vote: {
+      type: DataTypes.ENUM('very_good', 'good', 'normal', 'bad', 'very_bad'),
+      allowNull: false,
     },
   },
   {
@@ -70,6 +50,9 @@ SequelizeMusic.hasMany(SequelizeVote, {
   as: 'vote',
 });
 
-SequelizeVote.belongsTo(SequelizeMusic, {
-  foreignKey: 'musicId',
+SequelizeDJ.hasMany(SequelizeVote, {
+  foreignKey: 'djId',
+  as: 'vote',
 });
+
+export default SequelizeVote;

@@ -10,37 +10,19 @@ export default {
         allowNull: false,
         primaryKey: true,
       },
-      voterId: {
+      djId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'voter_id',
-      },
-      veryGood: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'very_good',
-      },
-      good: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      normal: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      bad: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      veryBad: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'very_bad',
+        field: 'dj_id',
       },
       musicId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         field: 'music_id',
+      },
+      vote: {
+        type: DataTypes.ENUM('very_good', 'good', 'normal', 'bad', 'very_bad'),
+        allowNull: false,
       },
     });
   },
