@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Table, Button, Spinner, Container, Col,
@@ -8,12 +8,16 @@ import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
-import { DJ } from '../types/DJ';
-import Header from './Header';
-import Menu from './Menu';
+import { DJ, DJPlayingNow } from '../types/DJ';
 import MessagePopup from './MessagePopup';
 import Podium from './Podium';
-import TrackInfoMenu from './TrackInfoMenu';
+import usePlayback from '../utils/usePlayback';
+import useVote from '../utils/useVote';
+import PlayingNow from '../types/PlayingNow';
+const Header = lazy(() => import('./Header'));
+const Menu = lazy(() => import('./Menu'));
+const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
+const VotePopup = lazy(() => import('./VotePopup'));
 
 interface Props {
   trackToken: string;
@@ -32,10 +36,20 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
+  const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
+  const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
 
   const djActions = useDJ();
   const trackActions = useTrack();
+  const playbackActions = usePlayback();
+  const voteActions = useVote();
   const navigate = useNavigate();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const interval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -73,20 +87,33 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   
     fetchInitialData();
 
-  }, [djActions, djToken, trackActions, trackId, trackToken]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [djToken, trackId, trackToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [fetchedTrack, fetchedDJs] = await Promise.all([
+          const [
+            fetchedTrack,
+            fetchedDJs,
+            fetchedPlayingNow,
+            fetchedDJPlayingNow,
+            fetchedVerifyIfDJHasAlreadVoted
+          ] = await Promise.all([
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
+            playbackActions.getState(trackId as string),
+            playbackActions.getDJAddedCurrentMusic(trackId),
+            voteActions.verifyIfDJHasAlreadVoted(djToken)
           ]);
     
           if (fetchedTrack?.status === 200) {
             setTrackFound(true);
             setDJs(fetchedDJs);
+            setPlayingNow(fetchedPlayingNow);
+            setDJPlayingNow(fetchedDJPlayingNow);
+            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
           }
         } catch (error) {
           console.error("Error fetching data:", error);
@@ -94,11 +121,60 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
           setIsLoading(false);
         }
       }
-    }
+    };
+    
     fetchData();
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  , [trackId, djToken]);
+
+    interval.current = setInterval(() => {
+      fetchData();
+    }, 5000);
+
+    return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
+    };
+
+  }, [trackId, djToken, trackActions, djActions, playbackActions, voteActions]);
+
+  const closeMenu = useCallback(() => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeMenu]);
+
+  // Funções para lidar com o toque
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    // Calcula a distância de deslocamento horizontal
+    const distance = touchEndX - touchStartX;
+    
+    // Define o valor mínimo para considerar um swipe
+    if (distance > 50) {
+      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+  };
 
   const handleViewProfile = (djId: string) => {
     const profileUrl = isOwner
@@ -141,7 +217,11 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
 );
 
   return (
-    <>
+    <div
+    onTouchStart={handleTouchStart}
+    onTouchMove={handleTouchMove}
+    onTouchEnd={handleTouchEnd}
+    >
       <MessagePopup
         show={showPopup}
         handleClose={() => setShowPopup(false)}
@@ -155,21 +235,21 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
         </Container>
       ) : trackFound ? (
         <Container>
-          <Header dj={dj}/>
+          <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
           <Row>
           {isOwner ? (
-            <Col md={3} className="d-none d-md-block">
+            <Col md={3} className="d-none d-xl-block">
               <TrackInfoMenu trackId={trackId} />
             </Col>
           ) : (
-            <Col md={3} className="d-none d-md-block">
+            <Col md={3} className="d-none d-xl-block">
               <Menu dj={dj} />
             </Col>
           )}
             <Col className="py-4">
               <Card className="text-center text-light">
                 <Card.Body
-                  style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0', width: '100%', height: '845px', overflowY: 'auto' }}
+                  style={{ backgroundColor: '#000000', padding: '0', width: '100%', height: '845px', overflowY: 'auto' }}
                 >
                   <Podium
                     djs={djs}
@@ -177,7 +257,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                     trackId={trackId}
                     hasDJs={djs.length > 0}
                   />
-                  <Card.Title>Ranque</Card.Title>
+                  <Card.Title>Ranque:</Card.Title>
                   {djs?.length === 0 ? (
                     <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
                   ) : (
@@ -278,6 +358,13 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
               </Card>
             </Col>
           </Row>
+          {showVotePopup && isOwner && (
+          <VotePopup
+            showVotePopup={showVotePopup}
+            playingNow={playingNow}
+            djPlayingNow={djPlayingNow}
+          />
+        )}
         </Container>
       ) : (
         <Container className="text-center">
@@ -300,7 +387,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   );
 };
 

@@ -1,23 +1,26 @@
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, lazy, useMemo } from 'react';
 import { Card, Col, Container, Form, Row, Spinner, Modal, Button } from 'react-bootstrap';
-import Header from './Header';
-import Menu from './Menu';
-import usePlayback from '../utils/usePlayback';
-import MessagePopup from './MessagePopup';
-import useDJ from '../utils/useDJ';
 import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import { Music } from '../types/SpotifySearchResponse';
 import { useParams } from 'react-router-dom';
 import useDebounce from '../utils/useDebounce';
-import { DJ } from '../types/DJ';
+import { DJ, DJPlayingNow } from '../types/DJ';
+import usePlayback from '../utils/usePlayback';
+import useDJ from '../utils/useDJ';
+import useVote from '../utils/useVote';
+import MessagePopup from './MessagePopup';
+import PlayingNow from '../types/PlayingNow';
+const Header = lazy(() => import('./Header'));
+const Menu = lazy(() => import('./Menu'));
+const VotePopup = lazy(() => import('./VotePopup'));
 
 interface Props {
   token: string;
 }
 
 const AddMusicToQueue: React.FC<Props> = ({ token }) => {
-  const { trackId } = useParams<{ trackId: string }>();
+  const { trackId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [dj, setDJ] = useState<DJ>();
   const [topTracksInBrazil, setTopTracksInBrazil] = useState<Music[]>([]);
@@ -31,20 +34,38 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
+  const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
+  const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
+  const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
 
   const playbackActions = usePlayback();
   const djActions = useDJ();
-  
+  const voteActions = useVote();
   const debouncedSearch = useDebounce(search, 600);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const interval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [fetchedVerifyLogin, fetchedDJ, fetchedGetTopTracksInBrazil] = await Promise.all([
+        const [
+          fetchedVerifyLogin,
+          fetchedDJ,
+          fetchedGetTopTracksInBrazil,
+          fetchedPlayingNow,
+          fetchedDJPlayingNow,
+          fetchedVerifyIfDJHasAlreadVoted
+        ] = await Promise.all([
           djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
           djActions.getDJByToken(token),
           playbackActions.getTopMusicsInBrazil(trackId),
+          playbackActions.getState(trackId as string),
+          playbackActions.getDJAddedCurrentMusic(trackId),
+          voteActions.verifyIfDJHasAlreadVoted(token)
         ]);
 
         if (fetchedVerifyLogin?.status !== 200) {
@@ -63,6 +84,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
         if (fetchedDJ?.status === 200) {
           setDJ(fetchedDJ.data);
+          setPlayingNow(fetchedPlayingNow);
+          setDJPlayingNow(fetchedDJPlayingNow);
+          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
         } else {
           console.error('Error fetching DJ');
         }
@@ -80,9 +104,18 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     };
 
     fetchData();
-  
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [djActions, token, trackId]);
+
+    interval.current = setInterval(() => {
+      fetchData();
+    }, 5000);
+
+    return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
+    };
+
+  }, [djActions, playbackActions, token, trackId, voteActions]);
 
   useEffect(() => {
     if (debouncedSearch.trim() === '') {
@@ -111,6 +144,45 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     fetchSearchResults();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, trackId]);
+
+  const closeMenu = useCallback(() => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeMenu]);
+
+  // Funções para lidar com o toque
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    // Calcula a distância de deslocamento horizontal
+    const distance = touchEndX - touchStartX;
+    
+    // Define o valor mínimo para considerar um swipe
+    if (distance > 50) {
+      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -163,8 +235,15 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     setIsConfirmed(false);
   }
 
+  const memoizedSearchResults = useMemo(() => searchResults, [searchResults]);
+  const memoizedTopTracksInBrazil = useMemo(() => topTracksInBrazil, [topTracksInBrazil]);
+
   return (
-    <>
+    <div
+    onTouchStart={handleTouchStart}
+    onTouchMove={handleTouchMove}
+    onTouchEnd={handleTouchEnd}
+    >
       <MessagePopup
         show={showPopup}
         handleClose={() => setShowPopup(false)}
@@ -181,69 +260,40 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
         </Container>
       ) : (
         <Container style={{ position: 'relative' }}>
-          <Header dj={dj}/>
-          <Row>
-            <Col md={3} className="d-none d-md-block">
-              <Menu dj={dj} />
-            </Col>
-            <Col className="py-4" md={9}>
-              <Card className="text-center text-light" style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}>
-                <Card.Body
-                  className="hide-scrollbar"
-                  style={{ width: '100%', height: '845px', overflowY: 'auto', padding: '0px' }}
-                >
-                  <Form.Control
-                    type="text"
-                    placeholder="Pesquisar"
-                    value={search}
-                    onChange={handleChange}
-                    className="my-3 custom-input"
-                    style={{ 
-                      textAlign: 'center', 
-                      position: 'sticky',
-                      top: '0px',
-                      zIndex: 1000,
-                      backgroundColor: '#000000'
-                    }}
-                  />
-                  {isDebouncing ? (
-                    <div className="d-flex justify-content-center align-items-center my-4">
-                      <Spinner animation="border" className="text-light" />
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    <>
-                      <h1>Resultados da busca:</h1>
-                      <Row>
-                        {searchResults.map((track: Music, index) => (
-                          <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
-                            <Card
-                              className="image-col text-light"
-                              style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
-                              onClick={() => handleClick(track)}
-                            >
-                              <Card.Img variant="top" src={track.album.images[0].url} />
-                              <Card.Body>
-                                <Card.Title>{track.name}</Card.Title>
-                                <Card.Text>
-                                  {track.artists.map((artist) => artist.name).join(', ')}
-                                </Card.Text>
-                              </Card.Body>
-                            </Card>
-                          </Col>
-                        ))}
-                      </Row>
-                      {isDebouncing && (
-                        <div className="d-flex justify-content-center align-items-center my-4">
-                          <Spinner animation="border" className="text-light" />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    !isDebouncing && (
+            <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
+            <Row>
+              <Col md={3} className="d-none d-xl-block">
+                <Menu dj={dj} />
+              </Col>
+              <Col className="py-4" md={12} lg={12} xl={9}>
+                <Card className="text-center text-light" style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}>
+                  <Card.Body
+                    className="hide-scrollbar"
+                    style={{ width: '100%', height: '845px', overflowY: 'auto', padding: '0px' }}
+                  >
+                    <Form.Control
+                      type="text"
+                      placeholder="Pesquisar"
+                      value={search}
+                      onChange={handleChange}
+                      className="my-3 custom-input"
+                      style={{ 
+                        textAlign: 'center', 
+                        position: 'sticky',
+                        top: '0px',
+                        zIndex: 1000,
+                        backgroundColor: '#000000'
+                      }}
+                    />
+                    {isDebouncing ? (
+                      <div className="d-flex justify-content-center align-items-center my-4">
+                        <Spinner animation="border" className="text-light" />
+                      </div>
+                    ) : memoizedSearchResults.length > 0 ? (
                       <>
-                        <h1>Populares no Brasil:</h1>
+                        <h1>Resultados da busca:</h1>
                         <Row>
-                          {topTracksInBrazil.map((track: Music, index) => (
+                          {memoizedSearchResults.map((track: Music, index) => (
                             <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
                               <Card
                                 className="image-col text-light"
@@ -261,13 +311,42 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                             </Col>
                           ))}
                         </Row>
+                        {isDebouncing && (
+                          <div className="d-flex justify-content-center align-items-center my-4">
+                            <Spinner animation="border" className="text-light" />
+                          </div>
+                        )}
                       </>
-                    )
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+                    ) : (
+                      !isDebouncing && (
+                        <>
+                          <h1>Populares no Brasil:</h1>
+                          <Row>
+                            {memoizedTopTracksInBrazil.map((track: Music, index) => (
+                              <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                                <Card
+                                  className="image-col text-light"
+                                  style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+                                  onClick={() => handleClick(track)}
+                                >
+                                  <Card.Img variant="top" src={track.album.images[0].url} />
+                                  <Card.Body>
+                                    <Card.Title>{track.name}</Card.Title>
+                                    <Card.Text>
+                                      {track.artists.map((artist) => artist.name).join(', ')}
+                                    </Card.Text>
+                                  </Card.Body>
+                                </Card>
+                              </Col>
+                            ))}
+                          </Row>
+                        </>
+                      )
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
           <Modal className='custom-modal' show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton style={{ borderBottom: 'none' }}>
               <Modal.Title>Confirmação</Modal.Title>
@@ -302,9 +381,16 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
               )}
             </Modal.Footer>
           </Modal>
+          {showVotePopup && (
+            <VotePopup
+              showVotePopup={showVotePopup}
+              playingNow={playingNow}
+              djPlayingNow={djPlayingNow}
+            />
+          )}
         </Container>
       )}
-    </>
+    </div>
   );
 }
 

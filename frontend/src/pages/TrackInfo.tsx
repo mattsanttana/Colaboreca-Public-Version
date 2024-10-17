@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Button, Spinner, Modal, Form, Row, Col } from 'react-bootstrap';
@@ -13,8 +13,8 @@ import usePlayback from '../utils/usePlayback';
 import MessagePopUp from './MessagePopup';
 import QueuePreview from './QueuePreview';
 import { Music } from '../types/SpotifySearchResponse';
-import Header from './Header';
-import TrackInfoMenu from './TrackInfoMenu';
+const Header = lazy(() => import('./Header'));
+const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
 
 interface Props {
   djToken: string;
@@ -34,6 +34,9 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
   const [queue, setQueue] = useState<Music[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
   const [messagePopup, setMessagePopup] = useState<{
     show: boolean;
     message: string;
@@ -48,7 +51,8 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   const trackActions = useTrack();
   const playbackActions = usePlayback();
   const navigate = useNavigate();
-  const intervalId1 = useRef<null | NodeJS.Timeout>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const interval = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,13 +103,15 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
     };
   
     fetchData();
-  
-    intervalId1.current = setInterval(() => {
+
+    interval.current = window.setInterval(() => {
       fetchData();
     }, 5000);
-  
+
     return () => {
-      if (intervalId1.current) clearInterval(intervalId1.current);
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
     };
   }, [
     djActions,
@@ -124,6 +130,45 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
     const isNameTooBig = editedTrackName.length > 16;
     setIsButtonDisabled(isSameAsTrack || isNameTooShort || isNameTooBig);
   }, [trackName, editedTrackName]);
+
+  const closeMenu = useCallback(() => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeMenu]);
+
+  // Funções para lidar com o toque
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    // Calcula a distância de deslocamento horizontal
+    const distance = touchEndX - touchStartX;
+    
+    // Define o valor mínimo para considerar um swipe
+    if (distance > 50) {
+      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+  };
   
   const handleClosePopup = () => {
     setEditedTrackName(trackName);
@@ -169,7 +214,11 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
   };
 
   return (
-    <>
+    <div
+    onTouchStart={handleTouchStart}
+    onTouchMove={handleTouchMove}
+    onTouchEnd={handleTouchEnd}
+    >
       <MessagePopUp
         show={messagePopup.show}
         handleClose={() => setMessagePopup({ ...messagePopup, show: false })}
@@ -236,18 +285,20 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
       ) : trackFound ? (
         <div>
           <Container>
-            <Header trackInfoShowPopup={setShowPopup} />
+            <Header isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen} trackInfoShowPopup={setShowPopup}/>
             <Row>
-              <Col md={3} className="d-none d-md-block">
+              <Col md={3} className="d-none d-xl-block">
                 <TrackInfoMenu trackId={trackId}/>
               </Col>
               <Col
-                md={6}
+                md={12}
+                lg={12}
+                xl={6}
                 className="d-flex flex-column align-items-center playback-state-container"
               >
                 <PlaybackState playingNow={playingNow} trackName={ trackName } dj={djPlayingNow}/>
               </Col>
-              <Col md={3} className="d-none d-md-block">
+              <Col md={3} className="d-none d-xl-block">
                 <div className="podium-container">
                   <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
                 </div>
@@ -263,7 +314,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
           <h1 className='text-light'>Pista não encontrada</h1>
         </Container>
       )}
-    </>
+    </div>
   );
 };
 

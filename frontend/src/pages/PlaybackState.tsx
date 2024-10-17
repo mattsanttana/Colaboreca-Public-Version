@@ -40,9 +40,9 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj }) => {
         className="text-center"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
       >
-        <Card.Body style={{ height: '850px', overflow: 'auto' }}>
+        <Card.Body style={{height: '850px', overflow: 'auto' }}>
           {playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track' ? (
-            <div>
+            <div style={{padding: '0px'}}>
               <div className="d-flex justify-content-center align-items-center squeres-container">
                 <div className="dj-square mx-2 hide-scrollbar">
                   <div style={{ fontWeight: 'bold' }}>Discotecando:</div>

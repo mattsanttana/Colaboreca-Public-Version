@@ -63,11 +63,10 @@ const ShareTrackInfo: React.FC<Props> = ({ trackId, setShowPopup }) => {
       >
         <Card.Body>
           <Row className='w-100'>
-            <Card.Title>Compartilhe sua pista</Card.Title>
-            <Col md={4} className='d-flex justify-content-center align-items-center'>
+            <Col md={6} className='d-flex justify-content-center align-items-center'>
               <h3 className="mb-4">O ID da sua pista é:</h3>
             </Col>
-            <Col md={4} className='d-flex justify-content-center align-items-center'>
+            <Col md={6} className='d-flex justify-content-center align-items-center'>
               <Col md={2} className='d-flex justify-content-center align-items-center'>
                 <h1 className='track-id'> {trackIdHead} </h1>
               </Col>
@@ -75,7 +74,7 @@ const ShareTrackInfo: React.FC<Props> = ({ trackId, setShowPopup }) => {
               <h1 className='track-id'> {trackIdTail} </h1>
             </Col>
             <Col
-              md={4}
+              md={12}
               className='d-flex flex-column justify-content-center align-items-center text-center'
             >
               <div style={{ backgroundColor: 'white', height: '200px', width: '200px' }}>
@@ -83,7 +82,7 @@ const ShareTrackInfo: React.FC<Props> = ({ trackId, setShowPopup }) => {
               </div>
             </Col>
           </Row>
-          <div className="d-flex justify-content-center mt-3">
+          <div className="d-flex justify-content-center mt-3" style={{margin: '20px', marginRight: '50px'}}>
             <Button variant="primary" onClick={handleShare}>
               Compartilhar
             </Button>

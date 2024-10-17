@@ -1,21 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
 import { RootState } from '../redux/store';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, Col, Container, ListGroupItem, OverlayTrigger, Popover, Row, Spinner } from 'react-bootstrap';
-import Header from './Header';
-import Menu from './Menu';
 import MessagePopup from './MessagePopup';
 import useDJ from '../utils/useDJ';
 import usePlayback from '../utils/usePlayback';
 import useTrack from '../utils/useTrack';
-import { DJ } from '../types/DJ';
+import { DJ, DJPlayingNow } from '../types/DJ';
 import TQueue from '../types/TQueue';
 import { logo } from '../assets/images/characterPath';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import TrackInfoMenu from './TrackInfoMenu';
+import PlayingNow from '../types/PlayingNow';
+import useVote from '../utils/useVote';
+const Header = lazy(() => import('./Header'));
+const Menu = lazy(() => import('./Menu'));
+const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
+const VotePopup = lazy(() => import('./VotePopup'));
 
 type Props = {
   djToken: string;
@@ -34,12 +37,21 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const [popupMessage, setPopupMessage] = useState<string>('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0); // Para controlar o índice da música atual
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
+  const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
+  const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
+  
   const cacheRef = useRef<{ [key: string]: TQueue[] }>({});
   const sliderRef = useRef<Slider | null>(null); // Referência para o slider
-
+  const menuRef = useRef<HTMLDivElement>(null);
+  const trackRefs = useRef<(HTMLDivElement | null)[]>([]); // Referências para os itens da fila
   const trackActions = useTrack();
   const djActions = useDJ();
   const playbackActions = usePlayback();
+  const voteActions = useVote();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -76,7 +88,8 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     };
 
     fetchInitialData();
-  }, [djActions, djToken, trackActions, trackId, trackToken]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [djToken, trackId, trackToken]);
 
   useEffect(() => {
     const fetchQueue = async () => {
@@ -87,32 +100,96 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
           setIsLoading(false);
           return;
         }
-
+  
         try {
-          const [fetchedTrack, fetchedQueue] = await Promise.all([
+          const [
+            fetchedTrack,
+            fetchedQueue,
+            fetchedPlayingNow,
+            fetchedDJPlayingNow,
+            fetchedVerifyIfDJHasAlreadVoted
+          ] = await Promise.all([
             trackActions.getTrackById(trackId),
             playbackActions.getQueue(trackId),
+            playbackActions.getState(trackId),
+            playbackActions.getDJAddedCurrentMusic(trackId),
+            voteActions.verifyIfDJHasAlreadVoted(djToken)
           ]);
-
+  
           if (fetchedTrack?.status === 200 && fetchedQueue) {
             setTrackFound(true);
             setQueue(fetchedQueue);
+            setPlayingNow(fetchedPlayingNow);
+            setDJPlayingNow(fetchedDJPlayingNow);
+            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
             cacheRef.current[cacheKey] = fetchedQueue; // Cache the result
+          } else {
+            console.error('Error fetching data:', fetchedTrack?.status);
+            setPopupMessage('Erro ao buscar a fila.');
+            setShowPopup(true);
           }
         } catch (error) {
           console.error('Error fetching data:', error);
+          setPopupMessage('Erro ao buscar a fila. Tente novamente mais tarde.');
+          setShowPopup(true);
         } finally {
           setIsLoading(false);
         }
       }
     };
-
+  
     fetchQueue();
+  
+    const interval = setInterval(fetchQueue, 60000); // Aumente o intervalo para 60 segundos
+  
+    return () => clearInterval(interval);
+  }, [djActions, isOwner, playbackActions, djToken, trackActions, trackId, voteActions]);
 
-    const intervalId = setInterval(fetchQueue, 60000); // Aumente o intervalo para 60 segundos
+  useEffect(() => {
+    // Rolar para o item selecionado sempre que currentTrackIndex mudar
+    if (trackRefs.current[currentTrackIndex]) {
+      trackRefs.current[currentTrackIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentTrackIndex]);
 
-    return () => clearInterval(intervalId);
-  }, [djActions, isOwner, playbackActions, djToken, trackActions, trackId]);
+  const closeMenu = useCallback(() => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeMenu]);
+
+  // Funções para lidar com o toque
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    // Calcula a distância de deslocamento horizontal
+    const distance = touchEndX - touchStartX;
+    
+    // Define o valor mínimo para considerar um swipe
+    if (distance > 50) {
+      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+  };
 
   // Função para pular para o item clicado no carrossel
   const handleTrackClick = (index: number) => {
@@ -148,7 +225,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   };
 
   return (
-    <>
+    <div>
       <MessagePopup
         show={showPopup}
         handleClose={() => setShowPopup(false)}
@@ -162,23 +239,26 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
         </Container>
       ) : trackFound ? (
         <Container>
-          <Header dj={dj} />
+          <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
           <Row>
           {isOwner ? (
-            <Col md={3} className="d-none d-md-block">
+            <Col md={3} className="d-none d-xl-block">
               <TrackInfoMenu trackId={trackId} />
             </Col>
           ) : (
-            <Col md={3} className="d-none d-md-block">
+            <Col md={3} className="d-none d-xl-block">
               <Menu dj={dj} />
             </Col>
           )}
-            <Col md={9} className="py-4">
+            <Col
+            md={12}
+            xl={9}
+            className="py-4">
               <Card
                 className="text-center text-light"
                 style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
               >
-                <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '848px', overflow: 'auto', paddingTop: '0%' }}>
+                <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '846px', overflow: 'auto', paddingTop: '0%' }}>
                   {queue.length > 0 ? (
                     <div>
                       <div className="mx-auto sticky-carousel d-flex justify-content-center">
@@ -197,10 +277,18 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                           </Slider>
                         </div>
                       </div>
-                    <Row>
+                    <Row
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    >
                       {queue.map((track, index) => (
                         <Col md={4} key={index} onClick={() => handleTrackClick(index)}>
-                          <ListGroupItem className="mb-3" style={{ backgroundColor: '#000000', borderBottom: 'none', cursor: 'pointer'}}>
+                          <ListGroupItem
+                            className="mb-3"
+                            style={{ backgroundColor: '#000000', borderBottom: 'none', cursor: 'pointer'}}
+                            ref={(el: never) => (trackRefs.current[index] = el)} // Adiciona a referência ao item da fila
+                          >
                             <div className="d-flex justify-content-left align-items-center" style={{ border: currentTrackIndex === index ? '2px solid white' : 'none'}}>
                               {track.characterPath ? (
                                 <OverlayTrigger
@@ -248,6 +336,13 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                         </Col>
                       ))}
                     </Row>
+                    {showVotePopup && isOwner && (
+                    <VotePopup
+                      showVotePopup={showVotePopup}
+                      playingNow={playingNow}
+                      djPlayingNow={djPlayingNow}
+                    />
+                  )}
                   </div>
                   ) : (
                     <h3 className="text-light" style={{marginTop: '40%'}}>Dispositivo desconectado</h3>
@@ -262,7 +357,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
           <h1 className="text-light">A música não foi encontrada.</h1>
         </Container>
       )}
-    </>
+    </div>
   );
 };
 

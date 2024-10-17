@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Container, Row, Col, Nav, Image } from 'react-bootstrap';
 import { FaHome, FaUser, FaMusic, FaList, FaChartLine, FaComments } from 'react-icons/fa';
 import { DJ } from '../types/DJ';
@@ -9,10 +8,14 @@ type Props = {
 }
 
 const Menu: React.FC<Props> = ({ dj }) => {
+  const handleRedirect = (path: string) => {
+    window.location.href = path;
+  };
+
   return (
     <aside
       className='menu-container'
-      style={{ backgroundColor: '#000000',boxShadow: '0 0 0 0.5px #ffffff', marginTop: '1%' }}
+      style={{ backgroundColor: '#000000', marginTop: '1%' }}
     >
       <Container className="p-3 text-center menu-height-container">
         <Row className="mb-3 menu-container">
@@ -28,8 +31,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
         <Nav className="flex-column">
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track/${dj?.trackId}`}
+              onClick={() => handleRedirect(`/track/${dj?.trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -38,8 +40,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track/profile/${dj?.trackId}/${dj?.id}`}
+              onClick={() => handleRedirect(`/track/profile/${dj?.trackId}/${dj?.id}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -48,8 +49,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track/add-music/${ dj?.trackId }`}
+              onClick={() => handleRedirect(`/track/add-music/${dj?.trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -58,8 +58,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track/queue/${dj?.trackId}`}
+              onClick={() => handleRedirect(`/track/queue/${dj?.trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -68,8 +67,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track/ranking/${dj?.trackId}`}
+              onClick={() => handleRedirect(`/track/ranking/${dj?.trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -78,8 +76,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track/chat?track-id=${dj?.trackId}`}
+              onClick={() => handleRedirect(`/track/chat?track-id=${dj?.trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >

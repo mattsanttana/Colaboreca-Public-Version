@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { GetTopTracksInBrazilResponse, GetTrackBySearchResponse } from '../interfaces/spotify_response/SpotifyResponse';
-import { IMusic } from '../interfaces/musics/IMusic';
 
 export default class SpotifyActions {
   static async getAccessToken(code: string) {
@@ -99,7 +98,16 @@ export default class SpotifyActions {
 
       return response;
     } catch (error) {
-      console.log(error);
+      if (axios.isAxiosError(error)) {
+        if (error.response && error.response.status === 429) {
+          const retryAfter = error.response.headers['retry-after'];
+          console.log(`Too many requests. Retry after ${retryAfter} seconds.`);
+        } else {
+          console.log('Axios error:', error.message);
+        }
+      } else {
+        console.log('Unexpected error:', error);
+      }
     }
   }
 

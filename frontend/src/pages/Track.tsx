@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
@@ -8,15 +8,15 @@ import useTrack from '../utils/useTrack';
 import usePlayback from '../utils/usePlayback';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
-import Menu from './Menu';
 import QueuePreview from './QueuePreview';
-import Header from './Header';
 import MessagePopup from './MessagePopup';
 import PlayingNow from '../types/PlayingNow';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import { Music } from '../types/SpotifySearchResponse';
 import useVote from '../utils/useVote';
-import VotePopup from './VotePopup';
+const Header = lazy(() => import('./Header'));
+const Menu = lazy(() => import('./Menu'));
+const VotePopup = lazy(() => import('./VotePopup'));
 
 interface Props {
   token: string;
@@ -35,6 +35,9 @@ const Track: React.FC<Props> = ({ token }) => {
   const [popupMessage, setPopupMessage] = useState('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const djActions = useDJ();
@@ -42,9 +45,10 @@ const Track: React.FC<Props> = ({ token }) => {
   const playbackActions = usePlayback();
   const voteActions = useVote();
   const navigate = useNavigate();
-  const intervalId1 = useRef<null | NodeJS.Timeout>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const interval = useRef<number | null>(null);
 
   useEffect(() => {
     const scrollElement = scrollRef.current;
@@ -124,17 +128,65 @@ const Track: React.FC<Props> = ({ token }) => {
 
     fetchData();
 
-    intervalId1.current = setInterval(() => {
+    interval.current = window.setInterval(() => {
       fetchData();
     }, 5000);
 
     return () => {
-      if (intervalId1.current) clearInterval(intervalId1.current);
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
     };
   }, [djActions, playbackActions, token, trackActions, trackId, navigate, voteActions]);
 
+  const closeMenu = useCallback(() => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeMenu]);
+
+  // Funções para lidar com o toque
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    // Calcula a distância de deslocamento horizontal
+    const distance = touchEndX - touchStartX;
+    
+    // Define o valor mínimo para considerar um swipe
+    if (distance > 50) {
+      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+  };
+
+  const memoizedDJs = useMemo(() => djs, [djs]);
+  const memoizedQueue = useMemo(() => queue, [queue]);
+
   return (
-    <>
+    <div
+    onTouchStart={handleTouchStart}
+    onTouchMove={handleTouchMove}
+    onTouchEnd={handleTouchEnd}
+    >
       <MessagePopup
         show={showPopup}
         handleClose={() => setShowPopup(false)}
@@ -152,25 +204,25 @@ const Track: React.FC<Props> = ({ token }) => {
       ) : trackFound && dj ? (
         <>
           <Container>
-            <Header dj={dj}/>
+            <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
             <Row>
-              <Col md={3} className="d-none d-md-block">
+              <Col md={3} className="d-none d-xl-block">
                 <Menu dj={dj} />
               </Col>
-              <Col md={6} className="d-flex flex-column align-items-center playback-state-container">
+              <Col md={12} lg={12} xl={6} className="d-flex flex-column align-items-center playback-state-container">
                 <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} />
               </Col>
-              <Col md={3} className="d-none d-md-block">
+              <Col md={3} className="d-none d-xl-block">
                 <div className="podium-container">
                   <Podium
-                    djs={djs}
+                    djs={memoizedDJs}
                     isOwner={false}
                     trackId={trackId}
-                    hasDJs={djs.length > 0}
+                    hasDJs={memoizedDJs.length > 0}
                   />
                 </div>
                 <div className="queue-container">
-                  <QueuePreview trackId={trackId} queue={queue} />
+                  <QueuePreview trackId={trackId} queue={memoizedQueue} />
                 </div>
               </Col>
             </Row>
@@ -189,7 +241,7 @@ const Track: React.FC<Props> = ({ token }) => {
           <Button onClick={() => navigate("/")}>Página inicial</Button>
         </Container>
       )}
-    </>
+    </div>
   );
 }
 

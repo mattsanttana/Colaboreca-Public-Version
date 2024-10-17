@@ -13,8 +13,6 @@ const useTrack = () => {
         body: JSON.stringify({ trackName, code }),
       });
 
-      console.log(response);   
-
       const data = await response.json();
 
       return {

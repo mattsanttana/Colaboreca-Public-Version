@@ -11,7 +11,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
   return (
     <aside
       className='menu-container'
-      style={{ backgroundColor: '#000000',boxShadow: '0 0 0 0.5px #ffffff', marginTop: '1%' }}
+      style={{ backgroundColor: '#000000', marginTop: '1%' }}
     >
       <Container className="p-3 text-center menu-height-container">
         <Nav className="flex-column">
