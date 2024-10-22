@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Container, Nav } from 'react-bootstrap';
 import { FaHome, FaList, FaChartLine} from 'react-icons/fa';
 import React from 'react';
@@ -8,6 +7,11 @@ type Props = {
 }
 
 const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
+
+  const handleRedirect = (path: string) => {
+    window.location.href = path;
+  };
+  
   return (
     <aside
       className='menu-container'
@@ -17,8 +21,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
         <Nav className="flex-column">
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track-info/${trackId}`}
+              onClick={() => handleRedirect(`/track-info/${trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -27,8 +30,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track-info/queue/${trackId}`}
+              onClick={() => handleRedirect(`/track-info/queue/${trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -37,8 +39,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              as={Link}
-              to={`/track-info/ranking/${trackId}`}
+              onClick={() => handleRedirect(`/track-info/ranking/${trackId}`)}
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >

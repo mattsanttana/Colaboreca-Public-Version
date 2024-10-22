@@ -24,7 +24,8 @@ body::before {
 .card,
 .container,
 .row,
-.col, .aside {
+.col,
+.aside {
   background-color: black !important;
   border: none !important;
   box-shadow: none !important;
@@ -523,4 +524,26 @@ aside .nav-link:hover {
 .highlight {
   font-weight: bold;
   /* Ou use 'font-size: larger;' para aumentar o tamanho */
+}
+
+@keyframes fade-logo {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.logo-spinner {
+  width: 150px;
+  /* Ajuste o tamanho como preferir */
+  height: 150px;
+  animation: fade-logo 2s infinite ease-in-out;
+  /* A animação dura 2 segundos e se repete infinitamente */
 }

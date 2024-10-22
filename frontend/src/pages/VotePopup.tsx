@@ -3,16 +3,21 @@ import { djTable } from "../assets/images/characterPath";
 import React, { useEffect, useRef, useState } from "react";
 import { DJPlayingNow } from "../types/DJ";
 import PlayingNow from "../types/PlayingNow";
+import { RootState } from "../redux/store";
+import { connect } from "react-redux";
+import useVote from "../utils/useVote";
 
 interface Props {
   showVotePopup: boolean;
   djPlayingNow: DJPlayingNow | null;
   playingNow: PlayingNow | null;
+  token: string;
 }
 
-const VotePopup: React.FC<Props> = ({showVotePopup, playingNow, djPlayingNow}) => {
+const Vote: React.FC<Props> = ({ showVotePopup, playingNow, djPlayingNow, token }) => {
   const [vote, setVote] = useState(2);
   
+  const voteActions = useVote();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -45,9 +50,9 @@ const VotePopup: React.FC<Props> = ({showVotePopup, playingNow, djPlayingNow}) =
   };
 
   const handleVoteSubmit = () => {
-    const voteOptions = ["ninguém merece", "ruim", "tanto faz", "boa", "hino"];
-    console.log(`Votou: ${voteOptions[vote]}`);
-    // Aqui você pode adicionar a lógica para enviar o voto para o backend
+    const voteOptions = ['very_bad', 'bad', 'normal', 'good', 'very_good'];
+    
+    voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]);
   };
   
   return (
@@ -104,5 +109,11 @@ const VotePopup: React.FC<Props> = ({showVotePopup, playingNow, djPlayingNow}) =
     </Modal>
   )
 }
+
+const mapStateToProps = (state: RootState) => ({
+  token: state.djReducer.token,
+});
+
+const VotePopup = connect(mapStateToProps)(Vote);
 
 export default VotePopup;

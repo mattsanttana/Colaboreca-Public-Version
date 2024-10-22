@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Container, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Form, Button, Row, Col } from 'react-bootstrap';
 import { saveTrack } from '../redux/actions';
 import { RootState } from '../redux/store';
-import { logo } from '../assets/images/characterPath';
-import useTrack from '../utils/useTrack';
 import MessagePopup from './MessagePopup';
+import useTrack from '../utils/useTrack';
+import { logo } from '../assets/images/characterPath';
 
 interface Props {
   code: string;
@@ -78,6 +78,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
       } else {
         setModalMessage('Algo deu errado ao tentar criar a pista, tente novamente.');
         setShowModal(true);
+        navigate('/');
       }
     }
   };
@@ -89,9 +90,11 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
 
   return (
     isLoading ? (
-      <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <h1 className='text-light'>Carregando</h1>
-        <Spinner animation="border" className='text-light'/>
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: '100vh' }}
+      >
+        <img src={logo} alt="Loading Logo" className="logo-spinner" />
       </Container>
     ) : (
       <Container className="d-flex align-items-center justify-content-center vh-100">

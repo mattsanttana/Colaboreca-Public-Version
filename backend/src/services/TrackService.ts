@@ -1,10 +1,10 @@
 import { Op, Sequelize } from 'sequelize';
+import * as config from '../database/config/database';
+import TrackModel from '../models/TrackModel';
+import DJModel from '../models/DJModel';
 import generateShortId from '../utils/generateShortId';
 import SpotifyActions from '../utils/SpotifyActions';
 import JWT from '../utils/JWT';
-import TrackModel from '../models/TrackModel';
-import DJModel from '../models/DJModel';
-import * as config from '../database/config/database';
 
 export default class TrackService {
   constructor(

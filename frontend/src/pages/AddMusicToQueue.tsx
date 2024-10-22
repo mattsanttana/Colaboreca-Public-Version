@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState, lazy, useMemo } from 'react';
-import { Card, Col, Container, Form, Row, Spinner, Modal, Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { RootState } from '../redux/store';
-import { Music } from '../types/SpotifySearchResponse';
 import { useParams } from 'react-router-dom';
+import { RootState } from '../redux/store';
+import { Card, Col, Container, Form, Row, Spinner, Modal, Button } from 'react-bootstrap';
+import MessagePopup from './MessagePopup';
 import useDebounce from '../utils/useDebounce';
-import { DJ, DJPlayingNow } from '../types/DJ';
 import usePlayback from '../utils/usePlayback';
 import useDJ from '../utils/useDJ';
 import useVote from '../utils/useVote';
-import MessagePopup from './MessagePopup';
+import { Music } from '../types/SpotifySearchResponse';
+import { DJ, DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
+import { logo } from '../assets/images/characterPath';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -107,7 +108,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 5000);
+    }, 25000);
 
     return () => {
       if (interval.current) {
@@ -255,8 +256,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           className="d-flex justify-content-center align-items-center"
           style={{ height: '100vh' }}
         >
-          <h1 className="text-light">Carregando</h1>
-          <Spinner animation="border" className="text-light" />
+          <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
       ) : (
         <Container style={{ position: 'relative' }}>

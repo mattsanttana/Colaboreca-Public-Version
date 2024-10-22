@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar, Nav, Button, Modal } from 'react-bootstrap';
 import { FaBars } from 'react-icons/fa';
-import Menu from './Menu'; // Ajuste o caminho conforme necessário
-import TrackInfoMenu from './TrackInfoMenu'; // Ajuste o caminho conforme necessário
-import ShareTrack from './ShareTrack'; // Ajuste o caminho conforme necessário
-import ShareTrackInfo from './ShareTrackInfo'; // Ajuste o caminho conforme necessário
+import Menu from './Menu';
+import TrackInfoMenu from './TrackInfoMenu';
+import ShareTrack from './ShareTrack';
+import ShareTrackInfo from './ShareTrackInfo';
 import { DJ } from '../types/DJ';
 
 interface Props {

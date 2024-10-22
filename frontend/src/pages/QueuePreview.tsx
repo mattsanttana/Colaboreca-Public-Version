@@ -30,7 +30,6 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
         className="text-center text-light"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
       >
-        {/* Adicionar flexbox para o Body do Card */}
         <Card.Body 
           style={{ 
             height: '400px',
@@ -42,11 +41,11 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
           <div
             style={{
               flex: 1,
-              overflowY: 'auto',        // Mantém a rolagem para o conteúdo grande      // Remove rolagem horizontal
-              scrollbarWidth: 'none',   // Firefox: Esconde barras de rolagem
-              msOverflowStyle: 'none'   // IE e Edge: Esconde barras de rolagem
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'  
             }}
-            className='hide-scrollbar'  // Adiciona classe para browsers WebKit
+            className='hide-scrollbar' 
           >
             <Card.Title>Fila:</Card.Title>
             <Table

@@ -1,16 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { Card, Container } from 'react-bootstrap';
 import PlayingNow from '../types/PlayingNow';
-import { djTable } from '../assets/images/characterPath';
 import { DJPlayingNow } from '../types/DJ';
+import { djTable } from '../assets/images/characterPath';
+import { Vote, voteValues } from '../types/Vote';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 type Props = {
   playingNow: PlayingNow | null;
   trackName: string;
   dj: DJPlayingNow | null;
+  votes: Vote[]
 };
 
-const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj }) => {
+const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -24,15 +27,38 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj }) => {
       const containerWidth = containerElement.clientWidth;
 
       if (isPlaying && scrollWidth > containerWidth) {
-        // Calcula a diferença para saber quanto precisa rolar
         const scrollAmount = scrollWidth - containerWidth + 20;
         scrollElement.style.animation = `scroll-text ${scrollAmount / 15}s linear infinite`;
         scrollElement.style.setProperty('--scroll-distance', `-${scrollAmount}px`);
       } else {
-        scrollElement.style.animation = 'none'; // Remove a animação se o texto couber ou se não houver música tocando
+        scrollElement.style.animation = 'none';
       }
     }
-  }, [playingNow]); // Recalcula sempre que 'playingNow' muda
+  }, [playingNow]);
+
+  // Contagem dos votos usando o enum voteValues
+  const initialVoteCounts = {
+    [voteValues.VERY_GOOD]: 0,
+    [voteValues.GOOD]: 0,
+    [voteValues.NORMAL]: 0,
+    [voteValues.BAD]: 0,
+    [voteValues.VERY_BAD]: 0
+  };
+
+  // Reduzindo os votos para contar as ocorrências
+  const voteCounts = votes.reduce((acc, vote) => {
+    acc[vote.value] = (acc[vote.value] || 0) + 1;
+    return acc;
+  }, initialVoteCounts);
+
+  // Dados para o gráfico
+  const data = [
+    { name: 'Hino', value: voteCounts[voteValues.VERY_GOOD] },
+    { name: 'Boa', value: voteCounts[voteValues.GOOD] },
+    { name: 'Tanto faz', value: voteCounts[voteValues.NORMAL] },
+    { name: 'Ruim', value: voteCounts[voteValues.BAD] },
+    { name: 'Ninguém merece', value: voteCounts[voteValues.VERY_BAD] },
+  ];
 
   return (
     <Container className="py-4">
@@ -93,6 +119,24 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj }) => {
               </div>
             </div>
           )}
+          {/* Gráfico de votos abaixo do DJ table */}
+          <div style={{ marginTop: '20px', height: '350px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} layout="vertical">
+                {/* Removido o CartesianGrid para não ficar quadriculado */}
+                <XAxis type="number" />
+                <YAxis
+                  type="category" 
+                  dataKey="name" 
+                  width={100} // Aumenta o espaço para as labels
+                  tick={{ fontSize: 15 }} // Diminui o tamanho da fonte
+                />
+                {/* Remova o Tooltip se não quiser a interação ao passar o mouse */}
+                {/* <Tooltip /> */}
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </Card.Body>
       </Card>
     </Container>

@@ -5,6 +5,7 @@ import Validations from '../middlewares/Validations';
 const trackController = new TrackController();
 const router = Router();
 
+// Rotas de Criação, Atualização e Exclusão
 router.post(
   '/',
   Validations.validateCreateTrack,
@@ -24,6 +25,7 @@ router.delete(
   (req, res) => trackController.deleteTrack(req, res)
 );
 
+// Rotas de Verificação e Login
 router.get(
   '/login',
   (req, res) => trackController.loginWithSpotify(req, res)
@@ -47,6 +49,7 @@ router.get(
   (req, res) => trackController.enterTrack(req, res)
 );
 
+// Rotas Específicas por ID
 router.delete(
   '/:id',
   Validations.validateId,

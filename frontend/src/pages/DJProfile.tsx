@@ -1,16 +1,16 @@
 import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Spinner, Form, Card, Modal, Table } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Card, Modal, Table } from 'react-bootstrap';
 import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
-import { charactersPaths } from '../assets/images/characterPath';
-import useDJ from '../utils/useDJ';
-import usePlayback from '../utils/usePlayback';
-import { DJ, DJPlayingNow } from '../types/DJ';
 import MessagePopup from './MessagePopup';
-import { DJMusic } from '../types/SpotifySearchResponse';
+import useDJ from '../utils/useDJ';
 import useTrack from '../utils/useTrack';
 import useVote from '../utils/useVote';
+import usePlayback from '../utils/usePlayback';
+import { DJ, DJPlayingNow } from '../types/DJ';
+import { DJMusic } from '../types/SpotifySearchResponse';
+import { charactersPaths, logo } from '../assets/images/characterPath';
 import PlayingNow from '../types/PlayingNow';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
@@ -165,7 +165,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 5000);
+    }, 25000);
 
     return () => {
       clearInterval(interval.current as NodeJS.Timeout);
@@ -296,12 +296,12 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
     onTouchEnd={handleTouchEnd}
     >
       {isLoading ? (
-        <Row className="justify-content-center">
-          <Col xs={12} className="text-center">
-            <Spinner animation="border" />
-            <h1>Carregando...</h1>
-          </Col>
-        </Row>
+        <Container
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: '100vh' }}
+        >
+          <img src={logo} alt="Loading Logo" className="logo-spinner" />
+        </Container>
       ) : dj ? (
         <div>
           <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup}>

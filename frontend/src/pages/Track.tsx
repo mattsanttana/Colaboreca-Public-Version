@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import { RootState } from '../redux/store';
-import useDJ from '../utils/useDJ';
-import useTrack from '../utils/useTrack';
-import usePlayback from '../utils/usePlayback';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
 import QueuePreview from './QueuePreview';
 import MessagePopup from './MessagePopup';
+import useDJ from '../utils/useDJ';
+import useTrack from '../utils/useTrack';
+import usePlayback from '../utils/usePlayback';
+import useVote from '../utils/useVote';
 import PlayingNow from '../types/PlayingNow';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import { Music } from '../types/SpotifySearchResponse';
-import useVote from '../utils/useVote';
+import { logo } from '../assets/images/characterPath';
+import { Vote } from '../types/Vote';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -35,11 +37,12 @@ const Track: React.FC<Props> = ({ token }) => {
   const [popupMessage, setPopupMessage] = useState('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
+  const [votes, setVotes] = useState<Vote[]>([]);
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   const djActions = useDJ();
   const trackActions = useTrack();
   const playbackActions = usePlayback();
@@ -82,7 +85,8 @@ const Track: React.FC<Props> = ({ token }) => {
             fetchedPlayingNow,
             fetchedDJPlayingNow,
             fetchedQueue,
-            fetchedVerifyIfDJHasAlreadVoted
+            fetchedVerifyIfDJHasAlreadVoted,
+            fetchedVotes
           ] = await Promise.all([
             trackActions.getTrackById(trackId),
             djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
@@ -91,9 +95,10 @@ const Track: React.FC<Props> = ({ token }) => {
             playbackActions.getState(trackId),
             playbackActions.getDJAddedCurrentMusic(trackId),
             playbackActions.getSpotifyQueue(trackId),
-            voteActions.verifyIfDJHasAlreadVoted(token)
+            voteActions.verifyIfDJHasAlreadVoted(token),
+            voteActions.getAllVotesForThisMusic(trackId, playingNow?.item.uri)
           ]);
-
+          
           if (fetchedVerifyLogin?.status !== 200) {
             setPopupMessage('Você não está logado, por favor faça login novamente');
             setRedirectTo('/enter-track');
@@ -107,6 +112,7 @@ const Track: React.FC<Props> = ({ token }) => {
           }
 
           if (fetchedTrack?.status === 200) {
+            setTrackFound(true);
             setPlayingNow(fetchedPlayingNow);
             setDJs(fetchedDJs);
             setDJ(fetchedDJ?.data);
@@ -114,7 +120,7 @@ const Track: React.FC<Props> = ({ token }) => {
             setTrackName(fetchedTrack.data.trackName);
             setDJPlayingNow(fetchedDJPlayingNow);
             setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-            setTrackFound(true);
+            setVotes(fetchedVotes);
           } else {
             setTrackFound(false);
           }
@@ -130,14 +136,14 @@ const Track: React.FC<Props> = ({ token }) => {
 
     interval.current = window.setInterval(() => {
       fetchData();
-    }, 5000);
+    }, 40000);
 
     return () => {
       if (interval.current) {
         clearInterval(interval.current);
       }
     };
-  }, [djActions, playbackActions, token, trackActions, trackId, navigate, voteActions]);
+  }, [djActions, playbackActions, token, trackActions, trackId, navigate, voteActions, playingNow?.item.uri]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -198,8 +204,7 @@ const Track: React.FC<Props> = ({ token }) => {
           className="d-flex justify-content-center align-items-center"
           style={{ height: '100vh' }}
         >
-          <h1 className='text-light'>Carregando</h1>
-          <Spinner animation="border" className='text-light' />
+          <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
       ) : trackFound && dj ? (
         <>
@@ -210,7 +215,7 @@ const Track: React.FC<Props> = ({ token }) => {
                 <Menu dj={dj} />
               </Col>
               <Col md={12} lg={12} xl={6} className="d-flex flex-column align-items-center playback-state-container">
-                <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} />
+                <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} votes={votes} />
               </Col>
               <Col md={3} className="d-none d-xl-block">
                 <div className="podium-container">

@@ -4,6 +4,7 @@ import SequelizeDJ from '../database/models/SequelizeDJ';
 import { JwtPayload } from 'jsonwebtoken';
 import { trackNameSchema, djNameSchema } from '../utils/schemas';
 import SequelizeTrack from '../database/models/SequelizeTrack';
+import { log } from 'console';
 
 export default class Validations {
   static async validateToken(req: Request, res: Response, next: NextFunction) {
@@ -142,7 +143,27 @@ export default class Validations {
     if (!cover || !name || !artists || !musicURI) {
       return res.status(400).json({ message: 'Missing parameters' });
     }
-  
+
+    next();
+  }
+
+  static async validateCreateVote(req: Request, res: Response, next: NextFunction) {
+    const { musicURI, vote } = req.body;
+
+    if (!musicURI || !vote) {
+      return res.status(400).json({ message: 'Missing parameters' });
+    }
+
+    next();
+  }
+
+  static async validateMusicURI(req: Request, res: Response, next: NextFunction) {
+    const { musicURI } = req.params;
+
+    if (!musicURI) {
+      return res.status(201).json({ message: 'Missing parameters' });
+    }
+
     next();
   }
 }

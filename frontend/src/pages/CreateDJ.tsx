@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Container, Button, Form, Row, Col, Image, Spinner, Card } from 'react-bootstrap';
+import { Container, Button, Form, Row, Col, Image, Card } from 'react-bootstrap';
 import { saveDJ } from '../redux/actions';
 import { RootState } from '../redux/store';
-import { charactersPaths } from '../assets/images/characterPath';
-import useDJ from '../utils/useDJ';
 import MessagePopup from './MessagePopup';
+import useDJ from '../utils/useDJ';
+import { charactersPaths, logo } from '../assets/images/characterPath';
 
 const randomCharacter = charactersPaths[Math.floor(Math.random() * charactersPaths.length)];
 
@@ -107,9 +107,11 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
 
   return (
     isLoading ? (
-      <Container className="d-flex justify-content-center align-items-center menu-container">
-        <h1 className='text-light'>Carregando</h1>
-        <Spinner animation="border" className='text-light'/>
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: '100vh' }}
+      >
+        <img src={logo} alt="Loading Logo" className="logo-spinner" />
       </Container>
     ) : (
       <Container className="menu-container">

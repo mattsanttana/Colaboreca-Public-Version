@@ -1,20 +1,20 @@
 import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { connect } from 'react-redux';
-import { RootState } from '../redux/store';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Col, Container, ListGroupItem, OverlayTrigger, Popover, Row, Spinner } from 'react-bootstrap';
+import { Button, Card, Col, Container, ListGroupItem, OverlayTrigger, Popover, Row } from 'react-bootstrap';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import { RootState } from '../redux/store';
 import MessagePopup from './MessagePopup';
 import useDJ from '../utils/useDJ';
 import usePlayback from '../utils/usePlayback';
 import useTrack from '../utils/useTrack';
+import useVote from '../utils/useVote';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import TQueue from '../types/TQueue';
-import { logo } from '../assets/images/characterPath';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
 import PlayingNow from '../types/PlayingNow';
-import useVote from '../utils/useVote';
+import { logo } from '../assets/images/characterPath';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -140,7 +140,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   
     fetchQueue();
   
-    const interval = setInterval(fetchQueue, 60000); // Aumente o intervalo para 60 segundos
+    const interval = setInterval(fetchQueue, 25000); // Aumente o intervalo para 60 segundos
   
     return () => clearInterval(interval);
   }, [djActions, isOwner, playbackActions, djToken, trackActions, trackId, voteActions]);
@@ -233,9 +233,11 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
         redirectTo={redirectTo}
       />
       {isLoading ? (
-        <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-          <h1 className="text-light">Carregando</h1>
-          <Spinner animation="border" className="text-light" />
+        <Container
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: '100vh' }}
+        >
+          <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
       ) : trackFound ? (
         <Container>

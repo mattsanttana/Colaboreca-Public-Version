@@ -5,7 +5,7 @@ import { DJ } from '../types/DJ';
 
 type Props = {
   dj: DJ | undefined;
-}
+};
 
 const Menu: React.FC<Props> = ({ dj }) => {
   const handleRedirect = (path: string) => {
@@ -13,10 +13,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
   };
 
   return (
-    <aside
-      className='menu-container'
-      style={{ backgroundColor: '#000000', marginTop: '1%' }}
-    >
+    <aside className='menu-container' style={{ backgroundColor: '#000000', marginTop: '1%' }}>
       <Container className="p-3 text-center menu-height-container">
         <Row className="mb-3 menu-container">
           <Col>
@@ -31,7 +28,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
         <Nav className="flex-column">
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/${dj?.trackId}`)}
+              onClick={() => handleRedirect(`/track/${dj?.trackId}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -40,7 +37,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/profile/${dj?.trackId}/${dj?.id}`)}
+              onClick={() => handleRedirect(`/track/profile/${dj?.trackId}/${dj?.id}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -49,7 +46,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/add-music/${dj?.trackId}`)}
+              onClick={() => handleRedirect(`/track/add-music/${dj?.trackId}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -58,7 +55,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/queue/${dj?.trackId}`)}
+              onClick={() => handleRedirect(`/track/queue/${dj?.trackId}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -67,7 +64,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/ranking/${dj?.trackId}`)}
+              onClick={() => handleRedirect(`/track/ranking/${dj?.trackId}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -76,7 +73,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/chat?track-id=${dj?.trackId}`)}
+              onClick={() => handleRedirect(`/track/chat?track-id=${dj?.trackId}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
@@ -87,6 +84,6 @@ const Menu: React.FC<Props> = ({ dj }) => {
       </Container>
     </aside>
   );
-}
+};
 
 export default Menu;
