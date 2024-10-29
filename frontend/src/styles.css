@@ -527,7 +527,7 @@ aside .nav-link:hover {
 }
 
 @keyframes fade-logo {
-  0% {
+  15% {
     opacity: 1;
   }
 

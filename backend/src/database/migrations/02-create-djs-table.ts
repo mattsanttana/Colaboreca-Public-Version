@@ -20,10 +20,6 @@ export default {
         allowNull: false,
         field: 'character_path'
       },
-      credits: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
       score: {
         type: DataTypes.INTEGER,
         allowNull: false

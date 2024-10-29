@@ -206,7 +206,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 50) {
+    if (distance > 200) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
   };
@@ -395,15 +395,15 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
           <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
           <Row>
             {isTrackOwner ? (
-              <Col md={3} className="d-none d-xl-block">
+              <Col md={3} className="d-none d-xxl-block">
                 <TrackInfoMenu trackId={trackId} />
               </Col>
             ) : (
-              <Col md={3} className="d-none d-xl-block">
+              <Col md={3} className="d-none d-xxl-block">
                 <Menu dj={menuDJ} />
               </Col>
             )}
-            <Col className="py-4" md={12} lg={12} xl={9}>
+            <Col className="py-4" md={12} lg={12} xl={12} xxl={9}>
               <Card
                 className="text-center"
                 style={{ backgroundColor: '#000000', padding: '0' }}

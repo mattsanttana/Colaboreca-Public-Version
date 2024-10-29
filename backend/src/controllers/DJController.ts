@@ -41,6 +41,7 @@ export default class DJController {
     const response = await this.djService.verifyIfTheDJIsTheProfileOwner(Number(id), authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
+
   async updateDJ(req: Request, res: Response) {
     const { characterPath, djName } = req.body;
     const authorization = req.headers.authorization;

@@ -3,14 +3,14 @@ import { Card, Container } from 'react-bootstrap';
 import PlayingNow from '../types/PlayingNow';
 import { DJPlayingNow } from '../types/DJ';
 import { djTable } from '../assets/images/characterPath';
-import { Vote, voteValues } from '../types/Vote';
+import { Vote } from '../types/Vote';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 type Props = {
   playingNow: PlayingNow | null;
   trackName: string;
   dj: DJPlayingNow | null;
-  votes: Vote[]
+  votes: Vote | undefined;
 };
 
 const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) => {
@@ -20,44 +20,44 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
   useEffect(() => {
     const scrollElement = scrollRef.current;
     const containerElement = containerRef.current;
-
+  
     if (scrollElement && containerElement) {
-      const isPlaying = playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track';
       const scrollWidth = scrollElement.scrollWidth;
       const containerWidth = containerElement.clientWidth;
-
-      if (isPlaying && scrollWidth > containerWidth) {
-        const scrollAmount = scrollWidth - containerWidth + 20;
+      
+      const isPlaying = playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track';
+      const scrollAmount = scrollWidth - containerWidth + 20;
+      
+      // Verifica se a música está tocando ou se o texto é maior que o container (para a mensagem de "Nenhuma música tocando")
+      if ((isPlaying || scrollWidth > containerWidth) && scrollWidth > containerWidth) {
         scrollElement.style.animation = `scroll-text ${scrollAmount / 15}s linear infinite`;
         scrollElement.style.setProperty('--scroll-distance', `-${scrollAmount}px`);
       } else {
         scrollElement.style.animation = 'none';
       }
     }
-  }, [playingNow]);
+  }, [playingNow, trackName]);
+  
 
-  // Contagem dos votos usando o enum voteValues
-  const initialVoteCounts = {
-    [voteValues.VERY_GOOD]: 0,
-    [voteValues.GOOD]: 0,
-    [voteValues.NORMAL]: 0,
-    [voteValues.BAD]: 0,
-    [voteValues.VERY_BAD]: 0
-  };
+  // Contagem dos votos
+  const initialVoteCounts = { very_good: 0, good: 0, normal: 0, bad: 0, very_bad: 0 };
 
-  // Reduzindo os votos para contar as ocorrências
-  const voteCounts = votes.reduce((acc, vote) => {
-    acc[vote.value] = (acc[vote.value] || 0) + 1;
-    return acc;
-  }, initialVoteCounts);
+  const voteCounts = (votes && votes.voteValues && votes.voteValues.length > 0) ? votes.voteValues.reduce(
+    (acc, vote) => {
+      acc[vote] = (acc[vote] || 0) + 1;
+      return acc;
+    },
+    initialVoteCounts
+  ) : initialVoteCounts;
+  
 
   // Dados para o gráfico
   const data = [
-    { name: 'Hino', value: voteCounts[voteValues.VERY_GOOD] },
-    { name: 'Boa', value: voteCounts[voteValues.GOOD] },
-    { name: 'Tanto faz', value: voteCounts[voteValues.NORMAL] },
-    { name: 'Ruim', value: voteCounts[voteValues.BAD] },
-    { name: 'Ninguém merece', value: voteCounts[voteValues.VERY_BAD] },
+    { name: 'Hino', value: voteCounts.very_good },
+    { name: 'Boa', value: voteCounts.good },
+    { name: 'Tanto faz', value: voteCounts.normal },
+    { name: 'Ruim', value: voteCounts.bad },
+    { name: 'Ninguém merece', value: voteCounts.very_bad },
   ];
 
   return (
@@ -119,20 +119,16 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
               </div>
             </div>
           )}
-          {/* Gráfico de votos abaixo do DJ table */}
-          <div style={{ marginTop: '20px', height: '350px' }}>
+          <div style={{ marginTop: '20px', height: '350px', marginLeft: '-53px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} layout="vertical">
-                {/* Removido o CartesianGrid para não ficar quadriculado */}
                 <XAxis type="number" />
                 <YAxis
                   type="category" 
                   dataKey="name" 
-                  width={100} // Aumenta o espaço para as labels
-                  tick={{ fontSize: 15 }} // Diminui o tamanho da fonte
+                  width={100}
+                  tick={{ fontSize: 15 }}
                 />
-                {/* Remova o Tooltip se não quiser a interação ao passar o mouse */}
-                {/* <Tooltip /> */}
                 <Bar dataKey="value" fill="#8884d8" />
               </BarChart>
             </ResponsiveContainer>

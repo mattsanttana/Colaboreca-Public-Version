@@ -99,7 +99,7 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
       >
         <Nav>
           <Button
-            className="d-xl-none"
+            className="d-xxl-none"
             style={{ backgroundColor: '#000', border: 'none', marginLeft: '5px' }}
             onClick={toggleLocalMenu}
           >

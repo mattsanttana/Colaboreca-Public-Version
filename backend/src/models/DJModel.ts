@@ -19,7 +19,11 @@ export default class DJModel {
     return dj?.get();
   }
 
-  async update(data: { djName?: string; characterPath?: string; }, where: WhereOptions, p0?: unknown) {
+  async update(
+    data: { 
+      djName?: string; characterPath?: string; score?: number; ranking?: number; 
+    }, where: WhereOptions, p0?: unknown
+  ) {
     const response = await this.djModel.update(data, { where });
     return response;
   }

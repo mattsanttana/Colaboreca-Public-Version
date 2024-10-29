@@ -1,4 +1,4 @@
-import { Button, Card, Modal } from "react-bootstrap";
+import { Button, Card, Modal, Spinner } from "react-bootstrap";
 import { djTable } from "../assets/images/characterPath";
 import React, { useEffect, useRef, useState } from "react";
 import { DJPlayingNow } from "../types/DJ";
@@ -16,6 +16,7 @@ interface Props {
 
 const Vote: React.FC<Props> = ({ showVotePopup, playingNow, djPlayingNow, token }) => {
   const [vote, setVote] = useState(2);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const voteActions = useVote();
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -49,10 +50,17 @@ const Vote: React.FC<Props> = ({ showVotePopup, playingNow, djPlayingNow, token 
     return index === vote ? 'highlight' : '';
   };
 
-  const handleVoteSubmit = () => {
+  const handleVoteSubmit = async () => {
     const voteOptions = ['very_bad', 'bad', 'normal', 'good', 'very_good'];
     
-    voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]);
+    setIsSubmitting(true);
+    try {
+      await voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]);
+    } catch (error) {
+      console.error('Erro ao enviar voto:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -102,8 +110,8 @@ const Vote: React.FC<Props> = ({ showVotePopup, playingNow, djPlayingNow, token 
         </div>
       </Modal.Body>
       <Modal.Footer style={{ borderTop: 'none' }}>
-        <Button variant="success" onClick={handleVoteSubmit}>
-          Enviar
+        <Button onClick={handleVoteSubmit} disabled={isSubmitting}>
+          {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Enviar Voto'}
         </Button>
       </Modal.Footer>
     </Modal>

@@ -37,7 +37,7 @@ const Track: React.FC<Props> = ({ token }) => {
   const [popupMessage, setPopupMessage] = useState('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
-  const [votes, setVotes] = useState<Vote[]>([]);
+  const [votes, setVotes] = useState<Vote>();
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -96,7 +96,7 @@ const Track: React.FC<Props> = ({ token }) => {
             playbackActions.getDJAddedCurrentMusic(trackId),
             playbackActions.getSpotifyQueue(trackId),
             voteActions.verifyIfDJHasAlreadVoted(token),
-            voteActions.getAllVotesForThisMusic(trackId, playingNow?.item.uri)
+            voteActions.getAllVotesForThisMusic(trackId, playingNow?.item?.uri ?? "dispositivo não conectado")
           ]);
           
           if (fetchedVerifyLogin?.status !== 200) {
@@ -143,7 +143,8 @@ const Track: React.FC<Props> = ({ token }) => {
         clearInterval(interval.current);
       }
     };
-  }, [djActions, playbackActions, token, trackActions, trackId, navigate, voteActions, playingNow?.item.uri]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [djActions, playbackActions, token, trackActions, trackId, navigate, voteActions]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -179,7 +180,7 @@ const Track: React.FC<Props> = ({ token }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 50) {
+    if (distance > 200) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
   };
@@ -211,13 +212,13 @@ const Track: React.FC<Props> = ({ token }) => {
           <Container>
             <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
             <Row>
-              <Col md={3} className="d-none d-xl-block">
+              <Col md={3} className="d-none d-xxl-block">
                 <Menu dj={dj} />
               </Col>
-              <Col md={12} lg={12} xl={6} className="d-flex flex-column align-items-center playback-state-container">
+              <Col md={12} lg={12} xl={12} xxl={6} className="d-flex flex-column align-items-center playback-state-container">
                 <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} votes={votes} />
               </Col>
-              <Col md={3} className="d-none d-xl-block">
+              <Col md={3} className="d-none d-xxl-block">
                 <div className="podium-container">
                   <Podium
                     djs={memoizedDJs}

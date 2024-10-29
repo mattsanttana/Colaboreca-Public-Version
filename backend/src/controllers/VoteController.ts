@@ -20,7 +20,7 @@ export default class VoteController {
 
   async getAllVotesForThisMusic(req: Request, res: Response) {
     const { trackId, musicURI } = req.params;
-    const response = await this.voteService.getAllVotesForThisMusic(trackId, musicURI);
+    const response = await this.voteService.getAllVotesForThisMusic(Number(trackId), musicURI);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 }

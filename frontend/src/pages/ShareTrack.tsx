@@ -62,14 +62,14 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
       >
         <Card.Body>
           <Row className='w-100'>
-            <Col md={6} className='d-flex justify-content-center align-items-center'>
+            <Col md={12} className='d-flex justify-content-center align-items-center'>
               <h3 className="mb-4">O ID da sua pista é:</h3>
             </Col>
-            <Col md={6} className='d-flex justify-content-center align-items-center'>
-              <Col md={2} className='d-flex justify-content-center align-items-center'>
+            <Col md={12} className='d-flex justify-content-center align-items-center'>
+              <Col md={1} className='d-flex justify-content-center align-items-center'>
                 <h1 className='track-id'> { trackIdHead } </h1>
               </Col>
-              <Col md={2} className='d-flex justify-content-center align-items-center'></Col>
+              <Col md={1} className='d-flex justify-content-center align-items-center'></Col>
                 <h1 className='track-id'> { trackIdTail } </h1>
               </Col>
             <Col

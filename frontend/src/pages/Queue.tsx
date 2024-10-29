@@ -186,7 +186,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 50) {
+    if (distance > 200) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
   };
@@ -244,17 +244,18 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
           <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
           <Row>
           {isOwner ? (
-            <Col md={3} className="d-none d-xl-block">
+            <Col md={3} className="d-none d-xxl-block">
               <TrackInfoMenu trackId={trackId} />
             </Col>
           ) : (
-            <Col md={3} className="d-none d-xl-block">
+            <Col md={3} className="d-none d-xxl-block">
               <Menu dj={dj} />
             </Col>
           )}
             <Col
             md={12}
-            xl={9}
+            xl={12}
+            xxl={9}
             className="py-4">
               <Card
                 className="text-center text-light"

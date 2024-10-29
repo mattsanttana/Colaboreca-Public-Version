@@ -7,13 +7,15 @@ import JWT from '../utils/JWT';
 import { Track } from '../interfaces/spotify_response/SpotifyResponse';
 import * as config from '../database/config/database';
 import SequelizeMusic from '../database/models/SequelizeMusic';
+import VoteModel from '../models/VoteModel';
 
 export default class PlaybackService {
   constructor(
     private sequelize: Sequelize = new Sequelize(config),
     private trackModel: TrackModel = new TrackModel(),
     private djModel: DJModel = new DJModel(),
-    private musicModel: MusicModel = new MusicModel()
+    private musicModel: MusicModel = new MusicModel(),
+    private voteModel: VoteModel = new VoteModel()
   ) { }
 
   async findPlaybackState(id: number) {
@@ -259,7 +261,7 @@ export default class PlaybackService {
 
       if (!currentlyPlayingTrack) {
         await transaction.commit();
-        return { status: 'NOT_FOUND', data: { message: 'No track currently playing' } };
+        return { status: 'OK', data: { message: 'No track currently playing' } };
       }
 
       const colaborecaTracksWithURI = colaborecaQueue.filter(
@@ -281,7 +283,7 @@ export default class PlaybackService {
           characterPath = null;
         } else {
           // Se houver pelo menos uma ocorrência do DJ, considerar a última como a que adicionou a música
-          const lastColaborecaTrack = colaborecaTracksWithURI.reduce((latest, current) => {
+          const lastColaborecaTrack = colaborecaQueue.reduce((latest, current) => {
             if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
               return current;
             }
@@ -304,10 +306,21 @@ export default class PlaybackService {
       }
 
       await transaction.commit();
+
+      const musicId = colaborecaQueue
+        .filter((colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri)
+        .reduce((latest, current) => {
+          if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
+            return current;
+          }
+          return latest;
+        }, {} as InferAttributes<SequelizeMusic, { omit: never; }>).id;
+
+
       return {
         status: 'OK',
         data: {
-          musicId: colaborecaQueue.find((colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri)?.id,
+          musicId: musicId,
           cover: currentlyPlayingTrack.album.images[0].url,
           musicName: currentlyPlayingTrack.name,
           artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),

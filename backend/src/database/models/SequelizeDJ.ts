@@ -9,7 +9,6 @@ class SequelizeDJ extends Model<
   declare id?: number;
   declare djName: string;
   declare characterPath: string;
-  declare credits?: number
   declare score?: number;
   declare ranking?: number;
   declare trackId: number;
@@ -33,11 +32,6 @@ SequelizeDJ.init(
       type: DataTypes.STRING,
       allowNull: false,
       field: 'character_path'
-    },
-    credits: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
     },
     score: {
       type: DataTypes.INTEGER,

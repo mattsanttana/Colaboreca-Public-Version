@@ -7,4 +7,5 @@ export interface IMusic extends Identifiable {
   musicURI: string;
   djId: number;
   trackId: number;
+  pointsApllied: boolean;
 }

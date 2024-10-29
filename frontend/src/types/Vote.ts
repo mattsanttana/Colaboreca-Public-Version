@@ -7,5 +7,5 @@ export enum voteValues {
 }
 
 export interface Vote {
-  value: voteValues;
+  voteValues: voteValues[];
 }

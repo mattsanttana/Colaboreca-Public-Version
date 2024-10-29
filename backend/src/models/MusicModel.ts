@@ -17,7 +17,7 @@ export default class MusicModel {
     return response.get();
   }
 
-  async findAll(where?: { djId?: number, trackId?: number }, p0?: unknown) {
+  async findAll(where?: { djId?: number, trackId?: number, musicURI?: string }, p0?: unknown) {
     if (where) {
       const musics = await this.musicModel.findAll({ where });
       return musics.map(music => music.get());
@@ -26,9 +26,16 @@ export default class MusicModel {
     return musics.map(music => music.get());
   }
 
-  async findOne(where: { musicURI?: string; trackId?: number }, p0?: unknown) {
+  async findOne(where: { id?: number; musicURI?: string; trackId?: number, pointsApllied?: boolean }, p0?: unknown) {
     const music = await this.musicModel.findOne({ where });
+    
     return music?.get();
+  }
+
+  async update(data: { pointsApllied: boolean }, where: { id: number }, p0?: unknown) {
+    const response = await this.musicModel.update(data, { where });
+
+    return response;
   }
 
   async delete(where: { id: number }) {

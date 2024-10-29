@@ -8,7 +8,6 @@ class App {
     this.app = express();
 
     this.config();
-
     this.routes();
 
     // Não remover essa rota
@@ -17,9 +16,9 @@ class App {
 
   private config(): void {
     const accessControl: express.RequestHandler = (_req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Origin', '*'); // Ajuste aqui se necessário
       res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS,PUT,PATCH');
-      res.header('Access-Control-Allow-Headers', '*');
+      res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type'); // Inclua explicitamente os cabeçalhos permitidos
       next();
     };
 
@@ -38,5 +37,5 @@ class App {
 
 export { App };
 
-// Essa segunda exportação é estratégica, e a execução dos testes de cobertura depende dela
+
 export const { app } = new App();

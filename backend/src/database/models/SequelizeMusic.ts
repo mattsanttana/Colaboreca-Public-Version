@@ -14,6 +14,7 @@ class SequelizeMusic extends Model<
   declare musicURI: string;
   declare djId: number;
   declare trackId: number;
+  declare pointsApllied?: boolean;
 }
 
 SequelizeMusic.init(
@@ -54,7 +55,13 @@ SequelizeMusic.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'track_id',
-    }
+    },
+    pointsApllied: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+      field: 'points_apllied',
+    },
   },
   {
     sequelize: db,

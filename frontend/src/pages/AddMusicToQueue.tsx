@@ -31,8 +31,6 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const [selectedTrack, setSelectedTrack] = useState<Music | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isAddingTrack, setIsAddingTrack] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [isConfirmed, setIsConfirmed] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   const [touchStartX, setTouchStartX] = useState(0);
@@ -50,20 +48,37 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const interval = useRef<NodeJS.Timeout | null>(null);
 
+  // useEffect para carregar as músicas populares no Brasil apenas uma vez
+  useEffect(() => {
+    const fetchTopTracksInBrazil = async () => {
+      try {
+        const response = await playbackActions.getTopMusicsInBrazil(trackId);
+        if (response?.status === 200) {
+          setTopTracksInBrazil(response.data);
+        } else {
+          console.error('Error fetching top tracks in Brazil');
+        }
+      } catch (error) {
+        console.error('Error fetching top tracks in Brazil:', error);
+      }
+    };
+
+    fetchTopTracksInBrazil();
+  }, [playbackActions, trackId]);
+
+  // useEffect para carregar os dados periodicamente
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [
           fetchedVerifyLogin,
           fetchedDJ,
-          fetchedGetTopTracksInBrazil,
           fetchedPlayingNow,
           fetchedDJPlayingNow,
           fetchedVerifyIfDJHasAlreadVoted
         ] = await Promise.all([
           djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
           djActions.getDJByToken(token),
-          playbackActions.getTopMusicsInBrazil(trackId),
           playbackActions.getState(trackId as string),
           playbackActions.getDJAddedCurrentMusic(trackId),
           voteActions.verifyIfDJHasAlreadVoted(token)
@@ -91,12 +106,6 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
         } else {
           console.error('Error fetching DJ');
         }
-
-        if (fetchedGetTopTracksInBrazil?.status === 200) {
-          setTopTracksInBrazil(fetchedGetTopTracksInBrazil.data);
-        } else {
-          console.error('Error fetching top tracks in Brazil');
-        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -108,7 +117,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 25000);
+    }, 40000);
 
     return () => {
       if (interval.current) {
@@ -154,7 +163,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (isMenuOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {
         closeMenu();
       }
     };
@@ -164,7 +173,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [closeMenu]);
+  }, [isMenuOpen, closeMenu]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -180,7 +189,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 50) {
+    if (distance > 200) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
   };
@@ -197,9 +206,8 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const handleConfirmAddTrack = async () => {
     if (selectedTrack) {
       setIsAddingTrack(true);
-      setModalMessage('');
       try {
-        const response = await playbackActions.addTrackToQueue(
+        await playbackActions.addTrackToQueue(
           trackId,
           selectedTrack.album.images[0].url,
           selectedTrack.name,
@@ -207,18 +215,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           selectedTrack.uri,
           token
         );
-        if (response?.status === 409) {
-          setModalMessage('Essa música já está na fila, por favor adicione outra.');
-        } else if (response?.status === 401) {
-          setModalMessage('Token inválido, por favor faça login novamente.');
-        } else if (response?.status === 404) {
-          setModalMessage('Falha ao tentar adicionar a música à fila, nenhum dispositivo ativo encontrado.');
-        } else {
-          setModalMessage('Música adicionada à fila com sucesso!');
-        }
+        handleCloseModal(); // Fechar o modal automaticamente após adicionar a música com sucesso
       } catch (error) {
         console.error(error);
-        setModalMessage('Ocorreu um erro ao adicionar a música à fila.');
       } finally {
         setIsAddingTrack(false);
       }
@@ -226,14 +225,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   }
 
   const handleConfirm = () => {
-    setIsConfirmed(true);
     handleConfirmAddTrack();
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedTrack(null);
-    setIsConfirmed(false);
   }
 
   const memoizedSearchResults = useMemo(() => searchResults, [searchResults]);
@@ -262,10 +259,10 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
         <Container style={{ position: 'relative' }}>
             <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
             <Row>
-              <Col md={3} className="d-none d-xl-block">
+              <Col md={3} className="d-none d-xxl-block">
                 <Menu dj={dj} />
               </Col>
-              <Col className="py-4" md={12} lg={12} xl={9}>
+              <Col className="py-4" md={12} lg={12} xl={12} xxl={9}>
                 <Card className="text-center text-light" style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}>
                   <Card.Body
                     className="hide-scrollbar"
@@ -359,12 +356,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                 </div>
               ) : (
                 <div>
-                  <p>{modalMessage || `Deseja adicionar a música "${selectedTrack?.name}" à fila?`}</p>
+                  <p>{`Deseja adicionar a música "${selectedTrack?.name}" à fila?`}</p>
                 </div>
               )}
             </Modal.Body>
             <Modal.Footer style={{ borderTop: 'none' }}>
-              {!isAddingTrack && !isConfirmed && (
+              {!isAddingTrack && (
                 <>
                   <Button variant="secondary" onClick={handleCloseModal}>
                     Cancelar
@@ -373,11 +370,6 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                     Confirmar
                   </Button>
                 </>
-              )}
-              {isConfirmed && (
-                <Button variant="primary" onClick={handleCloseModal}>
-                  Fechar
-                </Button>
               )}
             </Modal.Footer>
           </Modal>
