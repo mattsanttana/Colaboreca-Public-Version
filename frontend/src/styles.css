@@ -53,6 +53,21 @@ input[type=number]::-webkit-inner-spin-button {
   margin-bottom: 15px;
 }
 
+.menu-button-spotify{
+  background-color: #1DB954;
+  border-color: #1DB954;
+}
+
+.menu-button-spotify:hover {
+  background-color: #1AA34A; /* Cor ligeiramente mais escura para o estado hover */
+  border-color: #1AA34A;
+}
+
+.menu-button-spotify:active {
+  background-color: #148F3D; /* Cor ainda mais escura para o estado active */
+  border-color: #148F3D;
+}
+
 /* inicial-page h1 phrase style */
 
 .login-title {
@@ -64,6 +79,23 @@ input[type=number]::-webkit-inner-spin-button {
   margin-left: 70px;
   text-align: left;
 }
+
+@media (max-width: 768px) {
+  .login-title {
+    font-size: 1.5rem;
+    margin-left: 0;
+    text-align: center;
+    margin: 50px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .horizontal_logo {
+    max-width: 150px;
+    margin-left: -150px;
+  }
+}
+
 
 /* share-track track-id style */
 
@@ -155,7 +187,7 @@ input[type=number]::-webkit-inner-spin-button {
 
 .chosen-character {
   width: 100%;
-  max-width: 300px;
+  max-width: 260px;
   height: auto;
 }
 
@@ -163,35 +195,6 @@ input[type=number]::-webkit-inner-spin-button {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-}
-
-/* responsive styles */
-@media (max-width: 768px) {
-  .chosen-character {
-    max-width: 150px;
-  }
-
-  .card-style {
-    max-width: 400px;
-  }
-
-  .image-style {
-    width: 120%;
-  }
-}
-
-@media (max-width: 576px) {
-  .chosen-character {
-    max-width: 100px;
-  }
-
-  .card-style {
-    max-width: 400px;
-  }
-
-  .image-style {
-    width: 120%;
-  }
 }
 
 /* menu items style */
@@ -326,9 +329,14 @@ aside .nav-link:hover {
   background-color: black;
   color: white;
   border: 1px solid white;
+  max-width: 300px;
 }
 
 .custom-input::placeholder {
+  color: white;
+}
+
+.search-input::placeholder {
   color: white;
 }
 
@@ -380,6 +388,118 @@ aside .nav-link:hover {
   /* Para centralizar completamente a imagem */
 }
 
+.dj-character-inside-table {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 160px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 1;
+  /* Camada superior */
+  top: 35%;
+  /* Ajuste para posicionar verticalmente */
+  left: 183px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.dj-character-podium-rank-1 {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 120px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 3;
+  /* Camada superior */
+  top: 12%;
+  /* Ajuste para posicionar verticalmente */
+  left: 148px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.dj-character-podium-rank-2 {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 90px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 2;
+  /* Camada superior */
+  top: 20%;
+  /* Ajuste para posicionar verticalmente */
+  left: 60px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.dj-character-podium-rank-3 {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 90px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 1;
+  /* Camada superior */
+  top: 20%;
+  /* Ajuste para posicionar verticalmente */
+  left: 230px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.name-rank-1 {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 120px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 3;
+  /* Camada superior */
+  top: -18%;
+  /* Ajuste para posicionar verticalmente */
+  left: 148px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.name-rank-2 {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 90px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 2;
+  /* Camada superior */
+  top: -7%;
+  /* Ajuste para posicionar verticalmente */
+  left: 60px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
+.name-rank-3 {
+  position: absolute;
+  /* Para se posicionar em relação ao .dj-table */
+  width: 90px;
+  /* Ajuste o tamanho conforme necessário */
+  height: auto;
+  z-index: 1;
+  /* Camada superior */
+  top: -7%;
+  /* Ajuste para posicionar verticalmente */
+  left: 230px;
+  /* Centro horizontalmente */
+  transform: translate(-50%, -50%);
+  /* Para centralizar completamente a imagem */
+}
+
 .dj-square {
   flex-direction: column;
   justify-content: center;
@@ -410,7 +530,7 @@ aside .nav-link:hover {
   /* Largura fixa */
   height: 60px;
   /* Altura fixa */
-  font-size: 1.4rem;
+  font-size: 1.0rem;
   font-weight: bold;
   top: 70px;
   background-color: #5da2ba;
@@ -546,4 +666,10 @@ aside .nav-link:hover {
   height: 150px;
   animation: fade-logo 2s infinite ease-in-out;
   /* A animação dura 2 segundos e se repete infinitamente */
+}
+
+@media (max-width: 768px) {
+  .logo {
+    width: 250px;
+  }
 }

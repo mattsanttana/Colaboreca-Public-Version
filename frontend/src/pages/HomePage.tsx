@@ -12,7 +12,7 @@ const HomePage = () => {
           <img 
             src={logo} 
             alt='logo' 
-            className='img-fluid shadow-lg' 
+            className='img-fluid shadow-lg logo' 
             style={{ maxWidth: '350px' }} 
           />
         </Col>

@@ -25,7 +25,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (trackName.length >= 3 && trackName.length <= 16) {
+    if (trackName.length >= 3 && trackName.length <= 32) {
       setButtonDisabled(false);
     } else {
       setButtonDisabled(true);
@@ -107,6 +107,11 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
               style={{ maxWidth: '300px' }} 
             />
             <Form.Group className="mb-3" style={{ maxWidth: '500px' }}>
+            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+              <span style={{ color: trackName.length < 3 ? 'red' : 'white' }}>
+                {trackName.length}/32
+              </span>
+            </div>
               <Form.Control
                 type="text"
                 placeholder="Nome da Pista"
@@ -116,6 +121,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
                 style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
                 className="text-center custom-input"
                 autoComplete="off"
+                maxLength={32}
               />
               <Button
                 variant="primary"

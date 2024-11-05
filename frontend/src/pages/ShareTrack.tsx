@@ -81,7 +81,7 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
               </div>
             </Col>
           </Row>
-          <Button variant="primary" onClick={ handleShare } style={{margin: '20px', marginRight: '20px'}}>
+          <Button variant="primary" onClick={ handleShare } style={{margin: '20px', marginRight: '42px'}}>
             Compartilhar
           </Button>
         </Card.Body>

@@ -165,7 +165,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 25000);
+    }, 300000);
 
     return () => {
       clearInterval(interval.current as NodeJS.Timeout);

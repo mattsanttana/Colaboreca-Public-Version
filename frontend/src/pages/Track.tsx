@@ -84,7 +84,6 @@ const Track: React.FC<Props> = ({ token }) => {
             fetchedDJ,
             fetchedPlayingNow,
             fetchedDJPlayingNow,
-            fetchedQueue,
             fetchedVerifyIfDJHasAlreadVoted,
             fetchedVotes
           ] = await Promise.all([
@@ -94,7 +93,6 @@ const Track: React.FC<Props> = ({ token }) => {
             djActions.getDJByToken(token),
             playbackActions.getState(trackId),
             playbackActions.getDJAddedCurrentMusic(trackId),
-            playbackActions.getSpotifyQueue(trackId),
             voteActions.verifyIfDJHasAlreadVoted(token),
             voteActions.getAllVotesForThisMusic(trackId, playingNow?.item?.uri ?? "dispositivo não conectado")
           ]);
@@ -116,7 +114,7 @@ const Track: React.FC<Props> = ({ token }) => {
             setPlayingNow(fetchedPlayingNow);
             setDJs(fetchedDJs);
             setDJ(fetchedDJ?.data);
-            setQueue(fetchedQueue);
+            setQueue(fetchedDJPlayingNow.spotifyQueue.queue);
             setTrackName(fetchedTrack.data.trackName);
             setDJPlayingNow(fetchedDJPlayingNow);
             setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
@@ -136,7 +134,7 @@ const Track: React.FC<Props> = ({ token }) => {
 
     interval.current = window.setInterval(() => {
       fetchData();
-    }, 40000);
+    }, 300000);
 
     return () => {
       if (interval.current) {
@@ -219,7 +217,7 @@ const Track: React.FC<Props> = ({ token }) => {
                 <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} votes={votes} />
               </Col>
               <Col md={3} className="d-none d-xxl-block">
-                <div className="podium-container">
+                <div>
                   <Podium
                     djs={memoizedDJs}
                     isOwner={false}

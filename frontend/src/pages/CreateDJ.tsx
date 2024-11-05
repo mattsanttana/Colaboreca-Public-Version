@@ -6,7 +6,7 @@ import { saveDJ } from '../redux/actions';
 import { RootState } from '../redux/store';
 import MessagePopup from './MessagePopup';
 import useDJ from '../utils/useDJ';
-import { charactersPaths, logo } from '../assets/images/characterPath';
+import { charactersPaths, horizontalLogo, logo } from '../assets/images/characterPath';
 
 const randomCharacter = charactersPaths[Math.floor(Math.random() * charactersPaths.length)];
 
@@ -152,32 +152,41 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
             <Button variant="primary" onClick={handleClick} className="mt-3" style={{ width: '100%'}}>Ok</Button>
           </div>
         ) : (
-          <div className="menu-background text-center">
+          <div className="d-flex flex-column align-items-center">
+            <Image src={horizontalLogo} alt="horizontal_logo" style={{width: '300px'}}/>
             <Image
               src={selectedCharacterPath}
               alt="Avatar escolhido"
               className="chosen-character"
               roundedCircle
               />
-            <Form.Control
-              type="text"
-              placeholder="Insira um vulgo"
-              name="name"
-              value={name}
-              onChange={handleChange}
-              onKeyDown={handleKeyPress}
-              className="my-3 custom-input"
-              style={{ textAlign: 'center' }}
-              autoComplete="off"
-            />
-            <Button
-              variant="primary"
-              onClick={handleClick}
-              disabled={buttonDisabled}
-              style={{ width: '100%'}}
-              >
-                Ok
-            </Button>
+            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+              <span style={{ color: name.length < 3 ? 'red' : 'white' }}>
+                {name.length}/16
+              </span>
+            </div>
+            <Form.Group className="d-flex flex-column align-items-center">
+              <Form.Control
+                type="text"
+                placeholder="Insira um vulgo"
+                name="name"
+                value={name}
+                onChange={handleChange}
+                onKeyDown={handleKeyPress}
+                className="my-3 custom-input"
+                style={{ textAlign: 'center'}}
+                autoComplete="off"
+                maxLength={16}
+              />
+              <Button
+                variant="primary"
+                onClick={handleClick}
+                disabled={buttonDisabled}
+                style={{ width: '100%', maxWidth: '300px' }}
+                >
+                  Ok
+              </Button>
+            </Form.Group>
           </div>
         )}
         <MessagePopup show={showPopup} handleClose={handleClosePopup} message={popupMessage} />

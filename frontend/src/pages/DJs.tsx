@@ -128,7 +128,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 25000);
+    }, 300000);
 
     return () => {
       if (interval.current) {
@@ -254,12 +254,14 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                 <Card.Body
                   style={{ backgroundColor: '#000000', padding: '0', width: '100%', height: '845px', overflowY: 'auto' }}
                 >
-                  <Podium
-                    djs={djs}
-                    isOwner={false}
-                    trackId={trackId}
-                    hasDJs={djs.length > 0}
-                  />
+                  <Row md={3} style={{width: '90%', marginLeft: '3%'}}>
+                    <Podium
+                      djs={djs}
+                      isOwner={false}
+                      trackId={trackId}
+                      hasDJs={djs.length > 0}
+                    />
+                  </Row>
                   <Card.Title>Ranque:</Card.Title>
                   {djs?.length === 0 ? (
                     <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
@@ -303,7 +305,13 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {djs.sort((a, b) => a.ranking - b.ranking).map((dj: DJ) => (
+                        {djs
+                          .sort((a, b) => {
+                            if (a.ranking === 0) return 1; // Coloca 'a' no final se o ranking for 0
+                            if (b.ranking === 0) return -1; // Coloca 'b' no final se o ranking for 0
+                            return a.ranking - b.ranking; // Ordena normalmente se ambos os rankings forem diferentes de 0
+                          })
+                          .map((dj: DJ) => (
                             <tr key={dj.id}>
                               <td
                                 className='text-light'

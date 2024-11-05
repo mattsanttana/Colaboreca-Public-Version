@@ -117,7 +117,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 40000);
+    }, 300000);
 
     return () => {
       if (interval.current) {
@@ -273,13 +273,14 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                       placeholder="Pesquisar"
                       value={search}
                       onChange={handleChange}
-                      className="my-3 custom-input"
+                      className="my-3 search-input"
                       style={{ 
                         textAlign: 'center', 
                         position: 'sticky',
                         top: '0px',
                         zIndex: 1000,
-                        backgroundColor: '#000000'
+                        backgroundColor: '#000000',
+                        color: 'white'
                       }}
                     />
                     {isDebouncing ? (

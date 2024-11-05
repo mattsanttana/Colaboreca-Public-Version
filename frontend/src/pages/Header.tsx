@@ -7,6 +7,7 @@ import TrackInfoMenu from './TrackInfoMenu';
 import ShareTrack from './ShareTrack';
 import ShareTrackInfo from './ShareTrackInfo';
 import { DJ } from '../types/DJ';
+import { horizontalLogo } from '../assets/images/characterPath';
 
 interface Props {
   trackInfoShowPopup?: (isOpen: boolean) => void;
@@ -53,6 +54,14 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
   const handleClick = () => {
     setShowPopup(true);
   };
+
+  const handleClickLogo = () => {
+    if (pageType === 'track') {
+      window.location.href = `/track/${trackId}`;
+    } else {
+      window.location.href = `/track-info/${trackId}`;
+    }
+  }
 
   const handleClosePopup = () => {
     setShowPopup(false);
@@ -106,7 +115,9 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
             <FaBars className="bi bi-list"></FaBars>
           </Button>
         </Nav>
-        <Navbar.Brand className="text-primary" style={{ marginLeft: '30px' }}>COLABORECA</Navbar.Brand>
+        <Navbar.Brand className="text-primary" onClick={() => handleClickLogo()} style={{ marginLeft: '180px', cursor: 'pointer' }}>
+          <img src={horizontalLogo} alt="horizontal_logo" className="horizontal_logo" style={{width: '200px'}}/>
+        </Navbar.Brand>
         <Button onClick={handleClick} style={{ marginRight: '30px' }} variant="primary">
           Compartilhar
         </Button>

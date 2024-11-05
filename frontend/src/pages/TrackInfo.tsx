@@ -69,7 +69,6 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             fetchedDJs,
             fetchedPlayingNow,
             fetchedDJPlayingNow,
-            fetchedQueue,
             fetchedVotes
           ] = await Promise.all([
             trackActions.verifyTrackAcess(trackToken, trackId),
@@ -77,7 +76,6 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             djActions.getAllDJs(trackId),
             playbackActions.getState(trackId),
             playbackActions.getDJAddedCurrentMusic(trackId),
-            playbackActions.getSpotifyQueue(trackId),
             voteActions.getAllVotesForThisMusic(trackId, playingNow?.item?.uri ?? "dispositivo não conectado")
           ]);  
   
@@ -88,13 +86,13 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
               redirectTo: '/login'
             });
             return;
-          }
+          }     
   
           if (fetchedTrack?.status === 200) {
             setPlayingNow(fetchedPlayingNow);
             setDJPlayingNow(fetchedDJPlayingNow);
             setDJs(fetchedDJs);
-            setQueue(fetchedQueue);
+            setQueue(fetchedDJPlayingNow.spotifyQueue.queue);
             setVotes(fetchedVotes);
             setTrackFound(true);
             setTrackName(fetchedTrack.data.trackName);
@@ -114,7 +112,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
 
     interval.current = window.setInterval(() => {
       fetchData();
-    }, 25000);
+    }, 300000);
 
     return () => {
       if (interval.current) {

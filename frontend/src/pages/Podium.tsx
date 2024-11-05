@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, ListGroup, ListGroupItem, Button, Container } from 'react-bootstrap';
+import { Card, Button, Container } from 'react-bootstrap';
 import { DJ } from '../types/DJ';
 import { podium } from '../assets/images/characterPath';
 
@@ -42,23 +42,46 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
     <Container className="py-4">
       <Card
         className="text-center text-light"
-        style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+        style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', top: '60px' }}
       >
-        <Card.Body className='hide-scrollbar' style={{ height: '400px', overflow: 'auto' }}>
+        <Card.Body className='hide-scrollbar' style={{ height: '400px', overflow: 'auto'}}>
+          <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto' }}></div>
           <img src={podium} alt="podium" className='podium-img' />
           {djPodium.length > 0 ? (
             <div>
-              <ListGroup variant="flush">
-                {djPodium.map((dj: DJ) => (
-                  <ListGroupItem key={dj.id}>
-                    <div className="d-flex justify-content-center align-items-center">
-                      <div className="rank-square-short">{dj?.ranking || '-'}</div>
-                      <div className="name-square-short mx-3">{dj?.djName}</div>
-                      <div className="points-square-short">{dj?.score} pts</div>
-                    </div>
-                  </ListGroupItem>
-                ))}
-              </ListGroup>
+              {djPodium[0] && (
+                <div>
+                  <p className="text-light mt-3 name-rank-1">1º <br />{djPodium[0].djName}</p>
+                  <Card.Img
+                    key={djPodium[0].id}
+                    src={djPodium[0].characterPath}
+                    alt={djPodium[0].djName}
+                    className="img-fluid dj-character-podium-rank-1"
+                  />
+                </div>
+              )}
+              {djPodium[1] && (
+                <div>
+                  <p className="text-light mt-3 name-rank-2">2º <br />{djPodium[1].djName}</p>
+                  <Card.Img
+                    key={djPodium[1].id}
+                    src={djPodium[1].characterPath}
+                    alt={djPodium[1].djName}
+                    className="img-fluid dj-character-podium-rank-2"
+                  />
+                </div>
+              )}
+              {djPodium[2] && (
+                <div>
+                  <p className="text-light mt-3 name-rank-3">3º <br />{djPodium[2].djName}</p>
+                  <Card.Img
+                    key={djPodium[2].id}
+                    src={djPodium[2].characterPath}
+                    alt={djPodium[2].djName}
+                    className="img-fluid dj-character-podium-rank-3"
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div>

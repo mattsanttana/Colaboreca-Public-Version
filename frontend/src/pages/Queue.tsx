@@ -140,7 +140,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   
     fetchQueue();
   
-    const interval = setInterval(fetchQueue, 25000); // Aumente o intervalo para 60 segundos
+    const interval = setInterval(fetchQueue, 300000); // Aumente o intervalo para 60 segundos
   
     return () => clearInterval(interval);
   }, [djActions, isOwner, playbackActions, djToken, trackActions, trackId, voteActions]);
@@ -339,7 +339,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                         </Col>
                       ))}
                     </Row>
-                    {showVotePopup && isOwner && (
+                    {showVotePopup && !isOwner && (
                     <VotePopup
                       showVotePopup={showVotePopup}
                       playingNow={playingNow}

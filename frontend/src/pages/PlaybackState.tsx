@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Card, Container } from 'react-bootstrap';
 import PlayingNow from '../types/PlayingNow';
 import { DJPlayingNow } from '../types/DJ';
-import { djTable } from '../assets/images/characterPath';
+import { djTable, djTablePlaying } from '../assets/images/characterPath';
 import { Vote } from '../types/Vote';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
@@ -82,7 +82,8 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
                   </div>
                 </div>
               </div>
-              <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto' }}>
+              { dj?.addedBy === trackName ? (
+              <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px' }}>
                 <Card.Img
                   src={djTable}
                   alt="DJ table"
@@ -94,6 +95,25 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
                   className="img-fluid music-inside-table"
                 />
               </div>
+              ) : (
+                <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px' }}>
+                  <Card.Img
+                    src={dj?.characterPath}
+                    alt="DJ character"
+                    className="img-fluid dj-character-inside-table"
+                  />
+                  <Card.Img
+                    src={djTablePlaying}
+                    alt="DJ table"
+                    className="img-fluid dj-table"
+                  />
+                  <Card.Img 
+                    src={playingNow.item.album.images.length > 0 ? playingNow.item.album.images[0].url : 'url_de_backup'} 
+                    alt={playingNow.item.album.name} 
+                    className="img-fluid music-inside-table"
+                />
+              </div>
+              )}
             </div>
           ) : (
             <div>
@@ -119,7 +139,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
               </div>
             </div>
           )}
-          <div style={{ marginTop: '20px', height: '350px', marginLeft: '-53px' }}>
+          <div style={{ marginTop: '50px', height: '320px', marginLeft: '-53px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} layout="vertical">
                 <XAxis type="number" />
