@@ -73,11 +73,11 @@ const Menu: React.FC<Props> = ({ dj }) => {
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
-              onClick={() => handleRedirect(`/track/chat?track-id=${dj?.trackId}`)} // Corrigi a interpolação de string
+              onClick={() => handleRedirect(`/track/chat/${dj?.trackId}`)} // Corrigi a interpolação de string
               className="d-flex align-items-center justify-content-center"
               style={{ color: '#0e99fc'}}
             >
-              <FaComments className="me-2" />Chat
+              <FaComments className="me-2" />Papinho
             </Nav.Link>
           </Nav.Item>
         </Nav>

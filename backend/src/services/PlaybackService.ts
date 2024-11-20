@@ -326,6 +326,7 @@ export default class PlaybackService {
           artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),
           addedBy,
           characterPath,
+          spotifyQueue,
         },
       };
     } catch (error) {

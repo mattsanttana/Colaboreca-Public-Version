@@ -166,4 +166,14 @@ export default class Validations {
 
     next();
   }
+
+  static async validateSendMessage(req: Request, res: Response, next: NextFunction) {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ message: 'Missing parameters' });
+    }
+
+    next();
+  }
 }

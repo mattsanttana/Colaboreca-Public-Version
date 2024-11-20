@@ -63,7 +63,7 @@ const EnterTrack: React.FC = () => {
   return (
     <Container className="d-flex align-items-center justify-content-center vh-100">
       <Row className="justify-content-center d-flex flex-column">
-        <Col lassName="text-center mb-5">
+        <Col className="text-center mb-5">
           {phase === 1 ? (
             <>
               <img

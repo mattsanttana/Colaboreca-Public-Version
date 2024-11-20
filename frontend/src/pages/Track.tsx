@@ -42,7 +42,7 @@ const Track: React.FC<Props> = ({ token }) => {
   const [touchEndX, setTouchEndX] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const djActions = useDJ();
   const trackActions = useTrack();
   const playbackActions = usePlayback();
@@ -114,7 +114,7 @@ const Track: React.FC<Props> = ({ token }) => {
             setPlayingNow(fetchedPlayingNow);
             setDJs(fetchedDJs);
             setDJ(fetchedDJ?.data);
-            setQueue(fetchedDJPlayingNow.spotifyQueue.queue);
+            setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []);
             setTrackName(fetchedTrack.data.trackName);
             setDJPlayingNow(fetchedDJPlayingNow);
             setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
@@ -134,7 +134,7 @@ const Track: React.FC<Props> = ({ token }) => {
 
     interval.current = window.setInterval(() => {
       fetchData();
-    }, 300000);
+    }, 10000);
 
     return () => {
       if (interval.current) {
@@ -142,7 +142,7 @@ const Track: React.FC<Props> = ({ token }) => {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [djActions, playbackActions, token, trackActions, trackId, navigate, voteActions]);
+  }, []);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {

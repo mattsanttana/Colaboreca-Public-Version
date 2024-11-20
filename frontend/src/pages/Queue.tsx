@@ -140,10 +140,12 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   
     fetchQueue();
   
-    const interval = setInterval(fetchQueue, 300000); // Aumente o intervalo para 60 segundos
+    const interval = setInterval(fetchQueue, 10000);
   
     return () => clearInterval(interval);
-  }, [djActions, isOwner, playbackActions, djToken, trackActions, trackId, voteActions]);
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Rolar para o item selecionado sempre que currentTrackIndex mudar
@@ -253,10 +255,11 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
             </Col>
           )}
             <Col
-            md={12}
-            xl={12}
-            xxl={9}
-            className="py-4">
+              md={12}
+              xl={12}
+              xxl={9}
+              className="py-4"
+            >
               <Card
                 className="text-center text-light"
                 style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}

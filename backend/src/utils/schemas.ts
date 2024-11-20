@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 export const trackNameSchema = Joi.object({
   trackName: Joi.string()
     .min(3).message('track name too short')
-    .max(16).message('track name too long')
+    .max(32).message('track name too long')
     .required(),
 });
 

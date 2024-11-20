@@ -1,11 +1,21 @@
 import * as express from 'express';
+import * as http from 'http';
+
 import router from './routes';
+import { initSocket } from './utils/socketIO'; // Importe a função de inicialização do Socket.IO
 
 class App {
   public app: express.Express;
+  private server: http.Server;
 
   constructor() {
     this.app = express();
+
+    // Criar o servidor HTTP
+    this.server = http.createServer(this.app);
+
+    // Inicialize o Socket.IO
+    initSocket(this.server);
 
     this.config();
     this.routes();
@@ -31,11 +41,12 @@ class App {
   }
 
   public start(PORT: string | number): void {
-    this.app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+    this.server.listen(PORT, () => {
+      console.log(`Running on port ${PORT}`);
+      console.log(`Socket.IO is running on port ${PORT}`);
+    });
   }
 }
 
 export { App };
-
-
 export const { app } = new App();

@@ -66,7 +66,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
         className="text-center"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
       >
-        <Card.Body style={{height: '850px', overflow: 'auto' }}>
+        <Card.Body style={{height: '848px', overflow: 'auto' }}>
           {playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track' ? (
             <div style={{padding: '0px'}}>
               <div className="d-flex justify-content-center align-items-center squeres-container">
@@ -78,7 +78,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
                 <div className="music-square mx-2 hide-scrollbar" ref={containerRef}>
                   <div style={{ fontWeight: 'bold' }}>Tocando:</div>
                   <div className="music-scroll" ref={scrollRef}>
-                    {playingNow.item.name} - {playingNow.item.artists.map((artist) => artist.name).join(', ')}
+                    {playingNow?.item?.name} - {playingNow?.item?.artists?.map((artist) => artist.name).join(', ')}
                   </div>
                 </div>
               </div>
@@ -130,7 +130,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
                   </div>
                 </div>
               </div>
-              <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto' }}>
+              <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px' }}>
                 <Card.Img
                   src={djTable}
                   alt="DJ table"

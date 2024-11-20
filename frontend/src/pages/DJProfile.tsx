@@ -165,12 +165,15 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 300000);
+    }, 10000);
 
     return () => {
       clearInterval(interval.current as NodeJS.Timeout);
     };
-  }, [djId, trackId, djToken, djActions, playbackActions, voteActions]);
+
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {

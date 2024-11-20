@@ -54,16 +54,19 @@
   },
   "dependencies": {
     "axios": "^1.6.8",
+    "axios-throttle": "^1.0.2",
     "bcryptjs": "2.4.3",
     "cors": "2.8.5",
     "dotenv": "^16.4.5",
-    "express": "4.17.1",
+    "express": "^4.17.1",
     "express-async-errors": "3.1.1",
+    "express-rate-limit": "^7.4.1",
     "jest": "27.4.3",
     "joi": "^17.9.2",
     "jsonwebtoken": "8.5.1",
     "mysql2": "2.3.3",
     "sequelize": "^6.25.5",
+    "socket.io": "^4.8.1",
     "uuid": "^9.0.1"
   }
 }

@@ -64,7 +64,8 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     };
 
     fetchTopTracksInBrazil();
-  }, [playbackActions, trackId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // useEffect para carregar os dados periodicamente
   useEffect(() => {
@@ -117,7 +118,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 300000);
+    }, 10000);
 
     return () => {
       if (interval.current) {
@@ -125,7 +126,8 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
       }
     };
 
-  }, [djActions, playbackActions, token, trackId, voteActions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (debouncedSearch.trim() === '') {

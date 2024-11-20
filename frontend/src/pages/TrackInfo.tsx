@@ -20,11 +20,10 @@ const Header = lazy(() => import('./Header'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
 
 interface Props {
-  djToken: string;
   trackToken: string;
 }
 
-const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
+const TrackInfo: React.FC<Props> = ({ trackToken }) => {
   const { trackId } = useParams();
   const [trackFound, setTrackFound] = useState<boolean>(false);
   const [trackName, setTrackName] = useState<string>('');
@@ -92,7 +91,7 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
             setPlayingNow(fetchedPlayingNow);
             setDJPlayingNow(fetchedDJPlayingNow);
             setDJs(fetchedDJs);
-            setQueue(fetchedDJPlayingNow.spotifyQueue.queue);
+            setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []);
             setVotes(fetchedVotes);
             setTrackFound(true);
             setTrackName(fetchedTrack.data.trackName);
@@ -112,15 +111,16 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
 
     interval.current = window.setInterval(() => {
       fetchData();
-    }, 300000);
+    }, 10000);
 
     return () => {
       if (interval.current) {
         clearInterval(interval.current);
       }
     };
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [djActions, editedTrackName, navigate, playbackActions, djToken, trackActions, trackId, trackToken, voteActions]);
+  }, []);
   
   useEffect(() => {
     const isSameAsTrack = trackName === editedTrackName;
@@ -320,7 +320,6 @@ const TrackInfo: React.FC<Props> = ({ djToken, trackToken }) => {
 };
 
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token,
   trackToken: state.trackReducer.token
 });
 

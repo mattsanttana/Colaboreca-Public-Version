@@ -128,7 +128,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
 
     interval.current = setInterval(() => {
       fetchData();
-    }, 300000);
+    }, 10000);
 
     return () => {
       if (interval.current) {
@@ -136,7 +136,8 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
       }
     };
 
-  }, [trackId, djToken, trackActions, djActions, playbackActions, voteActions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {

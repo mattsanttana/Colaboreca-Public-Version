@@ -40,7 +40,7 @@ const Login = () => {
               <Button
                 variant='primary'
                 className='menu-button menu-button-spotify'
-                style={{ marginLeft: '13%'}}
+                style={{ marginLeft: '12.5%', marginTop: '20px' }}
                 onClick={handleClick}
               >
                 Entrar Com Spotify Premium
@@ -62,6 +62,7 @@ const Login = () => {
               variant='secondary'
               className='menu-button mt-3'
               disabled={true}
+              style={{ marginTop: '20%' }}
             >
               Entrar com YT Music (Em breve)
             </Button>
