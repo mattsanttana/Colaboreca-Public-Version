@@ -9,6 +9,7 @@ class SequelizeMessage extends Model<
 > {
   declare id?: number;
   declare chatId?: number | null;
+  declare trackId: number;
   declare djId: number;
   declare receiveDJId?: number | null;
   declare message: string;
@@ -28,6 +29,11 @@ SequelizeMessage.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       field: 'chat_id',
+    },
+    trackId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'track_id',
     },
     receiveDJId: {
       type: DataTypes.INTEGER,

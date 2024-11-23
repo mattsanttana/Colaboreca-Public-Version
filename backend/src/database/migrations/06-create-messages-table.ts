@@ -15,6 +15,11 @@ export default {
         allowNull: true,
         field: 'chat_id',
       },
+      trackId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: 'track_id',
+      },
       djId: {
         type: DataTypes.INTEGER,
         allowNull: false,

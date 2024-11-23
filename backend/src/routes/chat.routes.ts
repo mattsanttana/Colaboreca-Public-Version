@@ -12,4 +12,10 @@ router.post(
   (req, res) => chatController.sendMessage(req, res)
 );
 
+router.get(
+  '/',
+  Validations.validateToken,
+  (req, res) => chatController.findAllMessagesForThisDJ(req, res)
+);
+
 export default router;

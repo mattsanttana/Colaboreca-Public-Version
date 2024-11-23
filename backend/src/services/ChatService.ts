@@ -29,6 +29,7 @@ export default class ChatService {
       if (!djId) {
         const newMessage = await this.messageModel.create({
           chatId: null,
+          trackId,
           djId: decoded.id,
           receiveDJId: null,
           message,
@@ -64,6 +65,7 @@ export default class ChatService {
 
         const newMessage = await this.messageModel.create({
           chatId: newChat.id as number,
+          trackId,
           djId: decoded.id,
           receiveDJId: djId,
           message,
@@ -84,6 +86,7 @@ export default class ChatService {
       // Cria a mensagem e associa ao chat existente ou recém-criado
       const newMessage = await this.messageModel.create({
         chatId: existingChat.chatId as number,
+        trackId,
         djId: decoded.id,
         receiveDJId: djId,
         message,
@@ -99,6 +102,36 @@ export default class ChatService {
       io.to(`user_${decoded.id}`).emit('chat message', newMessage);
 
       return { status: 'CREATED', data: newMessage };
+    } catch (error) {
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
+  async findAllMessagesForThisDJ(authorization: string) {
+    try {
+      const token = authorization.split(' ')[1];
+      const decoded = JWT.verify(token);
+
+      if (typeof decoded === 'string') {
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
+      }
+
+      const trackId = decoded.trackId;
+
+      const messages = await this.messageModel.findAll({
+        where: {
+          trackId, // Filtrar mensagens pelo trackId
+          [Op.or]: [
+            { djId: decoded.id },
+            { receiveDJId: decoded.id },
+            { chatId: null } // Incluir mensagens gerais
+          ]
+        },
+        order: [['createdAt', 'ASC']]
+      });
+
+      return { status: 'OK', data: messages };
     } catch (error) {
       console.error(error);
       return { status: 'ERROR', data: { message: 'An error occurred' } };

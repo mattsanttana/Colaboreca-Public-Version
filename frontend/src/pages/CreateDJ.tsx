@@ -117,13 +117,14 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
       <Container className="menu-container">
         {phase === 1 ? (
           <div className="menu-background">
+            <Image src={ horizontalLogo } alt="horizontalLogo" className="logo" style={{width: '200px'}}/>
             <div className="text-center">
               <Image src={selectedCharacterPath} alt="Avatar escolhido" className="chosen-character" roundedCircle />
               <h2 className="text-white">{name}</h2>
             </div>
             <h1 className="text-white">Escolha o seu personagem</h1>
             <Card
-              className="text-center card-style hide-scrollbar"
+              className="text-center card-style"
               style={{
                 backgroundColor: '#000000',
                 boxShadow: '0 0 0 0.5px #ffffff',

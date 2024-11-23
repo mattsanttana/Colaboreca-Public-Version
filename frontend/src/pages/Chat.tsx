@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaPaperPlane } from 'react-icons/fa';
+import { FaPaperPlane, FaArrowLeft } from 'react-icons/fa';
 import { connect } from 'react-redux';
 import { Container, Row, Col, Button, Form, ListGroup, Image } from 'react-bootstrap';
 import { io } from 'socket.io-client';
@@ -56,6 +56,37 @@ const Chat: React.FC<Props> = ({ token }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const interval = useRef<number | null>(null);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const djMessages = await messageActions.getAllMessagesForThisDJ(token);
+  
+        if (djMessages?.status === 200) {
+          const newChats = djMessages.data.reduce((acc, message) => {
+            const chatId = message.chatId || 'general';
+            acc[chatId] = [
+              ...(acc[chatId] || []),
+              {
+                djId: message.djId,
+                receiveDJId: message.receiveDJId,
+                message: message.message
+              }
+            ];
+            return acc;
+          }, {} as { [key: string]: { djId: string; receiveDJId: string; message: string }[] });
+  
+          setChats(newChats);
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+  
+    fetchMessages();
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -314,7 +345,7 @@ const Chat: React.FC<Props> = ({ token }) => {
               <Col md={3} className="d-none d-xxl-block">
                 <Menu dj={dj} />
               </Col>
-              <Col md={12} lg={12} xl={12} xxl={3} style={{ borderRight: '1px solid #cccccc', overflowY: 'auto' }}>
+              <Col md={12} lg={12} xl={12} xxl={3} className={`chat-list ${!selectedChat && !selectedDJChat ? 'active' : ''}`} style={{ borderRight: '1px solid #cccccc', overflowY: 'auto' }}>
                 <div style={{ position: 'relative' }}>
                   <Form.Control
                     type='text'
@@ -412,7 +443,9 @@ const Chat: React.FC<Props> = ({ token }) => {
                         border: 'none',
                         borderBottom: '1px solid #cccccc',
                         paddingRight: 0,
-                        paddingLeft: 0
+                        paddingLeft: 0,
+                        maxHeight: '100px',
+                        overflowY: 'auto'
                       }}
                     >
                       <div
@@ -467,15 +500,24 @@ const Chat: React.FC<Props> = ({ token }) => {
                   ))}
                 </ListGroup>
               </Col>
-              <Col md={12} lg={12} xl={12} xxl={6}>
+
+              <Col md={12} lg={12} xl={12} xxl={6} className={`chat-container ${selectedChat || selectedDJChat ? 'active' : ''}`}>
                 {!selectedChat && !selectedDJChat ? (
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                     <h3 style={{ color: 'white' }}>Selecione um papinho</h3>
                   </div>
                 ) : (
                   <>
-                    <div style={{ backgroundColor: '#222222' }}>
+                    <div style={{ backgroundColor: '#222222', borderRadius: '8px', padding: '8px' }}>
                       <div style={{ display: 'flex' }}>
+                      <FaArrowLeft
+                        onClick={() => {
+                          setSelectedChat(null);
+                          setSelectedDJChat(null);
+                        }}
+                        className="mobile-only"
+                        style={{ cursor: 'pointer', marginRight: '15px', color: 'white' }}
+                      />
                         <Image
                           src={selectedDJChat ? getDJCharacter(selectedDJChat) : selectedChat === 'general' ? logo : getDJCharacter(
                             selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
@@ -502,61 +544,71 @@ const Chat: React.FC<Props> = ({ token }) => {
                     <div
                       ref={containerRef}
                       className="chat-container"
-                      style={{ backgroundColor: '#000000', color: 'white', height: '80vh', display: 'flex', flexDirection: 'column-reverse', overflowY: 'auto' }}
+                      style={{ backgroundColor: '#000000', color: 'white', height: '72vh', display: 'flex', flexDirection: 'column-reverse', overflowY: 'auto' }}
                     >
                       <div className="messages">
                         {selectedChat !== null && chats[selectedChat]?.map((msg, index) => (
                           <div
-                          key={index}
-                          className="message"
-                          style={{
-                            display: 'flex',
-                            justifyContent: msg.djId === dj.id ? 'flex-end' : 'flex-start',
-                            alignItems: 'center'
-                          }}
-                        >
-                          {msg.djId !== dj.id && (
-                            <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
-                              {isFirstMessageInSeries(chats[selectedChat], index) && (
-                                <Image
-                                  src={getDJCharacter(msg.djId)}
-                                  alt={getDJName(msg.djId)}
-                                  roundedCircle
-                                  style={{ width: '50px', height: '50px' }}
-                                />
-                              )}
-                            </div>
-                          )}
-                          <div
-                            className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
+                            key={index}
+                            className="message"
                             style={{
-                              backgroundColor: msg.djId !== dj.id ? '#333333' : '',
-                              marginRight: '10px',
-                              color: 'white',
-                              borderRadius: '20px',
-                              padding: '10px 15px',
-                              position: 'relative',
-                              maxWidth: '80%',
-                              wordBreak: 'break-word',
-                              margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3%'
+                              display: 'flex',
+                              justifyContent: msg.djId === dj.id ? 'flex-end' : 'flex-start',
+                              alignItems: 'center'
                             }}
                           >
-                            <p style={{ color: 'white', margin: 0 }}>
-                              {isFirstMessageInSeries(chats[selectedChat], index) && msg.djId !== dj.id && (
-                                <>
-                                  <strong>{getDJName(msg.djId)}</strong>
-                                  <br />
-                                </>
-                              )}
-                              {msg.message}
-                            </p>
+                            {msg.djId !== dj.id && (
+                              <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
+                                {isFirstMessageInSeries(chats[selectedChat], index) && (
+                                  <Image
+                                    src={getDJCharacter(msg.djId)}
+                                    alt={getDJName(msg.djId)}
+                                    roundedCircle
+                                    style={{ width: '50px', height: '50px' }}
+                                  />
+                                )}
+                              </div>
+                            )}
+                            <div
+                              className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
+                              style={{
+                                backgroundColor: msg.djId !== dj.id ? '#333333' : '',
+                                marginRight: '10px',
+                                color: 'white',
+                                borderRadius: '20px',
+                                padding: '10px 15px',
+                                position: 'relative',
+                                maxWidth: '80%',
+                                wordBreak: 'break-word',
+                                margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3%'
+                              }}
+                            >
+                              <p style={{ color: 'white', margin: 0 }}>
+                                {isFirstMessageInSeries(chats[selectedChat], index) && msg.djId !== dj.id && (
+                                  <>
+                                    <strong>{getDJName(msg.djId)}</strong>
+                                    <br />
+                                  </>
+                                )}
+                                {msg.message}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                       </div>
                     </div>
                     <div style={{ position: 'relative', width: '100%' }}>
-                      <div style={{ position: 'absolute', bottom: '-60px', display: 'flex', alignItems: 'flex-end', width: '100%' }}>
+                      <div
+                        style={{
+                          display: 'flex', 
+                          alignItems: 'flex-end', 
+                          width: '100%', 
+                          backgroundColor: '#222222', 
+                          padding: '8px', 
+                          borderRadius: '5px',
+                          marginTop: '30px'
+                        }}
+                      >
                         <Form.Control
                           as="textarea"
                           rows={1}
