@@ -209,7 +209,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     if (selectedTrack) {
       setIsAddingTrack(true);
       try {
-        await playbackActions.addTrackToQueue(
+        const addMusic = await playbackActions.addTrackToQueue(
           trackId,
           selectedTrack.album.images[0].url,
           selectedTrack.name,
@@ -217,7 +217,17 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           selectedTrack.uri,
           token
         );
-        handleCloseModal(); // Fechar o modal automaticamente após adicionar a música com sucesso
+
+        if (addMusic?.status === 200) {
+          handleCloseModal();
+        }
+
+        if (addMusic?.status === 409) {
+          handleCloseModal();
+          setPopupMessage('essa mnúsica já está na fila, por favor escolha outra');
+          setShowPopup(true);
+        }
+          
       } catch (error) {
         console.error(error);
       } finally {
@@ -379,6 +389,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           {showVotePopup && (
             <VotePopup
               showVotePopup={showVotePopup}
+              setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
             />

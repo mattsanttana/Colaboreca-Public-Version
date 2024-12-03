@@ -417,19 +417,19 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                   className="img-fluid rounded-circle mb-3"
                   style={{ width: '300px', margin: '0 auto' }}
                 />
-                <Card.Body style={{height: '530px', overflow: 'auto'}}>
-                  <div className="d-flex justify-content-center align-items-center mb-3">
-                    <div className="rank-square">{dj?.ranking || '-'}</div>
+                <div className="d-flex justify-content-center align-items-center mb-3">
+                  <div className="rank-square">
+                    {dj?.ranking ? `${dj.ranking}º` : '-'}
+                  </div>
                     <div className="name-square mx-3">{dj?.djName}</div>
                     <div className="points-square">{dj?.score} pts</div>
                   </div>
                   {isOwner && !isTrackOwner && (
-                    <Button variant="primary" style={{margin: '10px'}} onClick={() => setShowPopup(true)}>
+                    <Button variant="primary" style={{marginLeft: '40%', width: '20%'}} onClick={() => setShowPopup(true)}>
                       Editar/Excluir DJ
                     </Button>
                   )}
-                  <Card.Title className="mt-4 text-light" style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <Form.Select
                         className='text-light'
                         style={{ backgroundColor: '#000000', width: '140px' }}
@@ -440,6 +440,8 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                         <option value="3">Não tocadas</option>
                       </Form.Select>
                     </div>
+                <Card.Body style={{height: '370px', overflow: 'auto'}}>
+                  <Card.Title className="mt-4 text-light" style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
                     {musics.length > 0 ? (
                       <div className='table-responsive'>
                         <Table striped className='text-light'>
@@ -512,6 +514,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
             {showVotePopup && !isTrackOwner && (
             <VotePopup
               showVotePopup={showVotePopup}
+              setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
             />

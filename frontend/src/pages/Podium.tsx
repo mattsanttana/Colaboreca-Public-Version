@@ -51,7 +51,7 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
             <div>
               {djPodium[0] && (
                 <div>
-                  <p className="text-light mt-3 name-rank-1">1º <br />{djPodium[0].djName}</p>
+                  <p className="text-light mt-3 name-rank-1">{djPodium[0].djName}</p>
                   <Card.Img
                     key={djPodium[0].id}
                     src={djPodium[0].characterPath}
@@ -62,7 +62,7 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
               )}
               {djPodium[1] && (
                 <div>
-                  <p className="text-light mt-3 name-rank-2">2º <br />{djPodium[1].djName}</p>
+                  <p className="text-light mt-3 name-rank-2">{djPodium[1].djName}</p>
                   <Card.Img
                     key={djPodium[1].id}
                     src={djPodium[1].characterPath}
@@ -73,7 +73,7 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
               )}
               {djPodium[2] && (
                 <div>
-                  <p className="text-light mt-3 name-rank-3">3º <br />{djPodium[2].djName}</p>
+                  <p className="text-light mt-3 name-rank-3">{djPodium[2].djName}</p>
                   <Card.Img
                     key={djPodium[2].id}
                     src={djPodium[2].characterPath}

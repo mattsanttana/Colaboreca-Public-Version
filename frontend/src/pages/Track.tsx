@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from '
 import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Row, Col, Button } from 'react-bootstrap';
+import { io } from 'socket.io-client';
 import { RootState } from '../redux/store';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
@@ -15,7 +16,7 @@ import PlayingNow from '../types/PlayingNow';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import { Music } from '../types/SpotifySearchResponse';
 import { logo } from '../assets/images/characterPath';
-import { Vote } from '../types/Vote';
+import { Vote, voteValues } from '../types/Vote';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -23,6 +24,8 @@ const VotePopup = lazy(() => import('./VotePopup'));
 interface Props {
   token: string;
 }
+
+const socket = io('http://localhost:3001');
 
 const Track: React.FC<Props> = ({ token }) => {
   const { trackId } = useParams();
@@ -37,7 +40,7 @@ const Track: React.FC<Props> = ({ token }) => {
   const [popupMessage, setPopupMessage] = useState('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
-  const [votes, setVotes] = useState<Vote>();
+  const [votes, setVotes] = useState<Vote | undefined>(undefined);
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,6 +55,27 @@ const Track: React.FC<Props> = ({ token }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const interval = useRef<number | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (trackId && playingNow) {
+      const votes = await voteActions.getAllVotesForThisMusic(trackId, playingNow.item?.uri ?? "dispositivo não conectado");
+
+      setVotes(votes);
+      }
+    }
+
+    fetchData();
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  , [playingNow?.item?.uri || '']);
+
+  useEffect(() => {
+    // Limpar os votos quando a URI da música atual mudar
+    setVotes(undefined);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingNow?.item?.uri || '']);
 
   useEffect(() => {
     const scrollElement = scrollRef.current;
@@ -71,7 +95,8 @@ const Track: React.FC<Props> = ({ token }) => {
         scrollElement.style.animation = 'none'; // Remove a animação se o texto couber ou se não houver música tocando
       }
     }
-  }, [playingNow]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingNow?.item?.uri || '']);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,7 +110,6 @@ const Track: React.FC<Props> = ({ token }) => {
             fetchedPlayingNow,
             fetchedDJPlayingNow,
             fetchedVerifyIfDJHasAlreadVoted,
-            fetchedVotes
           ] = await Promise.all([
             trackActions.getTrackById(trackId),
             djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
@@ -94,7 +118,6 @@ const Track: React.FC<Props> = ({ token }) => {
             playbackActions.getState(trackId),
             playbackActions.getDJAddedCurrentMusic(trackId),
             voteActions.verifyIfDJHasAlreadVoted(token),
-            voteActions.getAllVotesForThisMusic(trackId, playingNow?.item?.uri ?? "dispositivo não conectado")
           ]);
           
           if (fetchedVerifyLogin?.status !== 200) {
@@ -118,7 +141,6 @@ const Track: React.FC<Props> = ({ token }) => {
             setTrackName(fetchedTrack.data.trackName);
             setDJPlayingNow(fetchedDJPlayingNow);
             setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-            setVotes(fetchedVotes);
           } else {
             setTrackFound(false);
           }
@@ -163,6 +185,24 @@ const Track: React.FC<Props> = ({ token }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [closeMenu]);
+
+  useEffect(() => {
+    const handleNewVote = (data: { vote: voteValues }) => {
+      setVotes((prevVotes) => {
+        if (!prevVotes) {
+          return { voteValues: [data.vote] };
+        }
+        return { voteValues: [...prevVotes.voteValues, data.vote] };
+      });
+    };
+  
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('new vote', handleNewVote);
+  
+    return () => {
+      socket.off('new vote', handleNewVote);
+    };
+  }, [trackId]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -234,6 +274,7 @@ const Track: React.FC<Props> = ({ token }) => {
           {showVotePopup && (
             <VotePopup
               showVotePopup={showVotePopup}
+              setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
             />

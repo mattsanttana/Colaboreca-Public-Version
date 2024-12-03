@@ -14,14 +14,17 @@ import PlayingNow from '../types/PlayingNow';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import { Music } from '../types/SpotifySearchResponse';
 import { logo } from '../assets/images/characterPath';
-import { Vote } from '../types/Vote';
+import { Vote, voteValues } from '../types/Vote';
 import useVote from '../utils/useVote';
+import { io } from 'socket.io-client';
 const Header = lazy(() => import('./Header'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
 
 interface Props {
   trackToken: string;
 }
+
+const socket = io('http://localhost:3001');
 
 const TrackInfo: React.FC<Props> = ({ trackToken }) => {
   const { trackId } = useParams();
@@ -60,6 +63,27 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (trackId && playingNow) {
+      const votes = await voteActions.getAllVotesForThisMusic(trackId, playingNow.item?.uri ?? "dispositivo não conectado");
+
+      setVotes(votes);
+      }
+    }
+
+    fetchData();
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  , [playingNow?.item?.uri || '']);
+
+  useEffect(() => {
+    // Limpar os votos quando a URI da música atual mudar
+    setVotes(undefined);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingNow?.item?.uri || '']);
+
+  useEffect(() => {
+    const fetchData = async () => {
       if (trackId) {
         try {
           const [
@@ -67,15 +91,13 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
             fetchedTrack,
             fetchedDJs,
             fetchedPlayingNow,
-            fetchedDJPlayingNow,
-            fetchedVotes
+            fetchedDJPlayingNow
           ] = await Promise.all([
             trackActions.verifyTrackAcess(trackToken, trackId),
             trackActions.getTrackById(trackId),
             djActions.getAllDJs(trackId),
             playbackActions.getState(trackId),
             playbackActions.getDJAddedCurrentMusic(trackId),
-            voteActions.getAllVotesForThisMusic(trackId, playingNow?.item?.uri ?? "dispositivo não conectado")
           ]);  
   
           if (fetchedOwnerTrack?.status !== 200) {
@@ -92,7 +114,6 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
             setDJPlayingNow(fetchedDJPlayingNow);
             setDJs(fetchedDJs);
             setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []);
-            setVotes(fetchedVotes);
             setTrackFound(true);
             setTrackName(fetchedTrack.data.trackName);
             if (!editedTrackName) {
@@ -148,6 +169,24 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [closeMenu]);
+
+  useEffect(() => {
+    const handleNewVote = (data: { vote: voteValues }) => {
+      setVotes((prevVotes) => {
+        if (!prevVotes) {
+          return { voteValues: [data.vote] };
+        }
+        return { voteValues: [...prevVotes.voteValues, data.vote] };
+      });
+    };
+  
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('new vote', handleNewVote);
+  
+    return () => {
+      socket.off('new vote', handleNewVote);
+    };
+  }, [trackId]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {

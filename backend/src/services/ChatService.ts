@@ -2,16 +2,19 @@ import { Op } from 'sequelize';
 import ChatModel from '../models/ChatModel';
 import MessageModel from '../models/MessageModel';
 import JWT from '../utils/JWT';
-import { getSocket } from '../utils/socketIO'; // Importe a função para obter a instância do Socket.IO
+import { getSocket } from '../utils/socketIO';
+import TrackModel from '../models/TrackModel';
 
 export default class ChatService {
   constructor(
     private chatModel: ChatModel = new ChatModel(),
-    private messageModel: MessageModel = new MessageModel()
+    private messageModel: MessageModel = new MessageModel(),
+    private trackModel: TrackModel = new TrackModel()
   ) { }
 
   async sendMessage(data: { djId: number; message: string; }, authorization: string) {
     const { djId, message } = data;
+    const now = new Date();
 
     try {
       const token = authorization.split(' ')[1];
@@ -44,6 +47,8 @@ export default class ChatService {
         io.to(`general_${trackId}`).emit('chat message', newMessage);
 
         return { status: 'CREATED', data: newMessage };
+
+        
       }
 
       // Verifica se já existe um chat entre os dois DJs
@@ -79,8 +84,9 @@ export default class ChatService {
         // Emitir evento do Socket.IO para mensagem direta
         io.to(`user_${djId}`).emit('chat message', newMessage);
         io.to(`user_${decoded.id}`).emit('chat message', newMessage);
+        await this.trackModel.update({ updatedAt: now }, { id: trackId });
 
-        return { status: 'CREATED', data: newMessage };
+        return { status: 'CREATED', data: newMessage };  
       }
 
       // Cria a mensagem e associa ao chat existente ou recém-criado
@@ -100,6 +106,7 @@ export default class ChatService {
       // Emitir evento do Socket.IO para mensagem direta
       io.to(`user_${djId}`).emit('chat message', newMessage);
       io.to(`user_${decoded.id}`).emit('chat message', newMessage);
+      await this.trackModel.update({ updatedAt: now }, { id: trackId });
 
       return { status: 'CREATED', data: newMessage };
     } catch (error) {

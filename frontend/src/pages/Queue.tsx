@@ -268,7 +268,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                   {queue.length > 0 ? (
                     <div>
                       <div className="mx-auto sticky-carousel d-flex justify-content-center">
-                        <div style={{ maxWidth: '300px', marginTop: '10px' }}>
+                        <div style={{ maxWidth: '300px', marginTop: '10px', marginBottom: '20px' }}>
                           <Slider {...settings} ref={sliderRef}>
                             {queue.map((track, index) => (
                               <div key={index}  style={{ padding: '20px' }}>
@@ -295,7 +295,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                             style={{ backgroundColor: '#000000', borderBottom: 'none', cursor: 'pointer'}}
                             ref={(el: never) => (trackRefs.current[index] = el)} // Adiciona a referência ao item da fila
                           >
-                            <div className="d-flex justify-content-left align-items-center" style={{ border: currentTrackIndex === index ? '2px solid white' : 'none'}}>
+                            <div className="d-flex justify-content-left align-items-center" style={{ backgroundColor: currentTrackIndex === index ? '#222222' : '', padding: '10px'}}>
                               {track.characterPath ? (
                                 <OverlayTrigger
                                   trigger="click"
@@ -306,7 +306,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                                   <img
                                     src={track.characterPath}
                                     alt={track.musicName}
-                                    className="img-thumbnail img-thumbnail-hover"
                                     style={{
                                       width: '70px',
                                       height: '70px',
@@ -345,6 +344,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                     {showVotePopup && !isOwner && (
                     <VotePopup
                       showVotePopup={showVotePopup}
+                      setShowVotePopup={setShowVotePopup} 
                       playingNow={playingNow}
                       djPlayingNow={djPlayingNow}
                     />

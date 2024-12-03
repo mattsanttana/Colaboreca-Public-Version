@@ -373,6 +373,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
           {showVotePopup && isOwner && (
           <VotePopup
             showVotePopup={showVotePopup}
+            setShowVotePopup={setShowVotePopup} 
             playingNow={playingNow}
             djPlayingNow={djPlayingNow}
           />

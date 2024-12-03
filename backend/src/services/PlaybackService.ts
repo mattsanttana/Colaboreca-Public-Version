@@ -242,56 +242,56 @@ export default class PlaybackService {
     try {
       const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
       const djs = await this.djModel.findAll({ trackId: Number(trackId) }, { transaction });
-
+  
       if (!track || !djs) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track or DJs not found' } };
       }
-
+  
       const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
       const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
       const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId) }, { transaction });
-
+  
       if (!spotifyQueue || !colaborecaQueue) {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
-
+  
       const currentlyPlayingTrack = spotifyQueue.currently_playing;
-
+  
       if (!currentlyPlayingTrack) {
         await transaction.commit();
         return { status: 'OK', data: { message: 'No track currently playing' } };
       }
-
+  
       const colaborecaTracksWithURI = colaborecaQueue.filter(
         (colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri
       );
-
+  
       let addedBy;
       let characterPath;
-
+  
       if (colaborecaTracksWithURI.length > 0) {
         // Verificar se todas as ocorrências são do Spotify ou se há alguma do DJ
         const isAllSpotify = colaborecaTracksWithURI.every(
           (colaborecaTrack: any) => colaborecaTrack.djId === null
         );
-
+  
         if (isAllSpotify) {
           // Se todas as ocorrências são do Spotify, então consideramos que a música foi adicionada pelo Spotify
           addedBy = track.trackName;
           characterPath = null;
         } else {
           // Se houver pelo menos uma ocorrência do DJ, considerar a última como a que adicionou a música
-          const lastColaborecaTrack = colaborecaQueue.reduce((latest, current) => {
+          const lastColaborecaTrack = colaborecaTracksWithURI.reduce((latest, current) => {
             if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
               return current;
             }
             return latest;
           }, {} as InferAttributes<SequelizeMusic, { omit: never; }>); // Inicializa com um objeto vazio do tipo correto
-
+  
           const dj = djs.find((dj: any) => dj.id === lastColaborecaTrack.djId);
-
+  
           if (dj) {
             addedBy = dj.djName;
             characterPath = dj.characterPath;
@@ -304,19 +304,16 @@ export default class PlaybackService {
         addedBy = track.trackName;
         characterPath = null;
       }
-
+  
       await transaction.commit();
-
-      const musicId = colaborecaQueue
-        .filter((colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri)
-        .reduce((latest, current) => {
-          if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
-            return current;
-          }
-          return latest;
-        }, {} as InferAttributes<SequelizeMusic, { omit: never; }>).id;
-
-
+  
+      const musicId = colaborecaTracksWithURI.reduce((latest, current) => {
+        if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
+          return current;
+        }
+        return latest;
+      }, {} as InferAttributes<SequelizeMusic, { omit: never; }>).id;
+  
       return {
         status: 'OK',
         data: {

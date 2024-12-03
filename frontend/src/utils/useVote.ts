@@ -31,7 +31,7 @@ const useVote = () => {
         },
       });
 
-      const data = await response.json();     
+      const data = await response.json();   
 
       if (data.message !== 'The DJ has not yet voted on the current song') {
         return false;

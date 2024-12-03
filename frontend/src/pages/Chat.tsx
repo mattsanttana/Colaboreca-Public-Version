@@ -63,7 +63,18 @@ const Chat: React.FC<Props> = ({ token }) => {
         const djMessages = await messageActions.getAllMessagesForThisDJ(token);
   
         if (djMessages?.status === 200) {
-          const newChats = djMessages.data.reduce((acc, message) => {
+          interface ChatMessage {
+            djId: string;
+            receiveDJId: string;
+            message: string;
+            chatId?: string;
+          }
+
+          interface Chats {
+            [key: string]: ChatMessage[];
+          }
+
+          const newChats = djMessages.data.reduce((acc: Chats, message: ChatMessage) => {
             const chatId = message.chatId || 'general';
             acc[chatId] = [
               ...(acc[chatId] || []),
@@ -74,7 +85,7 @@ const Chat: React.FC<Props> = ({ token }) => {
               }
             ];
             return acc;
-          }, {} as { [key: string]: { djId: string; receiveDJId: string; message: string }[] });
+          }, {} as Chats);
   
           setChats(newChats);
         }
@@ -145,7 +156,7 @@ const Chat: React.FC<Props> = ({ token }) => {
 
     interval.current = window.setInterval(() => {
       fetchData();
-    }, 20000);
+    }, 10000);
 
     return () => {
       if (interval.current) {
@@ -660,6 +671,7 @@ const Chat: React.FC<Props> = ({ token }) => {
           {showVotePopup && (
             <VotePopup
               showVotePopup={showVotePopup}
+              setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
             />

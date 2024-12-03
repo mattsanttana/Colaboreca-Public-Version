@@ -9,12 +9,13 @@ import useVote from "../utils/useVote";
 
 interface Props {
   showVotePopup: boolean;
+  setShowVotePopup: (show: boolean) => void;
   djPlayingNow: DJPlayingNow | null;
   playingNow: PlayingNow | null;
   token: string;
 }
 
-const Vote: React.FC<Props> = ({ showVotePopup, playingNow, djPlayingNow, token }) => {
+const Vote: React.FC<Props> = ({ showVotePopup, setShowVotePopup, playingNow, djPlayingNow, token }) => {
   const [vote, setVote] = useState(2);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -56,6 +57,7 @@ const Vote: React.FC<Props> = ({ showVotePopup, playingNow, djPlayingNow, token 
     setIsSubmitting(true);
     try {
       await voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]);
+      setShowVotePopup(false);
     } catch (error) {
       console.error('Erro ao enviar voto:', error);
     } finally {

@@ -112,42 +112,58 @@ export default class SpotifyActions {
   }
 
   static async getTopTracksInBrazil(token: string) {
-    try {
-      const response = await axios.get<GetTopTracksInBrazilResponse>(
-        'https://api.spotify.com/v1/playlists/37i9dQZF1DX0FOF1IUWK1W/tracks', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status !== 200) {
-        console.log('Error response from Spotify:', response.data);
-        return;
-      }
-
-      return response.data.items.map((item) => item.track);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.log('Error fetching top tracks:', error.response?.data || error.message);
-
-        if (error.response?.headers) {
-          const retryAfter = error.response.headers['retry-after'];
-          if (retryAfter) {
-            const retryAfterSeconds = parseInt(retryAfter, 10);
-            const hours = Math.floor(retryAfterSeconds / 3600);
-            const minutes = Math.floor((retryAfterSeconds % 3600) / 60);
-            const seconds = retryAfterSeconds % 60;
-            console.log(`Retry-After header value: ${retryAfter} seconds`);
-            console.log(
-              `You need to wait ${hours} hours, ${minutes} minutes, 
-              and ${seconds} seconds before making new requests.`
-            );
-          }
+    const primaryPlaylistUrl = 'https://api.spotify.com/v1/playlists/37i9dQZF1DX0FOF1IUWK1W/tracks';
+    const alternativePlaylistUrl = 'https://api.spotify.com/v1/playlists/2GC6fiCd3at4dq00nOAiF1/tracks'; // URL da playlist alternativa
+  
+    const fetchTracks = async (url: string) => {
+      try {
+        const response = await axios.get<GetTopTracksInBrazilResponse>(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        if (response.status !== 200) {
+          console.log('Error response from Spotify:', response.data);
+          return null;
         }
-      } else {
-        console.log('Unexpected error:', error);
+  
+        return response.data.items.map((item) => item.track);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.log('Error fetching top tracks:', error.response?.data || error.message);
+  
+          if (error.response?.headers) {
+            const retryAfter = error.response.headers['retry-after'];
+            if (retryAfter) {
+              const retryAfterSeconds = parseInt(retryAfter, 10);
+              const hours = Math.floor(retryAfterSeconds / 3600);
+              const minutes = Math.floor((retryAfterSeconds % 3600) / 60);
+              const seconds = retryAfterSeconds % 60;
+              console.log(`Retry-After header value: ${retryAfter} seconds`);
+              console.log(
+                `You need to wait ${hours} hours, ${minutes} minutes, 
+                and ${seconds} seconds before making new requests.`
+              );
+            }
+          }
+        } else {
+          console.log('Unexpected error:', error);
+        }
+        return null;
       }
+    };
+  
+    // Tentar buscar a playlist principal
+    let tracks = await fetchTracks(primaryPlaylistUrl);
+  
+    // Se a playlist principal estiver indisponível, tentar a playlist alternativa
+    if (!tracks) {
+      console.log('Primary playlist unavailable, trying alternative playlist...');
+      tracks = await fetchTracks(alternativePlaylistUrl);
     }
+  
+    return tracks;
   }
 
   static async getTrackBySearch(token: string, query: string) {

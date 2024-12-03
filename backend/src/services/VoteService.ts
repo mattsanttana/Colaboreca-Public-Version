@@ -5,6 +5,7 @@ import DJModel from '../models/DJModel';
 import VoteModel from '../models/VoteModel';
 import MusicModel from '../models/MusicModel';
 import JWT from '../utils/JWT';
+import { getSocket } from '../utils/socketIO';
 import { Vote } from '../interfaces/votes/IVote';
 import SpotifyActions from '../utils/SpotifyActions';
 import { Track } from '../interfaces/spotify_response/SpotifyResponse';
@@ -102,6 +103,8 @@ export default class VoteService {
   async createVote(authorization: string, musicURI: string, vote: Vote) {
     const transaction = await this.sequelize.transaction();
     try {
+      const io = getSocket();
+
       const token = authorization.split(' ')[1];
       const decoded = JWT.verify(token);
 
@@ -136,6 +139,7 @@ export default class VoteService {
       }
 
       const response = await this.voteModel.create({ djId: decoded.id, musicId: music.id, vote }, { transaction });
+      io.to(`track_${decoded.trackId}`).emit('new vote', response);
 
       await transaction.commit();
       return { status: 'OK', data: response };
@@ -148,7 +152,7 @@ export default class VoteService {
 
   async getAllVotesForThisMusic(trackId: number, musicURI: string) {
     try {
-      const musics = await this.musicModel.findAll({ musicURI });
+      const musics = await this.musicModel.findAll({ musicURI, trackId });
 
       if (!musics || musics.length === 0) {
         return { status: 'OK', data: { message: 'Music not found' } };

@@ -435,12 +435,12 @@ aside .nav-link:hover {
 .dj-character-inside-table {
   position: absolute;
   /* Para se posicionar em relação ao .dj-table */
-  width: 160px;
+  width: 200px;
   /* Ajuste o tamanho conforme necessário */
   height: auto;
   z-index: 1;
   /* Camada superior */
-  top: 35%;
+  top: 40%;
   /* Ajuste para posicionar verticalmente */
   left: 183px;
   /* Centro horizontalmente */
@@ -451,12 +451,12 @@ aside .nav-link:hover {
 .dj-character-podium-rank-1 {
   position: absolute;
   /* Para se posicionar em relação ao .dj-table */
-  width: 120px;
+  width: 160px;
   /* Ajuste o tamanho conforme necessário */
   height: auto;
   z-index: 3;
   /* Camada superior */
-  top: 12%;
+  top: 13%;
   /* Ajuste para posicionar verticalmente */
   left: 148px;
   /* Centro horizontalmente */
@@ -467,7 +467,7 @@ aside .nav-link:hover {
 .dj-character-podium-rank-2 {
   position: absolute;
   /* Para se posicionar em relação ao .dj-table */
-  width: 90px;
+  width: 130px;
   /* Ajuste o tamanho conforme necessário */
   height: auto;
   z-index: 2;
@@ -483,7 +483,7 @@ aside .nav-link:hover {
 .dj-character-podium-rank-3 {
   position: absolute;
   /* Para se posicionar em relação ao .dj-table */
-  width: 90px;
+  width: 130px;
   /* Ajuste o tamanho conforme necessário */
   height: auto;
   z-index: 1;
@@ -504,7 +504,7 @@ aside .nav-link:hover {
   height: auto;
   z-index: 3;
   /* Camada superior */
-  top: -18%;
+  top: -14%;
   /* Ajuste para posicionar verticalmente */
   left: 148px;
   /* Centro horizontalmente */
@@ -520,7 +520,7 @@ aside .nav-link:hover {
   height: auto;
   z-index: 2;
   /* Camada superior */
-  top: -7%;
+  top: -3%;
   /* Ajuste para posicionar verticalmente */
   left: 60px;
   /* Centro horizontalmente */
@@ -536,7 +536,7 @@ aside .nav-link:hover {
   height: auto;
   z-index: 1;
   /* Camada superior */
-  top: -7%;
+  top: -3%;
   /* Ajuste para posicionar verticalmente */
   left: 230px;
   /* Centro horizontalmente */
@@ -752,4 +752,24 @@ aside .nav-link:hover {
   .mobile-only {
     display: none;
   }
+}
+
+.slick-dots li button:before {
+  color: white; /* Altere para a cor desejada */
+}
+
+.slick-dots {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-bottom: 20px;
+}
+
+.slick-dots li {
+  margin: 0 5px; /* Ajuste o espaçamento entre os indicadores conforme necessário */
+}
+
+.slick-dots li.slick-active button:before {
+  color: white
 }
