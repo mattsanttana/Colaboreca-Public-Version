@@ -1,5 +1,5 @@
 const useMessage = () => {
-  const sendMessage = async (djId: string | null, message: string, token: string) => {
+  const sendMessage = async (djId: string | number | null, message: string, token: string) => {
     try {
       const response = await fetch('http://localhost:3001/chats', {
         method: 'POST',

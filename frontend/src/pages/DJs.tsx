@@ -185,6 +185,11 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     navigate(profileUrl);
   };
 
+  const handleStartChat = (djId: string) => {
+    const chatUrl = `/track/chat/${trackId}/${djId}`;
+    navigate(chatUrl);
+  }
+
   const handleExpelDJ = (dj: DJ) => {
     setSelectedDJ(dj);
     setShowConfirmModal(true);
@@ -212,7 +217,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     <Popover.Body>
       <Button variant="link" onClick={() => handleViewProfile(String(pDJ.id))}>Perfil</Button>
       {(!isOwner && pDJ.id !== dj?.id) && (
-        <Button variant="link" onClick={() => console.log(`Chat com DJ: ${pDJ.djName}`)}>Chat</Button>
+        <Button variant="link" onClick={() => handleStartChat(String(pDJ.id))}>Papinho</Button>
       )}
     </Popover.Body>
   </Popover>

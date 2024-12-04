@@ -26,6 +26,7 @@ const socket = io('http://localhost:3001');
 
 const Chat: React.FC<Props> = ({ token }) => {
   const { trackId } = useParams();
+  const { djChat } = useParams();
   const [trackFound, setTrackFound] = useState(false);
   const [trackName, setTrackName] = useState('');
   const [dj, setDJ] = useState<DJ>();
@@ -43,7 +44,7 @@ const Chat: React.FC<Props> = ({ token }) => {
   const [search, setSearch] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [selectedDJChat, setSelectedDJChat] = useState<string | null>(null);
+  const [selectedDJChat, setSelectedDJChat] = useState<string | number | null>(null);
   const [chats, setChats] = useState<{ [key: string]: { djId: string; receiveDJId: string; message: string }[] }>({});
   const [message, setMessage] = useState('');
 
@@ -56,6 +57,29 @@ const Chat: React.FC<Props> = ({ token }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const interval = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (djChat && !selectedChat) {
+      let chatFound = false;
+      for (const chatId in chats) {
+        const chat = chats[chatId];
+        // Verifica todas as mensagens na conversa
+        for (const message of chat) {
+          if (Number(message.djId) === Number(djChat) || Number(message.receiveDJId) === Number(djChat)) {
+            setSelectedChat(chatId);
+            setSelectedDJChat(Number(djChat));
+            chatFound = true;
+            break;
+          }
+        }
+        if (chatFound) break;
+      }
+      if (!chatFound) {
+        setSelectedChat(null);
+        setSelectedDJChat(Number(djChat));
+      }
+    }
+  }, [chats, djChat, selectedChat]);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -181,6 +205,7 @@ const Chat: React.FC<Props> = ({ token }) => {
   
     // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
     if (socket.connected && dj) {
+      socket.emit('joinRoom', `general_${trackId}`);
       socket.emit('joinRoom', `user_${dj.id}`);
     }
   
@@ -300,12 +325,12 @@ const Chat: React.FC<Props> = ({ token }) => {
     }, new Set<string>());
   }, [chats, dj]);
 
-  const getDJName = (djId: string | null | undefined) => {
+  const getDJName = (djId: string | number | null | undefined) => {
     const dj = djs.find(dj => dj.id === djId);
     return dj ? `${dj.djName} ` : '';
   };
 
-  const getDJCharacter = (djId: string | null) => {
+  const getDJCharacter = (djId: string | number | null) => {
     const dj = djs.find(dj => dj.id === djId);
     return dj ? dj.characterPath : logo;
   }

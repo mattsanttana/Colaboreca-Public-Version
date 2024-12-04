@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Nav, Image } from 'react-bootstrap';
 import { FaHome, FaUser, FaMusic, FaList, FaChartLine, FaComments } from 'react-icons/fa';
 import { DJ } from '../types/DJ';
@@ -8,8 +9,10 @@ type Props = {
 };
 
 const Menu: React.FC<Props> = ({ dj }) => {
+  const navigate = useNavigate();
+  
   const handleRedirect = (path: string) => {
-    window.location.href = path;
+    navigate(path);
   };
 
   return (
