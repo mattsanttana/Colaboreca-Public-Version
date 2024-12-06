@@ -22,7 +22,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Col>
             <Image src={dj?.characterPath} alt={dj?.djName} className="img-fluid rounded-circle mb-3" />
             <div className="d-flex justify-content-center align-items-center squeres-container">
-            <div className="rank-square">
+            <div className={`rank-square ${dj?.ranking === 1 ? 'gold' : dj?.ranking === 2 ? 'silver' : dj?.ranking === 3 ? 'bronze' : ''}`}>
               {dj?.ranking ? `${dj.ranking}º` : '-'}
             </div>
               <div className="name-square mx-3">{dj?.djName}</div>

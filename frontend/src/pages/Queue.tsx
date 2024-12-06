@@ -206,12 +206,17 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     navigate(profileUrl);
   };
 
+  const handleStartChat = (djId: number) => {
+    const chatUrl = `/track/chat/${trackId}/${djId}`;
+    navigate(chatUrl);
+  }
+
   const renderPopover = (djId: number) => (
     <Popover id={`popover-${djId}`}>
       <Popover.Body>
         <Button variant="link" onClick={() => handleViewProfile(String(djId))}>Perfil</Button>
         {(!isOwner && djId !== Number(dj?.id)) && (
-          <Button variant="link" onClick={() => console.log(`Chat com DJ: ${djId}`)}>Chat</Button>
+          <Button variant="link" onClick={() => handleStartChat(djId)}>Chat</Button>
         )}
       </Popover.Body>
     </Popover>
@@ -306,6 +311,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                                   <img
                                     src={track.characterPath}
                                     alt={track.musicName}
+                                    className="img-thumbnail i"
                                     style={{
                                       width: '70px',
                                       height: '70px',

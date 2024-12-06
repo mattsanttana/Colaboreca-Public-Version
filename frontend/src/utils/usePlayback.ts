@@ -78,7 +78,7 @@ const usePlayback = () => {
 
   const getDJAddedCurrentMusic = async (trackId: string | undefined) => {
     try {
-      const response = await fetch(`http://localhost:3001/playback/dj-added-current-song/${ trackId }`);
+      const response = await fetch(`http://localhost:3001/playback/dj-added-current-music/${ trackId }`);
 
       const data = await response.json();
 

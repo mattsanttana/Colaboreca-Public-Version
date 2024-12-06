@@ -336,11 +336,11 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
                 xxl={6}
                 className="d-flex flex-column align-items-center playback-state-container"
               >
-                <PlaybackState playingNow={playingNow} trackName={ trackName } dj={djPlayingNow} votes={votes}/>
+                <PlaybackState playingNow={playingNow} trackName={ trackName } dj={null} djPlayingNow={djPlayingNow} votes={votes} isOwner={true} trackId={trackId}/>
               </Col>
               <Col md={3} className="d-none d-xxl-block">
                 <div className="podium-container">
-                  <Podium djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
+                  <Podium dj={undefined} djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
                 </div>
                 <div className="queue-container">
                   <QueuePreview trackId={trackId} queue={queue} />

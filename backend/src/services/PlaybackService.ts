@@ -321,6 +321,7 @@ export default class PlaybackService {
           cover: currentlyPlayingTrack.album.images[0].url,
           musicName: currentlyPlayingTrack.name,
           artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),
+          djId: addedBy === track.trackName ? null : colaborecaTracksWithURI[0].djId,
           addedBy,
           characterPath,
           spotifyQueue,

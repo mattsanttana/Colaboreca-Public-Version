@@ -165,6 +165,48 @@ input[type=number]::-webkit-inner-spin-button {
   background-color: #ffdddd;
 }
 
+.rank-square.gold {
+  background-color: gold;
+  border: 2px solid gold;
+  box-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold;
+}
+
+.rank-square.silver {
+  background-color: silver;
+  border: 2px solid silver;
+  box-shadow: 0 0 5px silver, 0 0 10px silver, 0 0 15px silver;
+}
+
+.rank-square.bronze {
+  background-color: #cd7f32; /* Cor de bronze */
+  border: 2px solid #cd7f32;
+  box-shadow: 0 0 5px #cd7f32, 0 0 10px #cd7f32, 0 0 15px #cd7f32;
+}
+
+.gold {
+  background-color: gold !important;
+  border: 2px solid gold !important;
+  box-shadow: 0 0 3px gold, 0 0 6px gold, 0 0 10px gold !important;
+}
+
+.silver {
+  background-color: silver !important;
+  border: 2px solid silver !important;
+  box-shadow: 0 0 3px silver, 0 0 6px silver, 0 0 10px silver !important;
+}
+
+.bronze {
+  background-color: #cd7f32 !important; /* Cor de bronze */
+  border: 2px solid #cd7f32 !important;
+  box-shadow: 0 0 3px #cd7f32, 0 0 6px #cd7f32, 0 0 10px #cd7f32 !important;
+}
+
+.gold .message-text,
+.silver .message-text,
+.bronze .message-text {
+  color: black !important;
+}
+
 .points-square-short {
   background-color: #ddffdd;
 }

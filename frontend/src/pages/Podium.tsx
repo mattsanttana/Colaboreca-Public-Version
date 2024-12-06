@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Container } from 'react-bootstrap';
+import { Card, Button, Container, Popover, OverlayTrigger } from 'react-bootstrap';
 import { DJ } from '../types/DJ';
 import { podium } from '../assets/images/characterPath';
 
 type Props = {
+  dj: DJ | undefined;
   djs: DJ[];
   isOwner: boolean;
   trackId: string | undefined;
   hasDJs: boolean;
 }
 
-const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
+const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId, hasDJs }) => {
   const navigate = useNavigate();
   const [djPodium, setPodium] = useState<DJ[]>([]);
   const [isRankingPage, setIsRankingPage] = useState(false);
@@ -38,6 +39,30 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
     }
   }
 
+  const handleViewProfile = (djId: string) => {
+    const profileUrl = isOwner
+      ? `/track-info/profile/${trackId}/${djId}`
+      : `/track/profile/${trackId}/${djId}`;
+    navigate(profileUrl);
+  };
+
+  const handleStartChat = (djId: string) => {
+    const chatUrl = `/track/chat/${trackId}/${djId}`;
+    navigate(chatUrl);
+  }
+
+  const renderPopover = (pDJ: DJ) => (
+    <Popover id={`popover-${pDJ.id}`}>
+      <Popover.Body>
+        <Button variant="link" onClick={() => handleViewProfile(String(pDJ.id))}>Perfil</Button>
+        {(!isOwner && pDJ.id !== dj?.id) && (
+          <Button variant="link" onClick={() => handleStartChat(String(pDJ.id))}>Papinho</Button>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
+  
+
   return (
     <Container className="py-4">
       <Card
@@ -52,34 +77,58 @@ const Podium: React.FC<Props> = ({ djs, isOwner, trackId, hasDJs }) => {
               {djPodium[0] && (
                 <div>
                   <p className="text-light mt-3 name-rank-1">{djPodium[0].djName}</p>
-                  <Card.Img
-                    key={djPodium[0].id}
-                    src={djPodium[0].characterPath}
-                    alt={djPodium[0].djName}
-                    className="img-fluid dj-character-podium-rank-1"
-                  />
+                  <OverlayTrigger
+                    trigger="click"
+                    placement="top"
+                    overlay={renderPopover(djPodium[0])}
+                    rootClose
+                  >
+                    <Card.Img
+                      key={djPodium[0].id}
+                      src={djPodium[0].characterPath}
+                      alt={djPodium[0].djName}
+                      className="img-fluid dj-character-podium-rank-1"
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </OverlayTrigger>
                 </div>
               )}
               {djPodium[1] && (
                 <div>
                   <p className="text-light mt-3 name-rank-2">{djPodium[1].djName}</p>
-                  <Card.Img
+                  <OverlayTrigger
+                    trigger="click"
+                    placement="top"
+                    overlay={renderPopover(djPodium[1])}
+                    rootClose
+                  >
+                    <Card.Img
                     key={djPodium[1].id}
                     src={djPodium[1].characterPath}
                     alt={djPodium[1].djName}
                     className="img-fluid dj-character-podium-rank-2"
-                  />
+                    style={{ cursor: 'pointer' }}
+                    />
+                  </OverlayTrigger>
                 </div>
               )}
               {djPodium[2] && (
                 <div>
                   <p className="text-light mt-3 name-rank-3">{djPodium[2].djName}</p>
-                  <Card.Img
-                    key={djPodium[2].id}
-                    src={djPodium[2].characterPath}
-                    alt={djPodium[2].djName}
-                    className="img-fluid dj-character-podium-rank-3"
-                  />
+                  <OverlayTrigger
+                    trigger="click"
+                    placement="top"
+                    overlay={renderPopover(djPodium[2])}
+                    rootClose
+                  >
+                    <Card.Img
+                      key={djPodium[2].id}
+                      src={djPodium[2].characterPath}
+                      alt={djPodium[2].djName}
+                      className="img-fluid dj-character-podium-rank-3"
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </OverlayTrigger>
                 </div>
               )}
             </div>

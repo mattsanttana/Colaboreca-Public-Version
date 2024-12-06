@@ -254,11 +254,12 @@ const Track: React.FC<Props> = ({ token }) => {
                 <Menu dj={dj} />
               </Col>
               <Col md={12} lg={12} xl={12} xxl={6} className="d-flex flex-column align-items-center playback-state-container">
-                <PlaybackState playingNow={playingNow} trackName={trackName} dj={djPlayingNow} votes={votes} />
+                <PlaybackState playingNow={playingNow} trackName={trackName} dj={dj} djPlayingNow={djPlayingNow} votes={votes} isOwner={false} trackId={trackId} />
               </Col>
               <Col md={3} className="d-none d-xxl-block">
                 <div>
                   <Podium
+                    dj={dj}
                     djs={memoizedDJs}
                     isOwner={false}
                     trackId={trackId}

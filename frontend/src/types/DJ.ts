@@ -8,6 +8,7 @@ export type DJ = {
 };
 
 export type DJPlayingNow = {
+  djId: number;
   addedBy: string;
   characterPath: string;
 };

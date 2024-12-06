@@ -1,21 +1,26 @@
 import React, { useEffect, useRef } from 'react';
-import { Card, Container } from 'react-bootstrap';
+import { Button, Card, Container, OverlayTrigger, Popover } from 'react-bootstrap';
 import PlayingNow from '../types/PlayingNow';
-import { DJPlayingNow } from '../types/DJ';
+import { DJ, DJPlayingNow } from '../types/DJ';
 import { djTable, djTablePlaying } from '../assets/images/characterPath';
 import { Vote } from '../types/Vote';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
   playingNow: PlayingNow | null;
   trackName: string;
-  dj: DJPlayingNow | null;
+  dj: DJ | null;
+  djPlayingNow: DJPlayingNow | null;
   votes: Vote | undefined;
+  isOwner: boolean;
+  trackId: string | undefined;
 };
 
-const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) => {
+const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNow, votes, isOwner, trackId }) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const scrollElement = scrollRef.current;
@@ -60,6 +65,30 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
     { name: 'Ninguém merece', value: voteCounts.very_bad },
   ];
 
+  const handleViewProfile = (djId: string) => {
+    const profileUrl = isOwner
+      ? `/track-info/profile/${trackId}/${djId}`
+      : `/track/profile/${trackId}/${djId}`;
+    navigate(profileUrl);
+  };
+
+  const handleStartChat = (djId: string) => {
+    const chatUrl = `/track/chat/${trackId}/${djId}`;
+    navigate(chatUrl);
+  }
+
+  const renderPopover = (pDJ: DJPlayingNow | null) => (
+    <Popover id={`popover-${pDJ?.djId}`} style={{ marginBottom: '-80px' }}>
+      <Popover.Body>
+        <Button variant="link" onClick={() => handleViewProfile(String(pDJ?.djId))}>Perfil</Button>
+        {(!isOwner && Number(pDJ?.djId) !== Number(dj?.id)) && (
+          <Button variant="link" onClick={() => handleStartChat(String(pDJ?.djId))}>Papinho</Button>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
+  
+
   return (
     <Container className="py-4">
       <Card
@@ -72,7 +101,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
               <div className="d-flex justify-content-center align-items-center squeres-container">
                 <div className="dj-square mx-2 hide-scrollbar">
                   <div style={{ fontWeight: 'bold' }}>Discotecando:</div>
-                  <div>{dj?.addedBy === trackName ? '-' : dj?.addedBy}</div>
+                  <div>{djPlayingNow?.addedBy === trackName ? '-' : djPlayingNow?.addedBy}</div>
                 </div>
                 <div className="track-square mx-2 hide-scrollbar">{trackName}</div>
                 <div className="music-square mx-2 hide-scrollbar" ref={containerRef}>
@@ -82,7 +111,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
                   </div>
                 </div>
               </div>
-              { dj?.addedBy === trackName ? (
+              { djPlayingNow?.addedBy === trackName ? (
               <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px' }}>
                 <Card.Img
                   src={djTable}
@@ -96,23 +125,30 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, votes }) =>
                 />
               </div>
               ) : (
-                <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px' }}>
-                  <Card.Img
-                    src={dj?.characterPath}
-                    alt="DJ character"
-                    className="img-fluid dj-character-inside-table"
+                <OverlayTrigger
+                  trigger="click"
+                  placement="top"
+                  overlay={renderPopover(djPlayingNow)}
+                  rootClose
+                >
+                  <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px', cursor: 'pointer' }}>
+                      <Card.Img
+                        src={djPlayingNow?.characterPath}
+                        alt="DJ character"
+                        className="img-fluid dj-character-inside-table"
+                      />
+                    <Card.Img
+                      src={djTablePlaying}
+                      alt="DJ table"
+                      className="img-fluid dj-table"
+                    />
+                    <Card.Img 
+                      src={playingNow.item.album.images.length > 0 ? playingNow.item.album.images[0].url : 'url_de_backup'} 
+                      alt={playingNow.item.album.name} 
+                      className="img-fluid music-inside-table"
                   />
-                  <Card.Img
-                    src={djTablePlaying}
-                    alt="DJ table"
-                    className="img-fluid dj-table"
-                  />
-                  <Card.Img 
-                    src={playingNow.item.album.images.length > 0 ? playingNow.item.album.images[0].url : 'url_de_backup'} 
-                    alt={playingNow.item.album.name} 
-                    className="img-fluid music-inside-table"
-                />
-              </div>
+                </div>
+              </OverlayTrigger>
               )}
             </div>
           ) : (

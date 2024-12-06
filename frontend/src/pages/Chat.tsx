@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from '
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaPaperPlane, FaArrowLeft } from 'react-icons/fa';
 import { connect } from 'react-redux';
-import { Container, Row, Col, Button, Form, ListGroup, Image } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, ListGroup, Image, OverlayTrigger, Popover } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 import { RootState } from '../redux/store';
 import MessagePopup from './MessagePopup';
@@ -62,6 +62,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     if (djChat && !selectedChat) {
       let chatFound = false;
       for (const chatId in chats) {
+        if (chatId === 'general') continue;
         const chat = chats[chatId];
         // Verifica todas as mensagens na conversa
         for (const message of chat) {
@@ -354,6 +355,64 @@ const Chat: React.FC<Props> = ({ token }) => {
     return messages[index - 1].djId !== messages[index].djId;
   };
 
+  const handleViewProfile = (djId: string) => {
+    const profileUrl = `/track/profile/${trackId}/${djId}`;
+    navigate(profileUrl);
+  };
+
+  const handleStartChat = (djId: string) => {
+    // Converte djId para número
+    const djIdNumber = Number(djId);
+  
+    // Verifica se já existe um chat com o djId especificado
+    let chatFound = false;
+    for (const chatId in chats) {
+      if (chatId === 'general') continue; // Ignora o chat geral
+      const chat = chats[chatId];
+      for (const message of chat) {
+        if (Number(message.djId) === djIdNumber || Number(message.receiveDJId) === djIdNumber) {
+          setSelectedChat(chatId);
+          setSelectedDJChat(djIdNumber);
+          chatFound = true;
+          break;
+        }
+      }
+      if (chatFound) break;
+    }
+  
+    // Se o chat não existir, inicie um novo chat
+    if (!chatFound) {
+      setSelectedChat(null);
+      setSelectedDJChat(djIdNumber);
+    }
+  };
+
+  const getRankClass = (djId: string) => {
+    const dj = djs.find(dj => dj.id === djId); // Supondo que você tenha uma lista de DJs com seus rankings
+    if (!dj) return '';
+    switch (dj.ranking) {
+      case 1:
+        return 'gold';
+      case 2:
+        return 'silver';
+      case 3:
+        return 'bronze';
+      default:
+        return '';
+    }
+  };
+
+  const renderPopover = (djId: string) => (
+    <Popover id={`popover-${djId}`}>
+      <Popover.Body>
+        <Button variant="link" onClick={() => handleViewProfile(String(djId))}>Perfil</Button>
+        {(djId !== dj?.id && selectedChat === 'general') && (
+          <Button variant="link" onClick={() => handleStartChat(String(djId))}>Papinho</Button>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
+
   return (
     <div
     onTouchStart={handleTouchStart}
@@ -596,17 +655,24 @@ const Chat: React.FC<Props> = ({ token }) => {
                             {msg.djId !== dj.id && (
                               <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
                                 {isFirstMessageInSeries(chats[selectedChat], index) && (
-                                  <Image
-                                    src={getDJCharacter(msg.djId)}
-                                    alt={getDJName(msg.djId)}
-                                    roundedCircle
-                                    style={{ width: '50px', height: '50px' }}
-                                  />
+                                  <OverlayTrigger
+                                    trigger="click"
+                                    placement="top"
+                                    overlay={renderPopover(msg.djId)}
+                                    rootClose
+                                  >
+                                    <Image
+                                      src={getDJCharacter(msg.djId)}
+                                      alt={getDJName(msg.djId)}
+                                      roundedCircle
+                                      style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                                    />
+                                  </OverlayTrigger>
                                 )}
                               </div>
                             )}
                             <div
-                              className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
+                              className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''} ${getRankClass(msg.djId)}`}
                               style={{
                                 backgroundColor: msg.djId !== dj.id ? '#333333' : '',
                                 marginRight: '10px',
@@ -619,7 +685,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                                 margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3%'
                               }}
                             >
-                              <p style={{ color: 'white', margin: 0 }}>
+                              <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
                                 {isFirstMessageInSeries(chats[selectedChat], index) && msg.djId !== dj.id && (
                                   <>
                                     <strong>{getDJName(msg.djId)}</strong>

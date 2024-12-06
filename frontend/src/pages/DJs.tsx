@@ -213,15 +213,15 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   };
 
   const renderPopover = (pDJ: DJ) => (
-  <Popover id={`popover-${pDJ.id}`}>
-    <Popover.Body>
-      <Button variant="link" onClick={() => handleViewProfile(String(pDJ.id))}>Perfil</Button>
-      {(!isOwner && pDJ.id !== dj?.id) && (
-        <Button variant="link" onClick={() => handleStartChat(String(pDJ.id))}>Papinho</Button>
-      )}
-    </Popover.Body>
-  </Popover>
-);
+    <Popover id={`popover-${pDJ.id}`}>
+      <Popover.Body>
+        <Button variant="link" onClick={() => handleViewProfile(String(pDJ.id))}>Perfil</Button>
+        {(!isOwner && pDJ.id !== dj?.id) && (
+          <Button variant="link" onClick={() => handleStartChat(String(pDJ.id))}>Papinho</Button>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
 
   return (
     <div
@@ -262,6 +262,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                 >
                   <Row md={3} style={{width: '90%', marginLeft: '3%'}}>
                     <Podium
+                      dj={dj}
                       djs={djs}
                       isOwner={false}
                       trackId={trackId}
