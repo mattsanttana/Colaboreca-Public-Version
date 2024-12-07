@@ -7,4 +7,5 @@ export interface IMessage extends Identifiable {
   receiveDJId?: number;
   message: string;
   createdAt: Date;
+  read: boolean;
 }

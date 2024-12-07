@@ -815,3 +815,14 @@ aside .nav-link:hover {
 .slick-dots li.slick-active button:before {
   color: white
 }
+
+.notification-bubble {
+  display: inline-block;
+  background-color: rgb(13, 110, 253);
+  color: white;
+  border-radius: 50%;
+  padding: 0.2em 0.5em;
+  font-size: 0.6em;
+  margin-left: 5%;
+  position: fixed;
+}

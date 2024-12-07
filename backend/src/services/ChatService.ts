@@ -48,7 +48,7 @@ export default class ChatService {
 
         return { status: 'CREATED', data: newMessage };
 
-        
+
       }
 
       // Verifica se já existe um chat entre os dois DJs
@@ -86,7 +86,7 @@ export default class ChatService {
         io.to(`user_${decoded.id}`).emit('chat message', newMessage);
         await this.trackModel.update({ updatedAt: now }, { id: trackId });
 
-        return { status: 'CREATED', data: newMessage };  
+        return { status: 'CREATED', data: newMessage };
       }
 
       // Cria a mensagem e associa ao chat existente ou recém-criado
@@ -139,6 +139,33 @@ export default class ChatService {
       });
 
       return { status: 'OK', data: messages };
+    } catch (error) {
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
+  async markMessagesAsRead(data: { messageIds: (string | number)[]; }, authorization: string) {
+    const { messageIds } = data;
+    const io = getSocket();
+
+    try {
+      const token = authorization.split(' ')[1];
+      const decoded = JWT.verify(token);
+
+      if (typeof decoded === 'string') {
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
+      }
+
+      const updated = await this.messageModel.update(messageIds);
+
+      if (!updated) {
+        return { status: 'ERROR', data: { message: 'An error occurred' } };
+      }
+
+      io.emit('messagesMarkedAsRead', { messageIds });
+
+      return { status: 'OK', data: { message: 'Messages marked as read' } };
     } catch (error) {
       console.error(error);
       return { status: 'ERROR', data: { message: 'An error occurred' } };

@@ -150,7 +150,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   useEffect(() => {
     // Rolar para o item selecionado sempre que currentTrackIndex mudar
     if (trackRefs.current[currentTrackIndex]) {
-      trackRefs.current[currentTrackIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [currentTrackIndex]);
 

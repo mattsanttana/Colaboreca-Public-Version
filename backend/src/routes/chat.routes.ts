@@ -18,4 +18,11 @@ router.get(
   (req, res) => chatController.findAllMessagesForThisDJ(req, res)
 );
 
+router.patch(
+  '/',
+  Validations.validateMessagesIds,
+  Validations.validateToken,
+  (req, res) => chatController.markMessagesAsRead(req, res)
+);
+
 export default router;

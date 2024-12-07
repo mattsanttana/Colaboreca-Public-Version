@@ -40,6 +40,11 @@ export default {
         field: 'created_at',
         defaultValue: new Date(),
       },
+      read: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     });
   },
   down(queryInterface: QueryInterface) {

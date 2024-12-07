@@ -1,5 +1,6 @@
 import { FindOptions } from "sequelize";
 import SequelizeMessage from "../database/models/SequelizeMessage";
+import { Op } from 'sequelize';
 
 export default class MessageModel {
   private messageModel = SequelizeMessage;
@@ -16,6 +17,23 @@ export default class MessageModel {
     });
 
     return response.get();
+  }
+
+  async update(messageIds: (number | string)[], p0?: unknown) { 
+    const response = await this.messageModel.update(
+      {
+        read: true,
+      },
+      {
+        where: {
+          id: {
+            [Op.in]: messageIds,
+          },
+        },
+      }
+    );
+  
+    return response;
   }
 
   async findOne(options: FindOptions, p0?: unknown) {

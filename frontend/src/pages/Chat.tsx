@@ -14,6 +14,7 @@ import PlayingNow from '../types/PlayingNow';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import { logo } from '../assets/images/characterPath';
 import useMessage from '../utils/useMessage';
+import { ChatMessage, Chats } from '../types/Chat';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -45,8 +46,10 @@ const Chat: React.FC<Props> = ({ token }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [selectedDJChat, setSelectedDJChat] = useState<string | number | null>(null);
-  const [chats, setChats] = useState<{ [key: string]: { djId: string; receiveDJId: string; message: string }[] }>({});
+  const [chats, setChats] = useState<{ [key: string]: { id: number, djId: string; receiveDJId: string; message: string, read: boolean }[] }>({});
   const [message, setMessage] = useState('');
+  const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: number }>({});
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
 
   const djActions = useDJ();
   const trackActions = useTrack();
@@ -86,43 +89,55 @@ const Chat: React.FC<Props> = ({ token }) => {
     const fetchMessages = async () => {
       try {
         const djMessages = await messageActions.getAllMessagesForThisDJ(token);
-  
+
         if (djMessages?.status === 200) {
-          interface ChatMessage {
-            djId: string;
-            receiveDJId: string;
-            message: string;
-            chatId?: string;
-          }
-
-          interface Chats {
-            [key: string]: ChatMessage[];
-          }
-
           const newChats = djMessages.data.reduce((acc: Chats, message: ChatMessage) => {
             const chatId = message.chatId || 'general';
             acc[chatId] = [
               ...(acc[chatId] || []),
               {
+                id: message.id,
                 djId: message.djId,
                 receiveDJId: message.receiveDJId,
-                message: message.message
+                message: message.message,
+                read: message.read
               }
             ];
             return acc;
           }, {} as Chats);
-  
+
           setChats(newChats);
+          setMessagesLoaded(true);
         }
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
     };
-  
+
     fetchMessages();
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!messagesLoaded) return; // Verifica se as mensagens foram carregadas
+
+    const calculateUnreadMessages = () => {
+      const unreadCounts = Object.keys(chats).reduce((acc, chatId) => {
+        if (chatId === 'general') return acc; // Ignora o chat geral
+        const unreadCount = chats[chatId].filter(message => !message.read && message.receiveDJId === dj?.id).length;
+        
+        if (unreadCount > 0) {
+          acc[chatId] = unreadCount;
+        }
+        return acc;
+      }, {} as { [key: string]: number });
+  
+      setUnreadMessages(unreadCounts);
+    };
+  
+    calculateUnreadMessages();
+  }, [chats, messagesLoaded, dj?.id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -201,44 +216,76 @@ const Chat: React.FC<Props> = ({ token }) => {
         socket.emit('joinRoom', `user_${dj.id}`);
       }
     };
-  
+
     socket.on('connect', handleSocketConnect);
-  
+
     // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
     if (socket.connected && dj) {
       socket.emit('joinRoom', `general_${trackId}`);
       socket.emit('joinRoom', `user_${dj.id}`);
     }
-  
+
     // Recebe mensagens do servidor
     socket.on('chat message', (message) => {
       console.log('Nova mensagem recebida', message); // Imprime no console
-  
+
       setChats((prevChats) => {
         const chatId = message.chatId || 'general';
         const updatedChats = { ...prevChats };
-  
+
         // Atualizando o chat, incluindo o DJ ID e a mensagem
         updatedChats[chatId] = [
           ...(updatedChats[chatId] || []), 
           { 
+            id: message.id,
             djId: message.djId,  
             receiveDJId: message.receiveDJId, 
-            message: message.message 
+            message: message.message,
+            read: message.read
           }
         ];
-  
+
+        // Se o chat está aberto, marca as mensagens como lidas
+        if (Number(selectedChat) === Number(message.chatId)) {
+          updatedChats[chatId] = updatedChats[chatId].map(msg =>
+            msg.id === message.id ? { ...msg, read: true } : msg
+          );
+        }
+
+        return updatedChats;
+      });
+
+      // Se o chat está aberto, marca as mensagens como lidas
+      if (Number(selectedChat) === Number(message.chatId)) {
+        handleMarkAsRead(message.chatId);
+      }
+    });
+
+    // Recebe notificações de mensagens lidas do servidor
+    socket.on('messagesMarkedAsRead', ({ messageIds }) => {
+      setChats((prevChats) => {
+        const updatedChats = { ...prevChats };
+
+        // Atualiza o estado das mensagens para marcá-las como lidas
+        Object.keys(updatedChats).forEach((chatId) => {
+          updatedChats[chatId] = updatedChats[chatId].map((message) =>
+            messageIds.includes(message.id) ? { ...message, read: true } : message
+          );
+        });
+
         return updatedChats;
       });
     });
-  
+
     // Limpeza do evento `connect` para evitar múltiplas adições
     return () => {
       socket.off('connect', handleSocketConnect);
       socket.off('chat message');
+      socket.off('messagesMarkedAsRead');
     };
-  }, [dj, trackId]);
-  
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dj, trackId, selectedChat]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -308,6 +355,15 @@ const Chat: React.FC<Props> = ({ token }) => {
     setMessage('');
     textareaElement.style.height = 'auto';
   }
+
+  const handleMarkAsRead = async (chatId: string) => {
+    const messages = chats[chatId];
+    const unreadMessages = messages.filter(message => !message.read);
+    const unreadMessageIds = unreadMessages.map(message => message.id); // Extrai os IDs das mensagens não lidas
+    if (unreadMessageIds.length > 0) {
+      await messageActions.markMessagesAsRead(unreadMessageIds, token); // Passa o array de IDs para markMessagesAsRead
+    }
+  };
 
   const filteredDJs = useMemo(() => {
     return djs.filter(djItem => 
@@ -529,69 +585,75 @@ const Chat: React.FC<Props> = ({ token }) => {
                     </div>
                   </ListGroup.Item>
                   {Object.keys(chats).filter(chatId => chatId !== 'general').map(chatId => (
-                    <ListGroup.Item
-                      key={chatId}
-                      className="text-center"
-                      style={{
-                        backgroundColor: '#000000',
-                        color: 'white',
-                        border: 'none',
-                        borderBottom: '1px solid #cccccc',
-                        paddingRight: 0,
-                        paddingLeft: 0,
-                        maxHeight: '100px',
-                        overflowY: 'auto'
+                  <ListGroup.Item
+                    key={chatId}
+                    className="text-center"
+                    style={{
+                      backgroundColor: '#000000',
+                      color: 'white',
+                      border: 'none',
+                      borderBottom: '1px solid #cccccc',
+                      paddingRight: 0,
+                      paddingLeft: 0,
+                      maxHeight: '100px',
+                      overflowY: 'auto'
+                    }}
+                  >
+                    <div
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        cursor: 'pointer', 
+                        textAlign: 'left',
+                        backgroundColor: selectedChat === chatId ? '#333333' : '#000000',
+                      }} 
+                      onClick={() => {
+                        setSelectedChat(chatId);
+                        setSelectedDJChat(
+                          chats[chatId][chats[chatId].length - 1].receiveDJId ===
+                            dj.id ? chats[chatId][chats[chatId].length - 1].djId :
+                            chats[chatId][chats[chatId].length - 1].receiveDJId
+                        );
+                        handleMarkAsRead(chatId)
                       }}
                     >
-                      <div
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          cursor: 'pointer', 
-                          textAlign: 'left',
-                          backgroundColor: selectedChat === chatId ? '#333333' : '#000000',
-                        }} 
-                        onClick={() => {
-                          setSelectedChat(chatId);
-                          setSelectedDJChat(
-                            chats[chatId][chats[chatId].length - 1].receiveDJId ===
-                              dj.id ? chats[chatId][chats[chatId].length - 1].djId :
-                              chats[chatId][chats[chatId].length - 1].receiveDJId
-                          );
-                        }}
-                      >
-                        <Image
-                          src={getDJCharacter(
+                      <Image
+                        src={getDJCharacter(
+                          chats[chatId][chats[chatId].length - 1].djId === dj?.id
+                            ? chats[chatId][chats[chatId].length - 1].receiveDJId
+                            : chats[chatId][chats[chatId].length - 1].djId
+                        )}
+                        alt={getDJName(
+                          chats[chatId][chats[chatId].length - 1].djId === dj?.id
+                            ? chats[chatId][chats[chatId].length - 1].receiveDJId
+                            : chats[chatId][chats[chatId].length - 1].djId
+                        )}
+                        roundedCircle
+                        style={{ width: '50px', height: '50px', marginRight: '10px' }}
+                      />
+                      <div>
+                        <h5 style={{ margin: 0, position: 'relative' }}>
+                          {getDJName(
                             chats[chatId][chats[chatId].length - 1].djId === dj?.id
                               ? chats[chatId][chats[chatId].length - 1].receiveDJId
                               : chats[chatId][chats[chatId].length - 1].djId
                           )}
-                          alt={getDJName(
-                            chats[chatId][chats[chatId].length - 1].djId === dj?.id
-                              ? chats[chatId][chats[chatId].length - 1].receiveDJId
-                              : chats[chatId][chats[chatId].length - 1].djId
-                          )}
-                          roundedCircle
-                          style={{ width: '50px', height: '50px', marginRight: '10px' }}
-                        />
-                        <div>
-                          <h5 style={{ margin: 0 }}>
-                            {getDJName(
-                              chats[chatId][chats[chatId].length - 1].djId === dj?.id
-                                ? chats[chatId][chats[chatId].length - 1].receiveDJId
-                                : chats[chatId][chats[chatId].length - 1].djId
-                            )}
-                          </h5>
-                          <p style={{ margin: 0 }}>
-                            <strong>
-                              {chats[chatId][chats[chatId].length - 1].djId === dj.id ? 'Você' : getDJName(chats[chatId][chats[chatId].length - 1].djId)}
-                            </strong>
-                            <strong>:</strong> &nbsp;
-                            {truncateText(chats[chatId][chats[chatId].length - 1].message, 10)}
-                          </p>
-                        </div>
+                          {selectedChat !== chatId && unreadMessages[chatId] ? (
+                            <span className="notification-bubble">
+                              {unreadMessages[chatId]}
+                            </span>
+                          ) : ''}
+                        </h5>
+                        <p style={{ margin: 0 }}>
+                          <strong>
+                            {chats[chatId][chats[chatId].length - 1].djId === dj.id ? 'Você' : getDJName(chats[chatId][chats[chatId].length - 1].djId)}
+                          </strong>
+                          <strong>:</strong> &nbsp;
+                          {truncateText(chats[chatId][chats[chatId].length - 1].message, 10)}
+                        </p>
                       </div>
-                    </ListGroup.Item>
+                    </div>
+                  </ListGroup.Item>
                   ))}
                 </ListGroup>
               </Col>

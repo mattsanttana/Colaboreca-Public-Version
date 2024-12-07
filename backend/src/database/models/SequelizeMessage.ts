@@ -14,6 +14,7 @@ class SequelizeMessage extends Model<
   declare receiveDJId?: number | null;
   declare message: string;
   declare createdAt: Date;
+  declare read?: boolean;
 }
 
 SequelizeMessage.init(
@@ -53,6 +54,11 @@ SequelizeMessage.init(
       type: DataTypes.DATE,
       allowNull: false,
       field: 'created_at',
+    },
+    read: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {
