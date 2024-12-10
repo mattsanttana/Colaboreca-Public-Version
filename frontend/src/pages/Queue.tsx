@@ -278,7 +278,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                             {queue.map((track, index) => (
                               <div key={index}  style={{ padding: '20px' }}>
                                 <div className="d-flex justify-content-center">
-                                  <img src={track.cover} alt={track.musicName} style={{ width: '200px', height: '200px' }} />
+                                  <img src={track.cover} alt={track.musicName} style={{ width: '150px', height: '150px' }} />
                                 </div>
                                 <h4>{track.musicName}</h4>
                                 <h5>{track.artists}</h5>

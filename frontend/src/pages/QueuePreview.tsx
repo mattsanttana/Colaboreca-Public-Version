@@ -58,7 +58,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
             >
               <thead>
                 <tr>
-                  <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
+                  <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none'}}>Música</th>
                   <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
                   <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
                 </tr>
@@ -71,7 +71,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
                       style={{ 
                         backgroundColor: '#000000',
                         borderBottom: 'none',
-                        maxWidth: '150px',
+                        maxWidth: '100px',
                         wordWrap: 'break-word',
                       }}
                     >

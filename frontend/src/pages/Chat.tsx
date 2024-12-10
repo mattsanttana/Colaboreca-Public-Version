@@ -46,7 +46,7 @@ const Chat: React.FC<Props> = ({ token }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [selectedDJChat, setSelectedDJChat] = useState<string | number | null>(null);
-  const [chats, setChats] = useState<{ [key: string]: { id: number, djId: string; receiveDJId: string; message: string, read: boolean }[] }>({});
+  const [chats, setChats] = useState<{ [key: string]: { id: number, djId: string; receiveDJId: string; message: string, createdAt: Date, read: boolean }[] }>({});
   const [message, setMessage] = useState('');
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: number }>({});
   const [messagesLoaded, setMessagesLoaded] = useState(false);
@@ -241,6 +241,7 @@ const Chat: React.FC<Props> = ({ token }) => {
             djId: message.djId,  
             receiveDJId: message.receiveDJId, 
             message: message.message,
+            createdAt: message.createdAt,
             read: message.read
           }
         ];
@@ -584,7 +585,13 @@ const Chat: React.FC<Props> = ({ token }) => {
                       </div>
                     </div>
                   </ListGroup.Item>
-                  {Object.keys(chats).filter(chatId => chatId !== 'general').map(chatId => (
+                  {Object.keys(chats)
+                    .filter(chatId => chatId !== 'general')
+                    .sort((a, b) => {
+                      const lastMessageA = chats[a][chats[a].length - 1];
+                      const lastMessageB = chats[b][chats[b].length - 1];
+                      return new Date(lastMessageB.createdAt).getTime() - new Date(lastMessageA.createdAt).getTime();
+                    }).map(chatId => (
                   <ListGroup.Item
                     key={chatId}
                     className="text-center"
@@ -632,23 +639,19 @@ const Chat: React.FC<Props> = ({ token }) => {
                         style={{ width: '50px', height: '50px', marginRight: '10px' }}
                       />
                       <div>
+                        {selectedChat !== chatId && unreadMessages[chatId] ? (
+                          <span className="notification-bubble">
+                            {unreadMessages[chatId]}
+                          </span>
+                        ) : ''}
                         <h5 style={{ margin: 0, position: 'relative' }}>
                           {getDJName(
                             chats[chatId][chats[chatId].length - 1].djId === dj?.id
                               ? chats[chatId][chats[chatId].length - 1].receiveDJId
                               : chats[chatId][chats[chatId].length - 1].djId
                           )}
-                          {selectedChat !== chatId && unreadMessages[chatId] ? (
-                            <span className="notification-bubble">
-                              {unreadMessages[chatId]}
-                            </span>
-                          ) : ''}
                         </h5>
                         <p style={{ margin: 0 }}>
-                          <strong>
-                            {chats[chatId][chats[chatId].length - 1].djId === dj.id ? 'Você' : getDJName(chats[chatId][chats[chatId].length - 1].djId)}
-                          </strong>
-                          <strong>:</strong> &nbsp;
                           {truncateText(chats[chatId][chats[chatId].length - 1].message, 10)}
                         </p>
                       </div>
@@ -657,7 +660,6 @@ const Chat: React.FC<Props> = ({ token }) => {
                   ))}
                 </ListGroup>
               </Col>
-
               <Col md={12} lg={12} xl={12} xxl={6} className={`chat-container ${selectedChat || selectedDJChat ? 'active' : ''}`}>
                 {!selectedChat && !selectedDJChat ? (
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -666,7 +668,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                 ) : (
                   <>
                     <div style={{ backgroundColor: '#222222', borderRadius: '8px', padding: '8px' }}>
-                      <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', cursor: selectedChat !== 'general' ? 'pointer' : 'default' }}>
                       <FaArrowLeft
                         onClick={() => {
                           setSelectedChat(null);
@@ -675,20 +677,36 @@ const Chat: React.FC<Props> = ({ token }) => {
                         className="mobile-only"
                         style={{ cursor: 'pointer', marginRight: '15px', color: 'white' }}
                       />
-                        <Image
-                          src={selectedDJChat ? getDJCharacter(selectedDJChat) : selectedChat === 'general' ? logo : getDJCharacter(
-                            selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
-                              ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
-                              : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
-                            )}
-                          alt={selectedDJChat ? getDJName(selectedDJChat) : selectedChat === 'general' ? trackName : getDJName(
-                            selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
-                              ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
-                              : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
-                            )}
-                          roundedCircle
-                          style={{ width: '50px', height: '50px' }}
-                        />
+                        {selectedChat !== 'general' ? (
+                          <OverlayTrigger
+                            trigger="click"
+                            placement="bottom"
+                            overlay={renderPopover(String(selectedDJChat))}
+                            rootClose
+                          >
+                            <Image
+                              src={selectedDJChat ? getDJCharacter(selectedDJChat) : getDJCharacter(
+                                selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
+                                  ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
+                                  : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
+                              )}
+                              alt={selectedDJChat ? getDJName(selectedDJChat) : getDJName(
+                                selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
+                                  ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
+                                  : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
+                              )}
+                              roundedCircle
+                              style={{ width: '50px', height: '50px' }}
+                            />
+                          </OverlayTrigger>
+                        ) : (
+                          <Image
+                            src={selectedDJChat ? getDJCharacter(selectedDJChat) : logo}
+                            alt={selectedDJChat ? getDJName(selectedDJChat) : trackName}
+                            roundedCircle
+                            style={{ width: '50px', height: '50px' }}
+                          />
+                        )}
                         <h3 style={{ marginLeft: '15px', color: 'white' }}>
                           {selectedDJChat ? getDJName(selectedDJChat) : selectedChat === 'general' ? trackName : getDJName(
                             selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
@@ -704,61 +722,48 @@ const Chat: React.FC<Props> = ({ token }) => {
                       style={{ backgroundColor: '#000000', color: 'white', height: '72vh', display: 'flex', flexDirection: 'column-reverse', overflowY: 'auto' }}
                     >
                       <div className="messages">
-                        {selectedChat !== null && chats[selectedChat]?.map((msg, index) => (
+                      {selectedChat !== null && chats[selectedChat]?.map((msg, index) => (
+                        <div
+                          key={index}
+                          className="message"
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: msg.djId === dj.id ? 'flex-end' : 'flex-start',
+                            marginBottom: '10px'
+                          }}
+                        >
                           <div
-                            key={index}
-                            className="message"
+                            className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
                             style={{
-                              display: 'flex',
-                              justifyContent: msg.djId === dj.id ? 'flex-end' : 'flex-start',
-                              alignItems: 'center'
+                              backgroundColor: msg.djId !== dj.id ? '#333333' : '',
+                              marginRight: '10px',
+                              color: 'white',
+                              borderRadius: '20px',
+                              padding: '10px 15px',
+                              position: 'relative',
+                              maxWidth: '80%',
+                              wordBreak: 'break-word',
+                              margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3%'
                             }}
                           >
-                            {msg.djId !== dj.id && (
-                              <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
-                                {isFirstMessageInSeries(chats[selectedChat], index) && (
-                                  <OverlayTrigger
-                                    trigger="click"
-                                    placement="top"
-                                    overlay={renderPopover(msg.djId)}
-                                    rootClose
-                                  >
-                                    <Image
-                                      src={getDJCharacter(msg.djId)}
-                                      alt={getDJName(msg.djId)}
-                                      roundedCircle
-                                      style={{ width: '50px', height: '50px', cursor: 'pointer' }}
-                                    />
-                                  </OverlayTrigger>
-                                )}
-                              </div>
-                            )}
-                            <div
-                              className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''} ${getRankClass(msg.djId)}`}
-                              style={{
-                                backgroundColor: msg.djId !== dj.id ? '#333333' : '',
-                                marginRight: '10px',
-                                color: 'white',
-                                borderRadius: '20px',
-                                padding: '10px 15px',
-                                position: 'relative',
-                                maxWidth: '80%',
-                                wordBreak: 'break-word',
-                                margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3%'
-                              }}
-                            >
-                              <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
-                                {isFirstMessageInSeries(chats[selectedChat], index) && msg.djId !== dj.id && (
-                                  <>
-                                    <strong>{getDJName(msg.djId)}</strong>
-                                    <br />
-                                  </>
-                                )}
-                                {msg.message}
-                              </p>
-                            </div>
+                            <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
+                              {selectedChat === 'general' && msg.djId !== dj.id && (
+                                <>
+                                  <strong>{getDJName(msg.djId)}</strong>
+                                  <br />
+                                </>
+                              )}
+                              {msg.message}
+                            </p>
                           </div>
-                        ))}
+                          {msg.djId === dj.id && msg.read && index === chats[selectedChat].length - 1 && (
+                            <small style={{ marginTop: '5px', color: 'gray', alignSelf: 'flex-end' }}>
+                              visto
+                            </small>
+                          )}
+                        </div>
+                      ))}
                       </div>
                     </div>
                     <div style={{ position: 'relative', width: '100%' }}>

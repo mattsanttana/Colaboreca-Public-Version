@@ -254,7 +254,7 @@ input[type=number]::-webkit-inner-spin-button {
 @media (max-height: 835px) {
   .card-style {
     height: auto;
-    max-height: 25vh;
+    max-height: 40vh;
     /* Ajusta o max-height para dispositivos menores */
     padding: 10px;
     /* Reduz o padding para dispositivos menores */
@@ -277,10 +277,22 @@ input[type=number]::-webkit-inner-spin-button {
   height: auto;
 }
 
+@media (max-height: 668px) {
+  .chosen-character {
+    max-width: 170px;
+  }
+}
+
 .image-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
+}
+
+@media (max-width: 768px) { /* Ajuste o valor conforme necessário */
+  .image-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* menu items style */
@@ -447,6 +459,21 @@ aside .nav-link:hover {
   -ms-overflow-style: none;
 }
 
+.dj-table-container {
+  position: relative;
+  width: 370px; 
+  height: auto;
+  margin: 0 auto;
+  top: 50px;
+  cursor: pointer
+}
+
+@media (max-width: 390px) {
+  .dj-table-container {
+    width: 330px;
+  }
+}
+
 .dj-table {
   position: relative;
   /* O contêiner pai já está com position: relative */
@@ -455,7 +482,7 @@ aside .nav-link:hover {
   height: auto;
   z-index: 1;
   /* Camada inferior */
-  margin-top: 25%;
+  margin-top: 12%;
 }
 
 .music-inside-table {
@@ -466,12 +493,19 @@ aside .nav-link:hover {
   height: auto;
   z-index: 2;
   /* Camada superior */
-  top: 81%;
+  top: 80%;
   /* Ajuste para posicionar verticalmente */
   left: 183px;
   /* Centro horizontalmente */
   transform: translate(-50%, -50%);
   /* Para centralizar completamente a imagem */
+}
+
+@media (max-width: 390px) {
+  .music-inside-table {
+    left: 163px;
+    width: 89px;
+  }
 }
 
 .dj-character-inside-table {
@@ -482,12 +516,145 @@ aside .nav-link:hover {
   height: auto;
   z-index: 1;
   /* Camada superior */
-  top: 40%;
+  top: 5%;
   /* Ajuste para posicionar verticalmente */
-  left: 183px;
+  left: 85px;
   /* Centro horizontalmente */
   transform: translate(-50%, -50%);
   /* Para centralizar completamente a imagem */
+}
+
+@media (max-width: 390px) {
+  .dj-character-inside-table {
+    left: 163px;
+    width: 180px;
+  }
+}
+
+.music-notes-animation-top-left {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  right: 1;
+  margin-left: 25%;
+  margin-top: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInOut 3s linear infinite;
+}
+
+.music-notes-animation-top-right {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  right: -0;
+  margin-right: 26%;
+  margin-top: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInOut 3s linear infinite;
+}
+
+.music-notes-animation-bottom-left {
+  z-index: 1;
+  position: absolute;
+  bottom: 1;
+  right: 1;
+  margin-left: 25%;
+  margin-top: -25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInOut 3s linear infinite;
+}
+
+.music-notes-animation-bottom-right {
+  z-index: 1;
+  position: absolute;
+  bottom: 1;
+  right: -0;
+  margin-right: 26%;
+  margin-top: -25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInOut 3s linear infinite;
+}
+
+@media (max-width: 430px) {
+  .music-notes-animation-top-left {
+    margin-left: 12%;
+    margin-top: 15%
+  }
+
+  .music-notes-animation-top-right {
+    margin-right: 10%;
+    margin-top: 15%
+  }
+
+  .music-notes-animation-bottom-left {
+    margin-left: 12%;
+    margin-top: -40%
+  }
+
+  .music-notes-animation-bottom-right {
+    margin-right: 10%;
+    margin-top: -40%;
+  }
+}
+
+.music-note {
+  font-size: 40px;
+  color: #fff;
+  opacity: 0;
+  animation: moveUp 3s linear infinite;
+}
+
+.music-note:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.music-note:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.music-note:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes moveUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes dance {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.dj-dancing {
+  animation: dance 1s infinite;
 }
 
 .dj-character-podium-rank-1 {
@@ -504,6 +671,24 @@ aside .nav-link:hover {
   /* Centro horizontalmente */
   transform: translate(-50%, -50%);
   /* Para centralizar completamente a imagem */
+}
+
+.bar-chart {
+  margin-top: 50px; 
+  height: 320px;
+  margin-left: -53px; 
+}
+
+@media (max-width: 430px) {
+  .bar-chart {
+    margin-top: 75px;
+  }
+}
+
+@media (max-width: 390px) {
+  .bar-chart {
+    height: 270px;
+  }
 }
 
 .dj-character-podium-rank-2 {
@@ -822,7 +1007,12 @@ aside .nav-link:hover {
   color: white;
   border-radius: 50%;
   padding: 0.2em 0.5em;
-  font-size: 0.6em;
-  margin-left: 5%;
-  position: fixed;
+  font-size: 0.7em;
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  top: 50%;
+  margin-right: 10px;
+  right: 0;
+  transform: translateY(-50%);
 }

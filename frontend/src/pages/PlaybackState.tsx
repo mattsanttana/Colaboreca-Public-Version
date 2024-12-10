@@ -95,7 +95,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
         className="text-center"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
       >
-        <Card.Body style={{height: '848px', overflow: 'auto' }}>
+        <Card.Body className='card-body-playback'>
           {playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track' ? (
             <div style={{padding: '0px'}}>
               <div className="d-flex justify-content-center align-items-center squeres-container">
@@ -112,7 +112,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
                 </div>
               </div>
               { djPlayingNow?.addedBy === trackName ? (
-              <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px' }}>
+              <div className='dj-table-container'>
                 <Card.Img
                   src={djTable}
                   alt="DJ table"
@@ -131,11 +131,11 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
                   overlay={renderPopover(djPlayingNow)}
                   rootClose
                 >
-                  <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto', top: '50px', cursor: 'pointer' }}>
+                  <div className='dj-table-container'>
                       <Card.Img
                         src={djPlayingNow?.characterPath}
                         alt="DJ character"
-                        className="img-fluid dj-character-inside-table"
+                        className="img-fluid dj-character-inside-table dj-dancing"
                       />
                     <Card.Img
                       src={djTablePlaying}
@@ -175,7 +175,31 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
               </div>
             </div>
           )}
-          <div style={{ marginTop: '50px', height: '320px', marginLeft: '-53px' }}>
+          {playingNow && playingNow.is_playing && (
+            <div>
+              <div className="music-notes-animation-top-left">
+                <span className="music-note">♪</span>
+                <span className="music-note">♫</span>
+                <span className="music-note">♬</span>
+              </div>
+              <div className="music-notes-animation-top-right">
+                <span className="music-note">♪</span>
+                <span className="music-note">♫</span>
+                <span className="music-note">♬</span>
+              </div>
+              <div className="music-notes-animation-bottom-left">
+                <span className="music-note">♪</span>
+                <span className="music-note">♫</span>
+                <span className="music-note">♬</span>
+              </div>
+              <div className="music-notes-animation-bottom-right">
+                <span className="music-note">♪</span>
+                <span className="music-note">♫</span>
+                <span className="music-note">♬</span>
+              </div>
+            </div>
+          )}
+          <div className='bar-chart'>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} layout="vertical">
                 <XAxis type="number" />
@@ -195,4 +219,4 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
   );
 }
 
-export default PlaybackState;
+export default PlaybackState; 
