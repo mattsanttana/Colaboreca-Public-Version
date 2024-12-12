@@ -4,8 +4,10 @@ import MessagePopup from './MessagePopup';
 import CreateDJConnected from './CreateDJ'
 import useTrack from '../utils/useTrack';
 import { logo } from '../assets/images/characterPath';
+import { useParams } from 'react-router-dom';
 
 const EnterTrack: React.FC = () => {
+  const { trackIdParam } = useParams();
   const [trackId, setTrackId] = useState<string>('');
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
   const [phase, setPhase] = useState<number>(1);
@@ -19,8 +21,12 @@ const EnterTrack: React.FC = () => {
   }, [trackId]);
 
   useEffect(() => {
+    if (trackIdParam) {
+      setTrackId(trackIdParam);
+      setPhase(2);
+    }
     inputValidation();
-  }, [inputValidation]);
+  }, [inputValidation, trackIdParam]);
 
   const formatTrackId = (value: string) => {
     const cleaned = value.replace(/\D/g, '').substring(0, 6); // Remove non-digits and limit to 6 digits

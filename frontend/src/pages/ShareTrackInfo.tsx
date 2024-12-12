@@ -10,7 +10,7 @@ interface Props {
 const ShareTrackInfo: React.FC<Props> = ({ trackId, setShowPopup }) => {
   const generateQRCode = useCallback(() => {
     const qr = QRCode(0, 'M');
-    qr.addData(`http://localhost:3000/track-info/${trackId}`);
+    qr.addData(`http://localhost:5173/create-track/${trackId}`);
     qr.make();
 
     const canvas = document.createElement('canvas');
@@ -41,7 +41,7 @@ const ShareTrackInfo: React.FC<Props> = ({ trackId, setShowPopup }) => {
         await navigator.share({
           title: 'Essa é a minha pista no Colaboreca!',
           text: 'Clique no link e venha discotecar comigo!',
-          url: `http://localhost:3000/track-info/${trackId}`,
+          url: `http://localhost:5173/create-track/${trackId}`,
         });
         console.log('Link compartilhado com sucesso!');
       } else {

@@ -132,11 +132,11 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
                   rootClose
                 >
                   <div className='dj-table-container'>
-                      <Card.Img
-                        src={djPlayingNow?.characterPath}
-                        alt="DJ character"
-                        className="img-fluid dj-character-inside-table dj-dancing"
-                      />
+                    <Card.Img
+                      src={djPlayingNow?.characterPath}
+                      alt="DJ character"
+                      className="img-fluid dj-character-inside-table dj-dancing"
+                    />
                     <Card.Img
                       src={djTablePlaying}
                       alt="DJ table"

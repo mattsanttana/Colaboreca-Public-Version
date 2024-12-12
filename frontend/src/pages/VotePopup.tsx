@@ -1,5 +1,5 @@
 import { Button, Card, Modal, Spinner } from "react-bootstrap";
-import { djTable } from "../assets/images/characterPath";
+import { djTablePlaying } from "../assets/images/characterPath";
 import React, { useEffect, useRef, useState } from "react";
 import { DJPlayingNow } from "../types/DJ";
 import PlayingNow from "../types/PlayingNow";
@@ -80,18 +80,53 @@ const Vote: React.FC<Props> = ({ showVotePopup, setShowVotePopup, playingNow, dj
             </div>
           </div>
           </div>
-          <div style={{ position: 'relative', width: '370px', height: 'auto', margin: '0 auto' }}>
+          <div className='dj-table-container-vote-popup'>
             <Card.Img
-              src={djTable}
+              src={djPlayingNow?.characterPath}
+              alt="DJ character"
+              className="img-fluid dj-character-inside-table dj-dancing"
+            />
+            <Card.Img
+              src={djTablePlaying}
               alt="DJ table"
               className="img-fluid dj-table"
             />
-            <Card.Img 
-              src={playingNow && playingNow.item.album.images.length > 0 ? playingNow?.item.album.images[0].url : 'url_de_backup'} 
-              alt={playingNow?.item.album.name} 
-              className="img-fluid music-inside-table"
-            />
-          </div>
+            {playingNow && playingNow.item && playingNow.item.album && playingNow.item.album.images.length > 0 ? (
+              <div>
+                <Card.Img 
+                  src={playingNow.item.album.images[0].url} 
+                  alt={playingNow.item.album.name} 
+                  className="img-fluid music-inside-table"
+                />
+                <div className="music-notes-animation-top-left-vote-popup">
+                  <span className="music-note">♪</span>
+                  <span className="music-note">♫</span>
+                  <span className="music-note">♬</span>
+                </div>
+                <div className="music-notes-animation-top-right-vote-popup">
+                  <span className="music-note">♪</span>
+                  <span className="music-note">♫</span>
+                  <span className="music-note">♬</span>
+                </div>
+                <div className="music-notes-animation-bottom-left-vote-popup">
+                  <span className="music-note">♪</span>
+                  <span className="music-note">♫</span>
+                  <span className="music-note">♬</span>
+                </div>
+                <div className="music-notes-animation-bottom-right-vote-popup">
+                  <span className="music-note">♪</span>
+                  <span className="music-note">♫</span>
+                  <span className="music-note">♬</span>
+                </div>
+              </div>
+            ) : (
+              <Card.Img 
+                src='url_de_backup' 
+                alt='Backup Image' 
+                className="img-fluid music-inside-table"
+              />
+            )}
+      </div>
         </div>
         <div className="thermometer-container">
           <input

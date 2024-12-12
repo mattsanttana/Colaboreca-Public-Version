@@ -1,4 +1,4 @@
-import { WhereOptions } from 'sequelize';
+import { FindOptions, WhereOptions } from 'sequelize';
 import SequelizeDJ from '../database/models/SequelizeDJ';
 
 export default class DJModel {
@@ -11,6 +11,11 @@ export default class DJModel {
 
   async findAll(where: WhereOptions, po?: unknown) {
     const djs = await this.djModel.findAll({ where });
+    return djs.map(dj => dj.get());
+  }
+
+  async findAllWithOptions(options: FindOptions) {
+    const djs = await this.djModel.findAll(options);
     return djs.map(dj => dj.get());
   }
 

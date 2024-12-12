@@ -341,7 +341,7 @@ export default class PlaybackService {
   ) {
     const transaction = await this.sequelize.transaction();
     const { cover, name, artists, musicURI } = musicData;
-
+  
     try {
       const token = authorization.split(' ')[1];
       const decoded = JWT.verify(token);
@@ -349,7 +349,7 @@ export default class PlaybackService {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
-
+  
       const [dj, track] = await Promise.all([
         this.djModel.findOne({ id: decoded.id }, transaction),
         this.trackModel.findOne({ id: Number(trackId) }, { transaction })
@@ -358,19 +358,29 @@ export default class PlaybackService {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'DJ or Track not found' } };
       }
-
+  
       const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
-
+  
       const currentQueue = await SpotifyActions.getQueue(spotifyToken);
       const currentQueueURIs = currentQueue?.queue?.map((track: Track) => track.uri) ?? [];
-
+  
       const isMusicAlreadyInQueue = currentQueueURIs.includes(musicURI) ||
-        currentQueue.currently_playing?.uri === musicURI
+        currentQueue.currently_playing?.uri === musicURI;
       if (isMusicAlreadyInQueue) {
         await transaction.rollback();
         return { status: 'CONFLICT', data: { message: 'Music is already in queue or currently playing' } };
       }
-
+  
+      // Verificar se o DJ já tem 3 músicas na fila que ainda não foram tocadas
+      const djMusicCount = await this.musicModel.count({djId: dj.id, trackId: Number(trackId), pointsApllied: false }, {
+        transaction
+      });
+  
+      if (djMusicCount >= 3) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'DJ already has 3 songs in the queue' } };
+      }
+  
       const response = await this.musicModel.create({
         cover,
         name,
@@ -383,18 +393,18 @@ export default class PlaybackService {
         await transaction.rollback();
         return { status: 'Error', data: { message: 'An error occurred' } };
       }
-
+  
       const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI);
-
+  
       if (!addedToQueue) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Player command failed: No active device found' } };
       }
-
+  
       await this.trackModel.update({ updatedAt: new Date() }, { id: Number(trackId) }, { transaction });
-
+  
       await transaction.commit();
-
+  
       return { status: 'OK', data: response };
     } catch (error) {
       await transaction.rollback();

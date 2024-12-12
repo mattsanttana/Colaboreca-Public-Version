@@ -222,6 +222,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           handleCloseModal();
         }
 
+        if (addMusic?.status === 401) {
+          handleCloseModal();
+          setPopupMessage('Você já tem 3 músicas na fila, por favor espere a próxima música');
+          setShowPopup(true);
+        }
+
         if (addMusic?.status === 409) {
           handleCloseModal();
           setPopupMessage('essa mnúsica já está na fila, por favor escolha outra');
@@ -364,8 +370,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
             <Modal.Body>
               {isAddingTrack ? (
                 <div className="d-flex justify-content-center align-items-center">
-                  <Spinner animation="border" className="text-dark" />
-                  <span className="ml-3">Adicionando à fila...</span>
+                  <Spinner animation="border" className="text-light" />
                 </div>
               ) : (
                 <div>

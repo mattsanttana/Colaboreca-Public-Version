@@ -348,8 +348,9 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                     type="text"
                     value={editedName}
                     onChange={(e) => setEditedName(e.target.value)}
-                    className="text-center custom-input"
+                    className="text-centert"
                     onKeyDown={handleKeyPress}
+                    style={{ backgroundColor: 'black', color: 'white', border: '1px solid white', textAlign: 'center' }}
                   />
                 </Form.Group>
                 <Button variant="primary" disabled={isButtonDisabled} onClick={handleSaveChanges}>
@@ -425,11 +426,11 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                     <div className="points-square">{dj?.score} pts</div>
                   </div>
                   {isOwner && !isTrackOwner && (
-                    <Button variant="primary" style={{marginLeft: '40%', width: '20%'}} onClick={() => setShowPopup(true)}>
+                    <Button variant="primary" style={{marginLeft: '25%', width: '50%', marginTop: '10px'}} onClick={() => setShowPopup(true)}>
                       Editar/Excluir DJ
                     </Button>
                   )}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px' }}>
                       <Form.Select
                         className='text-light'
                         style={{ backgroundColor: '#000000', width: '140px' }}

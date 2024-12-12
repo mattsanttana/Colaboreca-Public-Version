@@ -281,7 +281,8 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
                       handleSaveChanges();
                     }
                   }}
-                  className="text-center custom-input"
+                  className="text-center"
+                  style={{ backgroundColor: 'black', color: 'white', border: '1px solid white' }}
                 />
               </Form.Group>
             </Form>

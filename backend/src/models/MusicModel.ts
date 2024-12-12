@@ -32,6 +32,12 @@ export default class MusicModel {
     return music?.get();
   }
 
+  async count(where: { djId?: number; trackId?: number; musicURI?: string, pointsApllied: boolean }, p0?: unknown) {
+    const count = await this.musicModel.count({ where });
+
+    return count;
+  }
+
   async update(data: { pointsApllied: boolean }, where: { id: number }, p0?: unknown) {
     const response = await this.musicModel.update(data, { where });
 

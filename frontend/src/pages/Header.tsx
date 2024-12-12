@@ -119,12 +119,12 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
           <img src={horizontalLogo} alt="horizontal_logo" className="horizontal_logo" style={{width: '200px'}}/>
         </Navbar.Brand>
         <Button onClick={handleClick} style={{ marginRight: '30px' }} variant="primary">
-          Compartilhar
+          {pageType === 'track' ? 'Compartilhar' : 'Detalhes'}
         </Button>
       </Navbar>
       <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup} size="lg">
         <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
-          <Modal.Title>Compartilhar Pista</Modal.Title>
+          <Modal.Title>{pageType === 'track' ? 'Compartilhar Pista' : 'Detalhes da Pista'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {pageType === 'track' ? (
