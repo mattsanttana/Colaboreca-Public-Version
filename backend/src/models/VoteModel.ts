@@ -19,4 +19,9 @@ export default class VoteModel {
     const votes = await this.voteModel.findAll({ where });
     return votes.map((vote) => vote.get());
   }
+
+  async delete(where: WhereOptions, p0?: unknown) {
+    const response = await this.voteModel.destroy({ where });
+    return response;
+  }
 }

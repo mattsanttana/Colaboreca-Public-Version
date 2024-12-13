@@ -1,3 +1,4 @@
+import { WhereOptions } from "sequelize";
 import SequelizeMusic from "../database/models/SequelizeMusic";
 
 export default class MusicModel {
@@ -44,7 +45,7 @@ export default class MusicModel {
     return response;
   }
 
-  async delete(where: { id: number }) {
+  async delete(where: WhereOptions, p0?: unknown) {
     const response = await this.musicModel.destroy({ where });
     return response;
   }

@@ -2,6 +2,10 @@ import { Op, Sequelize } from 'sequelize';
 import * as config from '../database/config/database';
 import TrackModel from '../models/TrackModel';
 import DJModel from '../models/DJModel';
+import ChatModel from '../models/ChatModel';
+import MessageModel from '../models/MessageModel';
+import MusicModel from '../models/MusicModel';
+import VoteModel from '../models/VoteModel';
 import generateShortId from '../utils/generateShortId';
 import SpotifyActions from '../utils/SpotifyActions';
 import JWT from '../utils/JWT';
@@ -10,7 +14,11 @@ export default class TrackService {
   constructor(
     private sequelize: Sequelize = new Sequelize(config),
     private trackModel: TrackModel = new TrackModel(),
-    private djModel: DJModel = new DJModel()
+    private djModel: DJModel = new DJModel(),
+    private chatModel: ChatModel = new ChatModel(),
+    private messageModel: MessageModel = new MessageModel(),
+    private musicModel: MusicModel = new MusicModel(),
+    private voteModel: VoteModel = new VoteModel()
   ) { }
 
   async createTrack(data: { trackName: string, code: string }) {
@@ -38,13 +46,7 @@ export default class TrackService {
         throw new Error('You need to have a Spotify Premium account');
       }
 
-      await this.trackModel.delete({
-        where: {
-          updatedAt: {
-            [Op.lt]: new Date(new Date().getTime() - 1000 * 60 * 60 * 6)
-          }
-        }
-      }, { transaction });
+      await this.deleteAllTracksWithSixHoursAbsence();
 
       let trackWithId = await this.trackModel.findOne({ id });
       while (trackWithId || id.toString().length !== 6) {
@@ -205,6 +207,43 @@ export default class TrackService {
       } else {
         return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
       }
+    }
+  }
+
+  async deleteAllTracksWithSixHoursAbsence() {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const tracksToDelete = await this.trackModel.findAll({
+        where: {
+          updatedAt: {
+            [Op.lt]: new Date(new Date().getTime() - 1000 * 60 * 60 * 6)
+          }
+        },
+        transaction
+      });
+  
+      for (const track of tracksToDelete) {
+        const trackId = track.id;
+  
+        // Deletar entradas relacionadas nas tabelas Chat, DJ, Message, Music e Vote
+        await Promise.all([
+          this.chatModel.delete({ where: { trackId }, transaction }),
+          this.djModel.delete({ where: { trackId }, transaction }),
+          this.messageModel.delete({ where: { trackId }, transaction }),
+          this.musicModel.delete({ where: { trackId }, transaction }),
+          this.voteModel.delete({ where: { trackId }, transaction })
+        ]);
+  
+        // Deletar a track
+        await this.trackModel.delete({ where: { id: trackId }, transaction });
+      }
+  
+      await transaction.commit();
+      return { status: 'OK', data: { message: `${tracksToDelete.length} tracks deleted` } };
+    } catch (error) {
+      await transaction.rollback();
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
     }
   }
 

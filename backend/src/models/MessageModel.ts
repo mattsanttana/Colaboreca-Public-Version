@@ -1,4 +1,4 @@
-import { FindOptions } from "sequelize";
+import { FindOptions, WhereOptions } from "sequelize";
 import SequelizeMessage from "../database/models/SequelizeMessage";
 import { Op } from 'sequelize';
 
@@ -44,5 +44,10 @@ export default class MessageModel {
   async findAll(options: FindOptions, p0?: unknown) {
     const response = await this.messageModel.findAll(options);
     return response.map((message) => message.get());
+  }
+
+  async delete(where: WhereOptions, p0?: unknown) {
+    const response = await this.messageModel.destroy({ where });
+    return response;
   }
 }
