@@ -1,2 +1,2 @@
-# Colaboreca-Private-Version
+# Colaboreca-Public-Version
 Aplicativo baseado em uma jukebox
