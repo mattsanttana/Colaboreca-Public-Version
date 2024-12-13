@@ -1,4 +1,4 @@
-import { Button, Card, Modal, Spinner } from "react-bootstrap";
+import { Button, Card, Modal, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 import { djTablePlaying } from "../assets/images/characterPath";
 import React, { useEffect, useRef, useState } from "react";
 import { DJPlayingNow } from "../types/DJ";
@@ -6,6 +6,7 @@ import PlayingNow from "../types/PlayingNow";
 import { RootState } from "../redux/store";
 import { connect } from "react-redux";
 import useVote from "../utils/useVote";
+import { FaQuestionCircle } from "react-icons/fa";
 
 interface Props {
   showVotePopup: boolean;
@@ -68,6 +69,28 @@ const Vote: React.FC<Props> = ({ showVotePopup, setShowVotePopup, playingNow, dj
   return (
     <Modal className='custom-modal' show={showVotePopup}>
       <Modal.Header style={{ borderBottom: 'none' }}>
+        <OverlayTrigger
+          placement="bottom-start"
+          overlay={
+            <Tooltip>
+              Como funcionam os votos?
+
+              Hino: +3 pontos
+              Boa: +1 ponto
+              Tanto faz: 0 pontos
+              Ruim: -1 ponto
+              Ninguém merece: -3 pontos
+              Os votos não são acumulativos! A maioria dos votos decide a pontuação que será atribuída à música.
+
+              Em caso de empate: A média dos votos empatados será considerada para calcular a pontuação final.
+              Vote e faça a diferença no ranking! 🎶
+            </Tooltip>
+          }
+        >
+          <span className='ms-2' style={{position: 'absolute', marginTop: '5%', right: 40}}>
+            <FaQuestionCircle style={{ cursor: 'pointer', color: '#ffffff' }} />
+          </span>
+        </OverlayTrigger>
         <Modal.Title>O que você acha da música que {djPlayingNow?.addedBy} está tocando?</Modal.Title>
       </Modal.Header>
       <Modal.Body>

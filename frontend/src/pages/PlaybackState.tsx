@@ -6,6 +6,7 @@ import { djTable, djTablePlaying } from '../assets/images/characterPath';
 import { Vote } from '../types/Vote';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
+import { FaExclamationTriangle } from 'react-icons/fa';
 
 type Props = {
   playingNow: PlayingNow | null;
@@ -172,6 +173,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
                   alt="DJ table"
                   className="img-fluid dj-table"
                 />
+                <FaExclamationTriangle className="img-fluid music-inside-table" style={{ width: '60px' }} />
               </div>
             </div>
           )}

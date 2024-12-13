@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import {
   Table, Button, Container, Col,
-  Row, Card, Popover, OverlayTrigger, Modal
+  Row, Card, Popover, OverlayTrigger, Modal,
+  Tooltip
 } from 'react-bootstrap';
 import { RootState } from '../redux/store';
 import MessagePopup from './MessagePopup';
@@ -15,6 +16,7 @@ import useVote from '../utils/useVote';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
+import { FaQuestionCircle } from 'react-icons/fa';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -270,9 +272,27 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                     />
                   </Row>
                   <Card.Title>Ranque:</Card.Title>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={
+                      <Tooltip>
+                        Os DJs são classificados com base na pontuação que acumulam ao longo da competição.
+
+                        Critérios de desempate:
+                        1º critério: O DJ com mais votos positivos ou menos votos negativos terá vantagem.
+                        2º critério: Se o empate persistir, quem alcançou a pontuação empatada primeiro ocupará a posição mais alta.
+                        {!isOwner && (
+                          "Use sua criatividade para conquistar votos e subir no ranking! 🎵")}
+                      </Tooltip>
+                    }
+                  >
+                    <span className='ms-2' style={{position: 'absolute', marginTop: '-10%', right: 40}}>
+                      <FaQuestionCircle style={{ cursor: 'pointer', color: '#ffffff' }} />
+                    </span>
+                  </OverlayTrigger>
                   {djs?.length === 0 ? (
                     <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
-                  ) : (
+                  ) : (          
                     <div className="table-responsive">
                       <Table striped>
                         <thead>

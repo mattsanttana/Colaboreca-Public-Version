@@ -419,7 +419,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                   style={{ width: '300px', margin: '0 auto' }}
                 />
                 <div className="d-flex justify-content-center align-items-center mb-3">
-                  <div className="rank-square">
+                <div className={`rank-square ${dj?.ranking === 1 ? 'gold' : dj?.ranking === 2 ? 'silver' : dj?.ranking === 3 ? 'bronze' : ''}`}>
                     {dj?.ranking ? `${dj.ranking}º` : '-'}
                   </div>
                     <div className="name-square mx-3">{dj?.djName}</div>

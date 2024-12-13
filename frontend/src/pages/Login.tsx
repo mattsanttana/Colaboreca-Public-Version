@@ -46,7 +46,7 @@ const Login = () => {
                 Entrar Com Spotify Premium
               </Button>
               <OverlayTrigger
-                placement="top"
+                placement="bottom-start"
                 overlay={
                   <Tooltip>
                     É necessário ter uma conta Spotify Premium porque a versão gratuita não permite adicionar músicas à fila.

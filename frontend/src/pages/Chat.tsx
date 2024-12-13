@@ -227,8 +227,6 @@ const Chat: React.FC<Props> = ({ token }) => {
 
     // Recebe mensagens do servidor
     socket.on('chat message', (message) => {
-      console.log('Nova mensagem recebida', message); // Imprime no console
-
       setChats((prevChats) => {
         const chatId = message.chatId || 'general';
         const updatedChats = { ...prevChats };
@@ -247,7 +245,7 @@ const Chat: React.FC<Props> = ({ token }) => {
         ];
 
         // Se o chat está aberto, marca as mensagens como lidas
-        if (Number(selectedChat) === Number(message.chatId)) {
+        if (Number(selectedChat) === Number(message.chatId && message.djId !== dj?.id)) {
           updatedChats[chatId] = updatedChats[chatId].map(msg =>
             msg.id === message.id ? { ...msg, read: true } : msg
           );
@@ -257,7 +255,7 @@ const Chat: React.FC<Props> = ({ token }) => {
       });
 
       // Se o chat está aberto, marca as mensagens como lidas
-      if (Number(selectedChat) === Number(message.chatId)) {
+      if (Number(selectedChat) === Number(message.chatId) && message.djId !== dj?.id) {
         handleMarkAsRead(message.chatId);
       }
     });
@@ -359,7 +357,7 @@ const Chat: React.FC<Props> = ({ token }) => {
 
   const handleMarkAsRead = async (chatId: string) => {
     const messages = chats[chatId];
-    const unreadMessages = messages.filter(message => !message.read);
+    const unreadMessages = messages.filter(message => !message.read && message.djId !== dj?.id); // Filtra as mensagens não lidas e não enviadas pelo cliente
     const unreadMessageIds = unreadMessages.map(message => message.id); // Extrai os IDs das mensagens não lidas
     if (unreadMessageIds.length > 0) {
       await messageActions.markMessagesAsRead(unreadMessageIds, token); // Passa o array de IDs para markMessagesAsRead
@@ -458,6 +456,21 @@ const Chat: React.FC<Props> = ({ token }) => {
         return '';
     }
   };
+
+  const getMedalIcon = (djId: string) => {
+    const dj = djs.find(dj => dj.id === djId); // Supondo que você tenha uma lista de DJs com seus rankings
+    if (!dj) return '';
+    switch (dj.ranking) {
+      case 1:
+        return '🥇';
+      case 2:
+        return '🥈';
+      case 3:
+        return '🥉';
+      default:
+        return '';
+    }
+  }
 
   const renderPopover = (djId: string) => (
     <Popover id={`popover-${djId}`}>
@@ -678,27 +691,21 @@ const Chat: React.FC<Props> = ({ token }) => {
                         style={{ cursor: 'pointer', marginRight: '15px', color: 'white' }}
                       />
                         {selectedChat !== 'general' ? (
-                          <OverlayTrigger
-                            trigger="click"
-                            placement="bottom"
-                            overlay={renderPopover(String(selectedDJChat))}
-                            rootClose
-                          >
-                            <Image
-                              src={selectedDJChat ? getDJCharacter(selectedDJChat) : getDJCharacter(
-                                selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
-                                  ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
-                                  : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
-                              )}
-                              alt={selectedDJChat ? getDJName(selectedDJChat) : getDJName(
-                                selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
-                                  ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
-                                  : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
-                              )}
-                              roundedCircle
-                              style={{ width: '50px', height: '50px' }}
-                            />
-                          </OverlayTrigger>
+                          <Image
+                            src={selectedDJChat ? getDJCharacter(selectedDJChat) : getDJCharacter(
+                              selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
+                                ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
+                                : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
+                            )}
+                            alt={selectedDJChat ? getDJName(selectedDJChat) : getDJName(
+                              selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
+                                ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
+                                : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
+                            )}
+                            roundedCircle
+                            style={{ width: '50px', height: '50px' }}
+                            onClick={() => navigate(`/track/profile/${trackId}/${selectedDJChat}`)}
+                          />
                         ) : (
                           <Image
                             src={selectedDJChat ? getDJCharacter(selectedDJChat) : logo}
@@ -728,13 +735,32 @@ const Chat: React.FC<Props> = ({ token }) => {
                           className="message"
                           style={{
                             display: 'flex',
-                            flexDirection: 'column',
+                            flexDirection: msg.djId === dj.id ? 'row-reverse' : 'row',
                             alignItems: msg.djId === dj.id ? 'flex-end' : 'flex-start',
-                            marginBottom: '10px'
+                            marginBottom: '0.5%'
                           }}
                         >
+                          {msg.djId !== dj.id && (
+                              <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
+                                {isFirstMessageInSeries(chats[selectedChat], index) && (
+                                  <OverlayTrigger
+                                    trigger="click"
+                                    placement="top"
+                                    overlay={renderPopover(msg.djId)}
+                                    rootClose
+                                  >
+                                    <Image
+                                      src={getDJCharacter(msg.djId)}
+                                      alt={getDJName(msg.djId)}
+                                      roundedCircle
+                                      style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                                    />
+                                  </OverlayTrigger>
+                                )}
+                              </div>
+                            )}
                           <div
-                            className={`bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
+                            className={`message-text ${getRankClass(msg.djId)} bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
                             style={{
                               backgroundColor: msg.djId !== dj.id ? '#333333' : '',
                               marginRight: '10px',
@@ -750,7 +776,10 @@ const Chat: React.FC<Props> = ({ token }) => {
                             <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
                               {selectedChat === 'general' && msg.djId !== dj.id && (
                                 <>
-                                  <strong>{getDJName(msg.djId)}</strong>
+                                  <strong>
+                                    {getDJName(msg.djId)}
+                                    {getMedalIcon(msg.djId)}
+                                  </strong>
                                   <br />
                                 </>
                               )}
