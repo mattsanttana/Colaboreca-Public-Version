@@ -24,6 +24,11 @@ export default {
         type: DataTypes.ENUM('very_good', 'good', 'normal', 'bad', 'very_bad'),
         allowNull: false,
       },
+      trackId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: 'track_id',
+      },
     });
   },
   down(queryInterface: QueryInterface) {

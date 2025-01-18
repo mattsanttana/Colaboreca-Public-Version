@@ -11,7 +11,8 @@ class SequelizeVote extends Model<
   declare id?: number;
   declare djId: number;
   declare musicId: number;
-  declare vote: Vote
+  declare vote: Vote;
+  declare trackId: number;
 }
 
 SequelizeVote.init(
@@ -36,6 +37,11 @@ SequelizeVote.init(
     vote: {
       type: DataTypes.ENUM('very_good', 'good', 'normal', 'bad', 'very_bad'),
       allowNull: false,
+    },
+    trackId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'track_id',
     },
   },
   {

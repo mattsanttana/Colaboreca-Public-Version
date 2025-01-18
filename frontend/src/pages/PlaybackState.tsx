@@ -11,7 +11,7 @@ import { FaExclamationTriangle } from 'react-icons/fa';
 type Props = {
   playingNow: PlayingNow | null;
   trackName: string;
-  dj: DJ | null;
+  dj: DJ | undefined;
   djPlayingNow: DJPlayingNow | null;
   votes: Vote | undefined;
   isOwner: boolean;
@@ -112,7 +112,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
                   </div>
                 </div>
               </div>
-              { djPlayingNow?.addedBy === trackName ? (
+              { (djPlayingNow?.addedBy === undefined) ? (
               <div className='dj-table-container'>
                 <Card.Img
                   src={djTable}

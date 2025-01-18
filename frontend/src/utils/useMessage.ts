@@ -55,12 +55,8 @@ const useMessage = () => {
         },
         body: JSON.stringify({ messageIds }), // Envia os IDs das mensagens no corpo da requisição
       });
-
-      console.log('chegou aqui');
       
       const data = await response.json();
-
-      console.log(data);
   
       return {
         status: response.status,

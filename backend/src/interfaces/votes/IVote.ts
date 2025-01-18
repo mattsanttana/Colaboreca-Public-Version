@@ -6,4 +6,5 @@ export interface IVote extends Identifiable {
   djId: number;
   musicId: number;
   vote: Vote;
+  trackId: number;
 }

@@ -279,7 +279,7 @@ export default class PlaybackService {
 
         if (isAllSpotify) {
           // Se todas as ocorrências são do Spotify, então consideramos que a música foi adicionada pelo Spotify
-          addedBy = track.trackName;
+          addedBy = undefined;
           characterPath = null;
         } else {
           // Se houver pelo menos uma ocorrência do DJ, considerar a última como a que adicionou a música
@@ -296,12 +296,12 @@ export default class PlaybackService {
             addedBy = dj.djName;
             characterPath = dj.characterPath;
           } else {
-            addedBy = track.trackName;
+            addedBy = undefined;
             characterPath = null;
           }
         }
       } else {
-        addedBy = track.trackName;
+        addedBy = undefined;
         characterPath = null;
       }
 
@@ -321,7 +321,7 @@ export default class PlaybackService {
           cover: currentlyPlayingTrack.album.images[0].url,
           musicName: currentlyPlayingTrack.name,
           artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),
-          djId: addedBy === track.trackName ? null : colaborecaTracksWithURI[0].djId,
+          djId: addedBy === undefined ? null : colaborecaTracksWithURI[0]?.djId,
           addedBy,
           characterPath,
           spotifyQueue,

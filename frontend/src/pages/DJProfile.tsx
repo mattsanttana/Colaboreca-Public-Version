@@ -1,6 +1,7 @@
 import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button, Form, Card, Modal, Table } from 'react-bootstrap';
+import { io } from 'socket.io-client';
 import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
 import MessagePopup from './MessagePopup';
@@ -21,6 +22,8 @@ interface Props {
   djToken: string;
   trackToken: string;
 }
+
+const socket = io('http://localhost:3001');
 
 const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   const { trackId, djId } = useParams();
@@ -55,45 +58,67 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   const navigate = useNavigate();
   const avatarRef = useRef<HTMLImageElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const cacheRef = useRef<{ [key: string]: { dj: DJ, isOwner: boolean, musics: DJMusic[] } }>({});
-  const interval = useRef<NodeJS.Timeout | null>(null);
+  const interval = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const pageType = window.location.pathname.split('/')[1];
-  
-      if (pageType !== 'track-info') {
-        setIsTrackOwner(false);
+      if (trackId) {
+        const pageType = window.location.pathname.split('/')[1];
+    
+        if (pageType !== 'track-info') {
+          setIsTrackOwner(false);
 
-        const [fetchVerifyLogin, fetchedMenuDJ] = await Promise.all([
-          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
-          djActions.getDJByToken(djToken),
-        ]);
+          const [ fetchedTrack, fetchedDJData, fetchedDJ, fetchedVerifyIfDJIsOwner ] = await Promise.all([
+            trackActions.getTrackById(trackId),
+            djActions.getDJData(djToken),
+            djActions.getDJById(djId, trackId),
+            djActions.verifyIfTheDJIsTheProfileOwner(djId, djToken)
+          ]);
 
-        if (fetchVerifyLogin?.status !== 200 || fetchedMenuDJ?.status !== 200) {
-          setPopupMessage('Você não é um DJ desta pista, por favor faça login novamente');
-          setRedirectTo('/enter-track');
-          setShowMessagePopup(true);
+          if (!fetchedDJData?.data.dj) {
+            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+          }
+
+          if (fetchedTrack?.status === 200) {
+            setMenuDJ(fetchedDJData?.data.dj);
+            setDJ(fetchedDJ?.data);
+            setIsOwner(fetchedVerifyIfDJIsOwner);
+          } else {
+            setPopupMessage('Esta pista não existe');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+          }
         } else {
-          setMenuDJ(fetchedMenuDJ.data);
-        }
-      } else {
-        setIsTrackOwner(true);
+          setIsTrackOwner(true);
 
-        if (trackId) {
-          const verifyOwnerLogin = await trackActions.verifyTrackAcess(trackToken, trackId);
+          if (trackId) {
+            const [ fetchedTrack, fetchedVerifyTrackAcess ] = await Promise.all([
+              trackActions.getTrackById(trackId),
+              trackActions.verifyTrackAcess(trackToken, trackId)
+            ])
 
-          if (verifyOwnerLogin?.status === 401) {
-            setPopupMessage('Você não tem permissão para acessar essa pista');
-            setRedirectTo('/login');
-            setShowMessagePopup(true);
+            if (fetchedTrack?.status !== 200) {
+              setPopupMessage('Esta pista não existe');
+              setRedirectTo('/enter-track');
+              setShowPopup(true);
+            }
+
+            if (fetchedVerifyTrackAcess?.status !== 200) {
+              setPopupMessage('Você não tem permissão para acessar essa pista');
+              setRedirectTo('/login');
+              setShowPopup(true);
+            }
           }
         }
       }
     };
 
     fetchInitialData();
-  }, [djActions, djToken, trackActions, trackId, trackToken]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const isSameAsDJ = editedCharacterPath === dj?.characterPath && editedName === dj?.djName;
@@ -111,48 +136,40 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (djId && trackId) {
-        const cacheKey = `dj_${djId}_track_${trackId}`;
-        if (cacheRef.current[cacheKey]) {
-          const cachedData = cacheRef.current[cacheKey];
-          setDJ(cachedData.dj);
-          setIsOwner(cachedData.isOwner);
-          setMusics(cachedData.musics);
-          setIsLoading(false);
-          return;
-        }
+      if (trackId && playingNow) {
+
+        // Limpar os votos quando a URI da música atual mudar
+        setDJPlayingNow(null);
 
         try {
-          const [
-            fetchedDJ,
-            fetchedVerifyIfDJIsOwner,
-            fetchedAddedMusicByDJ,
-            fetchedPlayingNow,
-            fetchedDJPlayingNow,
-            fetchedVerifyIfDJHasAlreadVoted
-          ] = await Promise.all([
-            djActions.getDJById(djId, trackId),
-            djActions.verifyIfTheDJIsTheProfileOwner(djId, djToken),
-            playbackActions.getAddedMusicsByDJ(djId, trackId),
-            playbackActions.getState(trackId),
+          const [fetchedVerifyIfDJHasAlreadVoted, fetchedDJPlayingNow, fetchedAddedMusicByDJ] = await Promise.all([
+            voteActions.verifyIfDJHasAlreadVoted(djToken),
             playbackActions.getDJAddedCurrentMusic(trackId),
-            voteActions.verifyIfDJHasAlreadVoted(djToken)
+            playbackActions.getAddedMusicsByDJ(djId, trackId)
           ]);
 
-          if (fetchedDJ?.status === 200) {
-            const data = {
-              dj: fetchedDJ.data,
-              isOwner: fetchedVerifyIfDJIsOwner || false,
-              musics: fetchedAddedMusicByDJ,
-            };
-            cacheRef.current[cacheKey] = data; // Cache the result
-            setDJ(data.dj);
-            setIsOwner(data.isOwner);
-            setMusics(data.musics);
-            setPlayingNow(fetchedPlayingNow);
-            setDJPlayingNow(fetchedDJPlayingNow);
-            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-          }
+          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
+          setDJPlayingNow(fetchedDJPlayingNow);
+          setMusics(fetchedAddedMusicByDJ);
+    
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingNow?.item?.uri || '']);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (trackId) {
+        try {
+          const fetchedPlayingNow = await playbackActions.getState(trackId)
+
+          setPlayingNow(fetchedPlayingNow);
+          
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
@@ -163,15 +180,15 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
 
     fetchData();
 
-    interval.current = setInterval(() => {
+    interval.current = window.setInterval(() => {
       fetchData();
     }, 10000);
 
     return () => {
-      clearInterval(interval.current as NodeJS.Timeout);
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
     };
-
-    
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -194,6 +211,51 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [closeMenu]);
+
+  useEffect(() => {
+      const handleTrackDeleted = (data: { trackId: number }) => {
+        if (Number(trackId) === Number(data.trackId)) {
+          setPopupMessage('Esta pista foi deletada');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+        }
+      }
+    
+      const handleDJUpdated = (data: { dj: DJ }) => {
+        if (Number(dj?.id) === Number(data.dj.id)) {
+          setDJ(data.dj);
+        }
+      };
+  
+      const handleDJDeleted = (data: { djId: number }) => {
+        if (Number(menuDJ) === Number(data.djId)) {
+          setPopupMessage('Você foi removido desta pista');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+        }
+
+        const redirect = isTrackOwner ? `/track-info/${trackId}` : `/track/${trackId}`;
+
+        if (Number(dj?.id) === Number(data.djId)) {
+          setPopupMessage('Este DJ foi deletado');
+          setRedirectTo(redirect);
+          setShowPopup(true);
+        }
+      };
+  
+      socket.emit('joinRoom', `track_${trackId}`);
+      socket.on('track deleted', handleTrackDeleted);
+      socket.on('dj updated', handleDJUpdated);
+      socket.on('dj deleted', handleDJDeleted);
+    
+      return () => {
+        socket.off('track deleted', handleTrackDeleted);
+        socket.off('dj updated', handleDJUpdated);
+        socket.off('dj deleted', handleDJDeleted);
+      };
+      
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {

@@ -140,151 +140,246 @@ const Chat: React.FC<Props> = ({ token }) => {
   }, [chats, messagesLoaded, dj?.id]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (trackId) {
-        try {
-          const [
-            fetchedTrack,
-            fetchedVerifyLogin,
-            fetchedDJs,
-            fetchedDJ,
-            fetchedPlayingNow,
-            fetchedDJPlayingNow,
-            fetchedVerifyIfDJHasAlreadVoted,
-          ] = await Promise.all([
-            trackActions.getTrackById(trackId),
-            djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
-            djActions.getAllDJs(trackId),
-            djActions.getDJByToken(token),
-            playbackActions.getState(trackId),
-            playbackActions.getDJAddedCurrentMusic(trackId),
-            voteActions.verifyIfDJHasAlreadVoted(token),
-          ]);
-          
-          if (fetchedVerifyLogin?.status !== 200) {
-            setPopupMessage('Você não está logado, por favor faça login novamente');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-          }
+      const fetchData = async () => {
+        if (trackId) {
+          try {
+            const [fetchedTrack, fetchedDJData] = await Promise.all([
+              trackActions.getTrackById(trackId),
+              djActions.getDJData(token)
+            ]);
+  
+            if (!fetchedDJData?.data.dj) {
+              setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+              setRedirectTo('/enter-track');
+              setShowPopup(true);
+            }
+  
+            if (fetchedTrack?.status === 200) {
+              setTrackFound(true);
+              setTrackName(fetchedTrack.data.name);
+              setDJs(fetchedDJData?.data.djs);
+              setDJ(fetchedDJData?.data.dj);
+            } else {
+              setPopupMessage('Esta pista não foi encontrada');
+              setRedirectTo('/enter-track');
+              setShowPopup(true);
+            }
 
-          if (fetchedDJ?.status !== 200) {
-            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          } finally {
+            setIsLoading(false);
           }
-
-          if (fetchedTrack?.status === 200) {
-            setTrackFound(true);
-            setTrackName(fetchedTrack.data.trackName);
-            setPlayingNow(fetchedPlayingNow);
-            setDJs(fetchedDJs);
-            setDJ(fetchedDJ?.data);
-            setDJPlayingNow(fetchedDJPlayingNow);
-            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-          } else {
-            setTrackFound(false);
-          }
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        } finally {
-          setIsLoading(false);
         }
-      }
-    };
-
-    fetchData();
-
-    interval.current = window.setInterval(() => {
+      };
+  
       fetchData();
-    }, 10000);
+  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    useEffect(() => {
+      const fetchData = async () => {
+        if (trackId && playingNow) {
+  
+          // Limpar os votos quando a URI da música atual mudar
+          setDJPlayingNow(null);
+  
+          try {
+            const [fetchedVerifyIfDJHasAlreadVoted, fetchedDJPlayingNow] = await Promise.all([
+              voteActions.verifyIfDJHasAlreadVoted(token),
+              playbackActions.getDJAddedCurrentMusic(trackId)
+            ]);
+  
+            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
+            setDJPlayingNow(fetchedDJPlayingNow);
+      
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
+        }
+      };
+  
+      fetchData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [playingNow?.item?.uri || '']);
 
   useEffect(() => {
-    const handleSocketConnect = () => {
-      // Solicita a entrada na sala geral
-      socket.emit('joinRoom', `general_${trackId}`);
-      
-      // Entra na sala do usuário se o DJ estiver disponível
+      const fetchData = async () => {
+        if (trackId) {
+          try {
+            const fetchedPlayingNow = await playbackActions.getState(trackId)
+  
+            setPlayingNow(fetchedPlayingNow);
+            
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      };
+  
+      fetchData();
+  
+      interval.current = window.setInterval(() => {
+        fetchData();
+      }, 10000);
+  
+      return () => {
+        if (interval.current) {
+          clearInterval(interval.current);
+        }
+      };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+      const handleSocketConnect = () => {
+        // Solicita a entrada na sala geral
+        socket.emit('joinRoom', `general_${trackId}`);
+    
+        // Entra na sala do usuário se o DJ estiver disponível
+        if (dj) {
+          socket.emit('joinRoom', `user_${dj.id}`);
+        }
+      };
+    
+      const handleTrackDeleted = (data: { trackId: number }) => {
+        if (Number(trackId) === Number(data.trackId)) {
+          setPopupMessage('Esta pista foi deletada');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+        }
+      };
+    
+      const handleDJCreated = (data: { dj: DJ }) => {
+        setDJs((prevDJs) => [...prevDJs, data.dj]);
+      };
+    
+      const handleDJUpdated = (data: { dj: DJ }) => {
+        setDJs((prevDJs) =>
+          prevDJs.map((dj) => {
+            if (Number(dj.id) === Number(data.dj.id)) {
+              return data.dj;
+            }
+            return dj;
+          })
+        );
+    
+        if (Number(dj?.id) === Number(data.dj.id)) {
+          setDJ(data.dj);
+        }
+      };
+    
+      const handleDJDeleted = (data: { djId: number }) => {
+        if (Number(dj?.id) === Number(data.djId)) {
+          setPopupMessage('Você foi removido desta pista');
+          setRedirectTo('/enter-track');
+          setShowPopup(true);
+        } else {
+          // Atualiza a lista de DJs removendo o DJ deletado
+          setDJs((prevDJs) => prevDJs.filter((dj) => Number(dj.id) !== Number(data.djId)));
+        }
+      };
+    
+      socket.on('connect', handleSocketConnect);
+    
+      // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
+      if (socket.connected && dj) {
+        socket.emit('joinRoom', `general_${trackId}`);
+        socket.emit('joinRoom', `user_${dj.id}`);
+      }
+    
+      // Recebe mensagens do servidor
+      socket.on('chat message', (message) => {
+        setChats((prevChats) => {
+          const chatId = message.chatId || 'general';
+          const updatedChats = { ...prevChats };
+    
+          // Atualizando o chat, incluindo o DJ ID e a mensagem
+          updatedChats[chatId] = [
+            ...(updatedChats[chatId] || []),
+            {
+              id: message.id,
+              djId: message.djId,
+              receiveDJId: message.receiveDJId,
+              message: message.message,
+              createdAt: message.createdAt,
+              read: message.read,
+            },
+          ];
+    
+          // Se o chat está aberto, marca as mensagens como lidas
+          console.log('Selected Chat: ', selectedChat, 'Chat ID: ', message.chatId, 'DJ Chat: ', selectedDJChat);
+          console.log(message.djId, message.receiveDJId, dj?.id);
+          
+    
+          if (
+            Number(selectedChat) === Number(message.chatId) &&
+            Number(message.receiveDJId) === Number(dj?.id)
+          ) {
+            handleMarkAsRead(message.chatId);
+
+            
+            updatedChats[chatId] = updatedChats[chatId].map((msg) =>
+              msg.id === message.id ? { ...msg, read: true } : msg
+            );
+
+            console.log('Marking as read');
+          }
+    
+          return updatedChats;
+        });
+    
+        // Se o chat está aberto, marca as mensagens como lidas
+        if (Number(selectedChat) === Number(message.chatId) && message.djId !== dj?.id ||
+        Number(message.receiveDJId) !== Number(dj?.id)) {
+          handleMarkAsRead(message.chatId);
+        }
+      });
+    
+      // Recebe notificações de mensagens lidas do servidor
+      socket.on('messagesMarkedAsRead', ({ messageIds }) => {
+        setChats((prevChats) => {
+          const updatedChats = { ...prevChats };
+    
+          // Atualiza o estado das mensagens para marcá-las como lidas
+          Object.keys(updatedChats).forEach((chatId) => {
+            updatedChats[chatId] = updatedChats[chatId].map((message) =>
+              messageIds.includes(message.id) ? { ...message, read: true } : message
+            );
+          });
+    
+          return updatedChats;
+        });
+      });
+    
+      socket.emit('joinRoom', `track_${trackId}`);
+      socket.on('track deleted', handleTrackDeleted);
+      socket.on('dj created', handleDJCreated);
+      socket.on('dj updated', handleDJUpdated);
+      socket.on('dj deleted', handleDJDeleted);
+    
+      // Limpeza do evento `connect` para evitar múltiplas adições
+      return () => {
+        socket.off('connect', handleSocketConnect);
+        socket.off('chat message');
+        socket.off('messagesMarkedAsRead');
+        socket.off('track deleted', handleTrackDeleted);
+        socket.off('dj created', handleDJCreated);
+        socket.off('dj updated', handleDJUpdated);
+        socket.off('dj deleted', handleDJDeleted);
+      };
+    
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
       if (dj) {
         socket.emit('joinRoom', `user_${dj.id}`);
       }
-    };
-
-    socket.on('connect', handleSocketConnect);
-
-    // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
-    if (socket.connected && dj) {
-      socket.emit('joinRoom', `general_${trackId}`);
-      socket.emit('joinRoom', `user_${dj.id}`);
-    }
-
-    // Recebe mensagens do servidor
-    socket.on('chat message', (message) => {
-      setChats((prevChats) => {
-        const chatId = message.chatId || 'general';
-        const updatedChats = { ...prevChats };
-
-        // Atualizando o chat, incluindo o DJ ID e a mensagem
-        updatedChats[chatId] = [
-          ...(updatedChats[chatId] || []), 
-          { 
-            id: message.id,
-            djId: message.djId,  
-            receiveDJId: message.receiveDJId, 
-            message: message.message,
-            createdAt: message.createdAt,
-            read: message.read
-          }
-        ];
-
-        // Se o chat está aberto, marca as mensagens como lidas
-        if (Number(selectedChat) === Number(message.chatId && message.djId !== dj?.id)) {
-          updatedChats[chatId] = updatedChats[chatId].map(msg =>
-            msg.id === message.id ? { ...msg, read: true } : msg
-          );
-        }
-
-        return updatedChats;
-      });
-
-      // Se o chat está aberto, marca as mensagens como lidas
-      if (Number(selectedChat) === Number(message.chatId) && message.djId !== dj?.id) {
-        handleMarkAsRead(message.chatId);
-      }
-    });
-
-    // Recebe notificações de mensagens lidas do servidor
-    socket.on('messagesMarkedAsRead', ({ messageIds }) => {
-      setChats((prevChats) => {
-        const updatedChats = { ...prevChats };
-
-        // Atualiza o estado das mensagens para marcá-las como lidas
-        Object.keys(updatedChats).forEach((chatId) => {
-          updatedChats[chatId] = updatedChats[chatId].map((message) =>
-            messageIds.includes(message.id) ? { ...message, read: true } : message
-          );
-        });
-
-        return updatedChats;
-      });
-    });
-
-    // Limpeza do evento `connect` para evitar múltiplas adições
-    return () => {
-      socket.off('connect', handleSocketConnect);
-      socket.off('chat message');
-      socket.off('messagesMarkedAsRead');
-    };
-    
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dj, trackId, selectedChat]);
+    }, [dj]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -320,7 +415,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 200) {
+    if (distance > 100) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
   };
@@ -343,7 +438,8 @@ const Chat: React.FC<Props> = ({ token }) => {
 
   const handleSubmitMessage = async (djId: string | null, message: string, textareaElement: HTMLTextAreaElement) => {
     if (selectedDJChat) {
-      const response = await messageActions.sendMessage(selectedDJChat, message, token);   
+      const response = await messageActions.sendMessage(selectedDJChat, message, token);
+         
       setSelectedChat(String(response?.data.chatId));
     } else if (djId === 'general') {
       await messageActions.sendMessage(null, message, token);
@@ -360,7 +456,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     const unreadMessages = messages.filter(message => !message.read && message.djId !== dj?.id); // Filtra as mensagens não lidas e não enviadas pelo cliente
     const unreadMessageIds = unreadMessages.map(message => message.id); // Extrai os IDs das mensagens não lidas
     if (unreadMessageIds.length > 0) {
-      await messageActions.markMessagesAsRead(unreadMessageIds, token); // Passa o array de IDs para markMessagesAsRead
+      await messageActions.markMessagesAsRead(unreadMessageIds, token);
     }
   };
 
@@ -742,7 +838,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                         >
                           {msg.djId !== dj.id && (
                               <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
-                                {isFirstMessageInSeries(chats[selectedChat], index) && (
+                                {selectedChat === 'general' && isFirstMessageInSeries(chats[selectedChat], index) && (
                                   <OverlayTrigger
                                     trigger="click"
                                     placement="top"
@@ -770,7 +866,8 @@ const Chat: React.FC<Props> = ({ token }) => {
                               position: 'relative',
                               maxWidth: '80%',
                               wordBreak: 'break-word',
-                              margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3%'
+                              margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3% 0 0',
+                              marginLeft: selectedChat !== 'general' && msg.djId !== dj.id ? '-50px' : '0'
                             }}
                           >
                             <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
@@ -786,7 +883,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                               {msg.message}
                             </p>
                           </div>
-                          {msg.djId === dj.id && msg.read && index === chats[selectedChat].length - 1 && (
+                          {msg.djId === dj.id && msg.read && index === chats[selectedChat].length - 1 && selectedChat !== 'general' && (
                             <small style={{ marginTop: '5px', color: 'gray', alignSelf: 'flex-end' }}>
                               visto
                             </small>

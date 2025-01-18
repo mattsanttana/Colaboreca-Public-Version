@@ -5,7 +5,7 @@ import { Vote } from '../interfaces/votes/IVote';
 export default class VoteModel {
   private voteModel = SequelizeVote;
 
-  async create(data: { djId: number; musicId: number; vote: Vote }, p0?: unknown) {
+  async create(data: { djId: number; musicId: number; vote: Vote, trackId: number }, p0?: unknown) {
     const vote = await this.voteModel.create(data);
     return vote.get();
   }

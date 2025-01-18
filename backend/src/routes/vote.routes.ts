@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import VoteController from '../controllers/VoteController';
 import Validations from '../middlewares/Validations';
-import PlaybackController from '../controllers/PlaybackController';
 
 const voteController = new VoteController();
 const router = Router();

@@ -9,6 +9,7 @@ export const initSocket = (server: HTTPServer) => {
       origin: "*", // Permitir todas as origens; ajuste se necessário
       methods: ["GET", "POST"],
     },
+    transports: ["websocket", "polling"],
   });
 
   io.on('connection', (socket) => {

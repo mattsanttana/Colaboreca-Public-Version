@@ -28,7 +28,6 @@ const socket = io('http://localhost:3001');
 
 const TrackInfo: React.FC<Props> = ({ trackToken }) => {
   const { trackId } = useParams();
-  const [trackFound, setTrackFound] = useState<boolean>(false);
   const [trackName, setTrackName] = useState<string>('');
   const [showPopup, setShowPopup] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -63,63 +62,67 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (trackId && playingNow) {
-      const votes = await voteActions.getAllVotesForThisMusic(trackId, playingNow.item?.uri ?? "dispositivo não conectado");
+      if (trackId) {
+        const [ fetchedTrack, fetchedVerifyTrackAcess, fetchedDJData ] = await Promise.all([
+          trackActions.getTrackById(trackId),
+          trackActions.verifyTrackAcess(trackToken, trackId),
+          djActions.getAllDJs(trackId)
+        ])
 
-      setVotes(votes);
+        if (fetchedVerifyTrackAcess?.status !== 200) {
+          setMessagePopup({
+            show: true,
+            message: 'Você não tem permissão para acessar essa pista',
+            redirectTo: '/create-track'
+          });
+        } else {
+          setTrackName(fetchedTrack?.data.trackName);
+          setDJs(fetchedDJData);
+        }
       }
-    }
+    };
 
     fetchData();
-  }
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  , [playingNow?.item?.uri || '']);
+  }, []);
 
   useEffect(() => {
-    // Limpar os votos quando a URI da música atual mudar
-    setVotes(undefined);
+    const fetchData = async () => {
+      if (trackId && playingNow) {
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+        // Limpar os votos quando a URI da música atual mudar
+        setVotes(undefined);
+        setDJPlayingNow(null);
+
+        try {
+          const [ fetchedVotes, fetchedDJPlayingNow] = await Promise.all([
+            voteActions.getAllVotesForThisMusic(trackId, playingNow.item?.uri ?? "dispositivo não conectado"),
+            playbackActions.getDJAddedCurrentMusic(trackId)
+          ]);
+
+          setVotes(fetchedVotes);
+          setDJPlayingNow(fetchedDJPlayingNow);
+          setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []);
+    
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playingNow?.item?.uri || '']);
 
   useEffect(() => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [
-            fetchedOwnerTrack,
-            fetchedTrack,
-            fetchedDJs,
-            fetchedPlayingNow,
-            fetchedDJPlayingNow
-          ] = await Promise.all([
-            trackActions.verifyTrackAcess(trackToken, trackId),
-            trackActions.getTrackById(trackId),
-            djActions.getAllDJs(trackId),
-            playbackActions.getState(trackId),
-            playbackActions.getDJAddedCurrentMusic(trackId),
-          ]);  
-  
-          if (fetchedOwnerTrack?.status !== 200) {
-            setMessagePopup({
-              show: true,
-              message: 'Você não tem permissão para acessar essa pista',
-              redirectTo: '/login'
-            });
-            return;
-          }     
-  
-          if (fetchedTrack?.status === 200) {
-            setPlayingNow(fetchedPlayingNow);
-            setDJPlayingNow(fetchedDJPlayingNow);
-            setDJs(fetchedDJs);
-            setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []);
-            setTrackFound(true);
-            setTrackName(fetchedTrack.data.trackName);
-            if (!editedTrackName) {
-              setEditedTrackName(fetchedTrack.data.trackName);
-            }
-          }
+          const fetchedPlayingNow = await playbackActions.getState(trackId)
+
+          setPlayingNow(fetchedPlayingNow);
+          
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
@@ -127,7 +130,7 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
         }
       }
     };
-  
+
     fetchData();
 
     interval.current = window.setInterval(() => {
@@ -139,7 +142,6 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
         clearInterval(interval.current);
       }
     };
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
@@ -186,7 +188,9 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
     return () => {
       socket.off('new vote', handleNewVote);
     };
-  }, [trackId]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -274,7 +278,7 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
               <Form.Group className="mb-3">
                 <Form.Control
                   type="text"
-                  value={editedTrackName}
+                  value={editedTrackName || trackName}
                   onChange={(e) => setEditedTrackName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -322,7 +326,7 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
         >
           <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
-      ) : trackFound ? (
+      ) : (
         <div>
           <Container>
             <Header isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen} trackInfoShowPopup={setShowPopup}/>
@@ -337,7 +341,7 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
                 xxl={6}
                 className="d-flex flex-column align-items-center playback-state-container"
               >
-                <PlaybackState playingNow={playingNow} trackName={ trackName } dj={null} djPlayingNow={djPlayingNow} votes={votes} isOwner={true} trackId={trackId}/>
+                <PlaybackState playingNow={playingNow} trackName={ trackName } dj={undefined} djPlayingNow={djPlayingNow} votes={votes} isOwner={true} trackId={trackId}/>
               </Col>
               <Col md={3} className="d-none d-xxl-block">
                 <div className="podium-container">
@@ -350,10 +354,6 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
             </Row>
           </Container>
         </div>
-      ) : (
-        <Container className="d-flex align-items-center justify-content-center vh-100">
-          <h1 className='text-light'>Pista não encontrada</h1>
-        </Container>
       )}
     </div>
   );

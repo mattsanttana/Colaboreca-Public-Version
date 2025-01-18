@@ -17,6 +17,7 @@ import { DJ, DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
 import { FaQuestionCircle } from 'react-icons/fa';
+import { io } from 'socket.io-client';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -27,10 +28,11 @@ interface Props {
   djToken: string;
 }
 
+const socket = io('http://localhost:3001');
+
 const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const { trackId } = useParams();
   const [isOwner, setIsOwner] = useState<boolean>(true);
-  const [trackFound, setTrackFound] = useState<boolean>(false);
   const [dj, setDJ] = useState<DJ | undefined>(undefined);
   const [djs, setDJs] = useState<DJ[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -52,72 +54,95 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const voteActions = useVote();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
-  const interval = useRef<NodeJS.Timeout | null>(null);
+  const interval = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const pageType = window.location.pathname.split('/')[1];
-  
-      if (pageType !== 'track-info') {
-        setIsOwner(false);
-  
-        const [fetchVerifyLogin, fetchedMenuDJ] = await Promise.all([
-          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
-          djActions.getDJByToken(djToken),
-        ]);
-  
-        if (fetchVerifyLogin?.status !== 200 || fetchedMenuDJ?.status !== 200) {
-          setPopupMessage('Você não é um DJ desta pista, por favor faça login novamente');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-        } else {
-          setDJ(fetchedMenuDJ.data);
-        }
-      } else {
-        setIsOwner(true);
-  
-        if (trackId) {
-          const verifyOwnerLogin = await trackActions.verifyTrackAcess(trackToken, trackId);
-  
-          if (verifyOwnerLogin?.status !== 200) {
-            setPopupMessage('Você não tem permissão para acessar essa pista');
-            setRedirectTo('/login');
+      if (trackId) {
+        const pageType = window.location.pathname.split('/')[1];
+    
+        if (pageType !== 'track-info') {
+          setIsOwner(false);
+
+          const [ fetchedTrack, fetchedDJData ] = await Promise.all([
+            trackActions.getTrackById(trackId),
+            djActions.getDJData(djToken),
+          ]);
+
+          if (!fetchedDJData?.data.dj) {
+            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+            setRedirectTo('/enter-track');
             setShowPopup(true);
+          }
+
+          if (fetchedTrack?.status === 200) {
+            setDJ(fetchedDJData?.data.dj);
+            setDJs(fetchedDJData?.data.djs);
+          } else {
+            setPopupMessage('Esta pista não existe');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+          }
+        } else {
+          setIsOwner(true);
+
+          if (trackId) {
+            const [ fetchedVerifyTrackAcess, fetchedDJs ] = await Promise.all([
+              trackActions.verifyTrackAcess(trackToken, trackId),
+              djActions.getAllDJs(trackId)
+            ])
+
+            if (fetchedVerifyTrackAcess?.status !== 200) {
+              setPopupMessage('Você não tem permissão para acessar essa pista');
+              setRedirectTo('/login');
+              setShowPopup(true);
+            } else {
+              setDJs(fetchedDJs);
+            }
           }
         }
       }
     };
-  
+
     fetchInitialData();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [djToken, trackId, trackToken]);
+  }, []);
 
   useEffect(() => {
+      const fetchData = async () => {
+        if (trackId && playingNow) {
+  
+          // Limpar os votos quando a URI da música atual mudar
+          setDJPlayingNow(null);
+  
+          try {
+            const [fetchedVerifyIfDJHasAlreadVoted, fetchedDJPlayingNow ] = await Promise.all([
+              voteActions.verifyIfDJHasAlreadVoted(djToken),
+              playbackActions.getDJAddedCurrentMusic(trackId)
+            ]);
+  
+            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
+            setDJPlayingNow(fetchedDJPlayingNow);
+      
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
+        }
+      };
+  
+      fetchData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [playingNow?.item?.uri || '']);
+
+   useEffect(() => {
     const fetchData = async () => {
       if (trackId) {
         try {
-          const [
-            fetchedTrack,
-            fetchedDJs,
-            fetchedPlayingNow,
-            fetchedDJPlayingNow,
-            fetchedVerifyIfDJHasAlreadVoted
-          ] = await Promise.all([
-            trackActions.getTrackById(trackId),
-            djActions.getAllDJs(trackId),
-            playbackActions.getState(trackId as string),
-            playbackActions.getDJAddedCurrentMusic(trackId),
-            voteActions.verifyIfDJHasAlreadVoted(djToken)
-          ]);
-    
-          if (fetchedTrack?.status === 200) {
-            setTrackFound(true);
-            setDJs(fetchedDJs);
-            setPlayingNow(fetchedPlayingNow);
-            setDJPlayingNow(fetchedDJPlayingNow);
-            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-          }
+          const fetchedPlayingNow = await playbackActions.getState(trackId)
+
+          setPlayingNow(fetchedPlayingNow);
+          
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
@@ -125,10 +150,10 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
         }
       }
     };
-    
+
     fetchData();
 
-    interval.current = setInterval(() => {
+    interval.current = window.setInterval(() => {
       fetchData();
     }, 10000);
 
@@ -136,6 +161,48 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
       if (interval.current) {
         clearInterval(interval.current);
       }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const handleDJCreated = (data: { dj: DJ }) => {
+      setDJs((prevDJs) => [...prevDJs, data.dj]);
+    };
+
+    const handleTrackDeleted = (data: { trackId: number }) => {
+      if (Number(trackId) === Number(data.trackId)) {
+        setPopupMessage('Esta pista foi deletada');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    };
+  
+    const handleDJUpdated = (data: { dj: DJ }) => {
+      if (Number(dj?.id) === Number(data.dj.id)) {
+        setDJ(data.dj);
+      }
+    };
+
+    const handleDJDeleted = (data: { djId: number }) => {
+      if (Number(dj) === Number(data.djId)) {
+        setPopupMessage('Você foi removido desta pista');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    };
+
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('track deleted', handleTrackDeleted);
+    socket.on('dj created', handleDJCreated);
+    socket.on('dj updated', handleDJUpdated);
+    socket.on('dj deleted', handleDJDeleted);
+  
+    return () => {
+      socket.off('track deleted', handleTrackDeleted);
+      socket.off('dj created', handleDJCreated);
+      socket.off('dj updated', handleDJUpdated);
+      socket.off('dj deleted', handleDJDeleted);
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -244,7 +311,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
         >
           <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
-      ) : trackFound ? (
+      ) : (
         <Container>
           <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
           <Row>
@@ -260,7 +327,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
             <Col className="py-4">
               <Card className="text-center text-light">
                 <Card.Body
-                  style={{ backgroundColor: '#000000', padding: '0', width: '100%', height: '845px', overflowY: 'auto' }}
+                  style={{ backgroundColor: '#000000', padding: '0', width: '100%', height: '810px', overflowY: 'auto' }}
                 >
                   <Row md={3} style={{width: '90%', marginLeft: '3%'}}>
                     <Podium
@@ -405,13 +472,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
           />
         )}
         </Container>
-      ) : (
-        <Container className="text-center">
-          <h1>Esta pista não existe</h1>
-          <Button onClick={() => navigate("/")}>Página inicial</Button>
-        </Container>
       )}
-
       <Modal className="custom-modal" show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
         <Modal.Header closeButton style={{ borderBottom: 'none' }}>
           <Modal.Title>Confirmação</Modal.Title>

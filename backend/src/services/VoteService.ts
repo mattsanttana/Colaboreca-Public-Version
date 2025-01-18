@@ -25,6 +25,7 @@ export default class VoteService {
 
   async checkPlaybackState() {
     const transaction = await this.sequelize.transaction();
+
     try {
       const tracks = await this.trackModel.findAll({ transaction });
 
@@ -138,7 +139,7 @@ export default class VoteService {
         return { status: 'UNAUTHORIZED', data: { message: 'This DJ has already voted' } };
       }
 
-      const response = await this.voteModel.create({ djId: decoded.id, musicId: music.id, vote }, { transaction });
+      const response = await this.voteModel.create({ djId: decoded.id, musicId: music.id, vote, trackId: decoded.trackId }, { transaction });
       io.to(`track_${decoded.trackId}`).emit('new vote', response);
 
       await transaction.commit();
@@ -197,6 +198,8 @@ export default class VoteService {
   }
 
   async applyPointsToDJ(trackId: number, musicURI: string) {
+    const io = getSocket();
+
     try {
       const music = await this.musicModel.findOne({ musicURI });
 
@@ -344,6 +347,8 @@ export default class VoteService {
       for (let i = 0; i < sortedDJs.length; i += 1) {
         const newRanking = sortedDJs[i].score === 0 ? 0 : i + 1;
         await this.djModel.update({ ranking: newRanking }, { id: sortedDJs[i].id });
+        const djUpdated = await this.djModel.findOne({ id: sortedDJs[i].id });
+        io.to(`track_${music.trackId}`).emit('dj updated', djUpdated);
       }
 
       return { status: 'OK', data: { message: 'Points and rank applied to DJ' } };

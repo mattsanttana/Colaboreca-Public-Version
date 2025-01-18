@@ -15,6 +15,7 @@ import { DJ, DJPlayingNow } from '../types/DJ';
 import TQueue from '../types/TQueue';
 import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
+import { io } from 'socket.io-client';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -25,11 +26,12 @@ type Props = {
   trackToken: string;
 };
 
+const socket = io('http://localhost:3001');
+
 const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const { trackId } = useParams();
   const navigate = useNavigate();
   const [isOwner, setIsOwner] = useState<boolean>(true);
-  const [trackFound, setTrackFound] = useState<boolean>(false);
   const [dj, setDJ] = useState<DJ | undefined>(undefined);
   const [queue, setQueue] = useState<TQueue[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -44,7 +46,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
   
-  const cacheRef = useRef<{ [key: string]: TQueue[] }>({});
   const sliderRef = useRef<Slider | null>(null); // Referência para o slider
   const menuRef = useRef<HTMLDivElement>(null);
   const trackRefs = useRef<(HTMLDivElement | null)[]>([]); // Referências para os itens da fila
@@ -52,98 +53,117 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const djActions = useDJ();
   const playbackActions = usePlayback();
   const voteActions = useVote();
+  const interval = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const pageType = window.location.pathname.split('/')[1];
-  
-      if (pageType !== 'track-info') {
-        setIsOwner(false);
+      if (trackId) {
+        const pageType = window.location.pathname.split('/')[1];
+    
+        if (pageType !== 'track-info') {
+          setIsOwner(false);
 
-        const [fetchVerifyLogin, fetchedMenuDJ] = await Promise.all([
-          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(djToken),
-          djActions.getDJByToken(djToken),
-        ]);
+          const [ fetchedTrack, fetchedDJData, fetchedQueue ] = await Promise.all([
+            trackActions.getTrackById(trackId),
+            djActions.getDJData(djToken),
+            playbackActions.getQueue(trackId)
+          ]);
 
-        if (fetchVerifyLogin?.status !== 200 || fetchedMenuDJ?.status !== 200) {
-          setPopupMessage('Você não é um DJ desta pista, por favor faça login novamente');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-        } else {
-          setDJ(fetchedMenuDJ.data);
-        }
-      } else {
-        setIsOwner(true);
-
-        if (trackId) {
-          const verifyOwnerLogin = await trackActions.verifyTrackAcess(trackToken, trackId);
-          
-          if (verifyOwnerLogin?.status !== 200) {
-            setPopupMessage('Você não tem permissão para acessar essa pista');
-            setRedirectTo('/login');
+          if (!fetchedDJData?.data.dj) {
+            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+            setRedirectTo('/enter-track');
             setShowPopup(true);
+          }
+
+          if (fetchedTrack?.status === 200) {
+            setDJ(fetchedDJData?.data.dj);
+            setQueue(fetchedQueue);
+            setIsLoading(false); 
+          } else {
+            setPopupMessage('Esta pista não existe');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+          }
+        } else {
+          setIsOwner(true);
+
+          if (trackId) {
+            const [ fetchedVerifyTrackAcess, fetchedQueue ] = await Promise.all([
+              trackActions.verifyTrackAcess(trackToken, trackId),
+              playbackActions.getQueue(trackId)
+            ])
+
+            if (fetchedVerifyTrackAcess?.status !== 200) {
+              setPopupMessage('Você não tem permissão para acessar essa pista');
+              setRedirectTo('/login');
+              setShowPopup(true);
+            } else {
+              setQueue(fetchedQueue);
+              setIsLoading(false);
+            }
           }
         }
       }
     };
 
     fetchInitialData();
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [djToken, trackId, trackToken]);
+  }, []);
 
   useEffect(() => {
-    const fetchQueue = async () => {
-      if (trackId && djToken) {
-        const cacheKey = `queue_${trackId}`;
-        if (cacheRef.current[cacheKey]) {
-          setQueue(cacheRef.current[cacheKey]);
-          setIsLoading(false);
-          return;
-        }
-  
+    const fetchData = async () => {
+      if (trackId && playingNow) {
+
+        // Limpar os votos quando a URI da música atual mudar
+        setDJPlayingNow(null);
+
         try {
-          const [
-            fetchedTrack,
-            fetchedQueue,
-            fetchedPlayingNow,
-            fetchedDJPlayingNow,
-            fetchedVerifyIfDJHasAlreadVoted
-          ] = await Promise.all([
-            trackActions.getTrackById(trackId),
-            playbackActions.getQueue(trackId),
-            playbackActions.getState(trackId),
+          const [fetchedVerifyIfDJHasAlreadVoted, fetchedDJPlayingNow, fetchedQueue ] = await Promise.all([
+            voteActions.verifyIfDJHasAlreadVoted(djToken),
             playbackActions.getDJAddedCurrentMusic(trackId),
-            voteActions.verifyIfDJHasAlreadVoted(djToken)
+            playbackActions.getQueue(trackId)
           ]);
-  
-          if (fetchedTrack?.status === 200 && fetchedQueue) {
-            setTrackFound(true);
-            setQueue(fetchedQueue);
-            setPlayingNow(fetchedPlayingNow);
-            setDJPlayingNow(fetchedDJPlayingNow);
-            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-            cacheRef.current[cacheKey] = fetchedQueue; // Cache the result
-          } else {
-            console.error('Error fetching data:', fetchedTrack?.status);
-            setPopupMessage('Erro ao buscar a fila.');
-            setShowPopup(true);
-          }
+
+          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
+          setDJPlayingNow(fetchedDJPlayingNow);
+          setQueue(fetchedQueue);
+    
         } catch (error) {
-          console.error('Error fetching data:', error);
-          setPopupMessage('Erro ao buscar a fila. Tente novamente mais tarde.');
-          setShowPopup(true);
-        } finally {
-          setIsLoading(false);
+          console.error("Error fetching data:", error);
         }
       }
     };
-  
-    fetchQueue();
-  
-    const interval = setInterval(fetchQueue, 10000);
-  
-    return () => clearInterval(interval);
-    
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingNow?.item?.uri || '']);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (trackId) {
+        try {
+          const fetchedPlayingNow = await playbackActions.getState(trackId)
+
+          setPlayingNow(fetchedPlayingNow);
+          
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+    };
+
+    fetchData();
+
+    interval.current = window.setInterval(() => {
+      fetchData();
+    }, 10000);
+
+    return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -173,6 +193,43 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [closeMenu]);
+
+  useEffect(() => {
+    const handleTrackDeleted = (data: { trackId: number }) => {
+      if (Number(trackId) === Number(data.trackId)) {
+        setPopupMessage('Esta pista foi deletada');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    }
+  
+    const handleDJUpdated = (data: { dj: DJ }) => {
+      if (Number(dj?.id) === Number(data.dj.id)) {
+        setDJ(data.dj);
+      }
+    };
+
+    const handleDJDeleted = (data: { djId: number }) => {
+      if (Number(dj) === Number(data.djId)) {
+        setPopupMessage('Você foi removido desta pista');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    };
+
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('track deleted', handleTrackDeleted);
+    socket.on('dj updated', handleDJUpdated);
+    socket.on('dj deleted', handleDJDeleted);
+  
+    return () => {
+      socket.off('track deleted', handleTrackDeleted);
+      socket.off('dj updated', handleDJUpdated);
+      socket.off('dj deleted', handleDJDeleted);
+    };
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -246,7 +303,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
         >
           <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
-      ) : trackFound ? (
+      ) : (
         <Container>
           <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
           <Row>
@@ -363,10 +420,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
               </Card>
             </Col>
           </Row>
-        </Container>
-      ) : (
-        <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-          <h1 className="text-light">A música não foi encontrada.</h1>
         </Container>
       )}
     </div>

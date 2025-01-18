@@ -7,7 +7,7 @@ services:
       - 3000:3000
     working_dir: /app-frontend
     healthcheck:
-      test: ["CMD", "lsof", "-t", "-i:3000"]
+      test: [ "CMD", "lsof", "-t", "-i:3000" ]
       timeout: 10s
       retries: 5
   backend:
@@ -16,7 +16,7 @@ services:
     ports:
       - 3001:3001
     working_dir: /app-backend
-    volumes: 
+    volumes:
       - ./backend/src:/app-backend/src
     depends_on:
       db:
@@ -29,7 +29,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
     healthcheck:
-      test: ["CMD", "lsof", "-t", "-i:3001"]
+      test: [ "CMD", "lsof", "-t", "-i:3001" ]
       timeout: 10s
       retries: 5
   db:
@@ -41,7 +41,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${DB_PASS}
     restart: 'always'
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 10s
       retries: 5
     cap_add:

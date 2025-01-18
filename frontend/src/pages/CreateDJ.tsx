@@ -34,9 +34,9 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token);
-      if (response?.status === 200) {
-        navigate(`/track/${response.data}`);
+      const response = await djActions.getDJData(token);
+      if (response?.data.dj !== undefined) {
+        navigate(`/track/${response.data.trackId}`);
       }
       setIsLoading(false);
     };

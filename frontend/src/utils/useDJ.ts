@@ -23,6 +23,27 @@ const useDJ = () => {
       console.error(error);
     }
   }
+
+  const getDJData = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:3001/djs', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${ token }`,
+        },
+      });
+
+      const data = await response.json();
+
+      return {
+        status: response.status,
+        data,
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  }
   
   const getAllDJs = async (trackId: string) => {
     try {
@@ -35,7 +56,7 @@ const useDJ = () => {
     }
   }
 
-  const getDJById = async (djId: string, trackId: string) => {
+  const getDJById = async (djId: string | undefined, trackId: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/djs/${ djId }/${ trackId }`, {
         method: 'GET',
@@ -53,49 +74,7 @@ const useDJ = () => {
     }
   }
 
-  const getDJByToken = async (token: string) => {  
-    try {
-      const response = await fetch('http://localhost:3001/djs', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${ token }`,
-        },
-      });
-
-      const data = await response.json();
-
-      return {
-        status: response.status,
-        data,
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  const verifyIfDJHasAlreadyBeenCreatedForThisTrack = async (token: string) => {
-    try {
-      const response = await fetch(`http://localhost:3001/djs/verify-if-dj-has-already-been-created-for-this-track`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${ token }`,
-        },
-        });
-
-      const data = await response.json();
-
-      return {
-        status: response.status,
-        data,
-      };
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  const verifyIfTheDJIsTheProfileOwner = async (id: string, token: string) => {
+  const verifyIfTheDJIsTheProfileOwner = async (id: string | undefined, token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/djs/verify-if-the-dj-is-the-profile-owner/${ id }`, {
         method: 'GET',
@@ -159,10 +138,9 @@ const useDJ = () => {
 
   return {
     createDJ,
+    getDJData,
     getDJById,
     getAllDJs,
-    getDJByToken,
-    verifyIfDJHasAlreadyBeenCreatedForThisTrack,
     verifyIfTheDJIsTheProfileOwner,
     updateDJ,
     deleteDJ 

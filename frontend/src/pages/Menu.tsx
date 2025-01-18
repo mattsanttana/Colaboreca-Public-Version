@@ -10,7 +10,7 @@ type Props = {
 
 const Menu: React.FC<Props> = ({ dj }) => {
   const navigate = useNavigate();
-  
+
   const handleRedirect = (path: string) => {
     navigate(path);
   };

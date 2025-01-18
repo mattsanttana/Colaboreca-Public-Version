@@ -1,6 +1,8 @@
-import { UniqueConstraintError, Sequelize } from 'sequelize';
+import { UniqueConstraintError, Sequelize, QueryTypes } from 'sequelize';
+import { camelCase } from 'lodash';
 import DJModel from '../models/DJModel';
 import TrackModel from '../models/TrackModel';
+import { getSocket } from '../utils/socketIO';
 import JWT from '../utils/JWT';
 import * as config from '../database/config/database';
 
@@ -14,6 +16,7 @@ export default class DJService {
   async createDJ(data: { djName: string, characterPath: string, trackId: number }) {
     const { djName, trackId, characterPath } = data;
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
 
     try {
       const track = await this.trackModel.findOne({ id: trackId }, { transaction });
@@ -41,9 +44,35 @@ export default class DJService {
       await this.trackModel.update({ updatedAt: now }, { id: trackId }, transaction);
 
       await transaction.commit();
+
+      io.to(`track_${trackId}`).emit('dj created', { dj });
+
       return { status: 'CREATED', data: response };
     } catch (error) {
       await transaction.rollback();
+      console.error(error);
+      return { status: 'ERROR', data: { message: 'An error occurred' } };
+    }
+  }
+
+  async findDJData(authorization: string) {
+    try {
+      const token = authorization.split(' ')[1];
+      const decoded = JWT.verify(token);
+
+      if (typeof decoded === 'string') {
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
+      }
+
+      const djId = decoded.id;
+
+      const response = await this.djModel.findAll({ trackId: decoded.trackId });
+
+      const dj = response.find((dj: { id?: number | undefined }) => dj.id === djId);
+      const djs = response;
+
+      return { status: 'OK', data: { dj, djs } };
+    } catch (error) {
       console.error(error);
       return { status: 'ERROR', data: { message: 'An error occurred' } };
     }
@@ -79,52 +108,6 @@ export default class DJService {
     }
   }
 
-  async findDJByToken(authorization: string) {
-    try {
-      const token = authorization.split(' ')[1];
-
-      const decoded = JWT.verify(token);
-
-      if (typeof decoded === 'string') {
-        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
-      }
-
-      const response = await this.djModel.findOne({ id: decoded.id });
-
-      if (!response) {
-        return { status: 'NOT_FOUND', data: { message: 'DJ not found' } };
-      }
-
-      return { status: 'OK', data: response };
-    } catch (error) {
-      console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
-    }
-  }
-
-  async verifyIfDjHasAlreadyBeenCreatedForThisTrack(authorization: string) {
-    try {
-      const token = authorization.split(' ')[1];
-
-      const decoded = JWT.verify(token);
-
-      if (typeof decoded === 'string') {
-        return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
-      }
-
-      const dj = await this.djModel.findOne({ id: decoded.id });
-
-      if (!dj) {
-        return { status: 'NOT_FOUND', data: { message: 'DJ not found' } };
-      }
-
-      return { status: 'OK', data: dj.trackId };
-    } catch (error) {
-      console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
-    }
-  }
-
   async verifyIfTheDJIsTheProfileOwner(id: number, authorization: string) {
     try {
       const token = authorization.split(' ')[1];
@@ -153,6 +136,7 @@ export default class DJService {
 
   async updateDJ(characterPath: string, djName: string, authorization: string) {
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
 
     try {
       const token = authorization.split(' ')[1];
@@ -195,6 +179,9 @@ export default class DJService {
       await this.trackModel.update({ updatedAt: now }, { id: decoded.trackId }, transaction);
 
       await transaction.commit();
+
+      io.to(`track_${decoded.trackId}`).emit('dj updated', { djId: decoded.id });
+
       return { status: 'OK', data: { message: 'DJ updated successfully' } };
     } catch (error) {
       await transaction.rollback();
@@ -208,6 +195,7 @@ export default class DJService {
 
   async deleteDJ(authorization: string) {
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
 
     try {
       const token = authorization.split(' ')[1];
@@ -238,6 +226,9 @@ export default class DJService {
       await this.trackModel.update({ updatedAt: now }, { id: decoded.trackId }, transaction);
 
       await transaction.commit();
+
+      io.to(`track_${decoded.trackId}`).emit('dj_deleted', { djId: decoded.id });
+
       return { status: 'OK', data: { message: 'DJ deleted successfully' } };
     } catch (error) {
       await transaction.rollback();

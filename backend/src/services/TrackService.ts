@@ -6,6 +6,7 @@ import ChatModel from '../models/ChatModel';
 import MessageModel from '../models/MessageModel';
 import MusicModel from '../models/MusicModel';
 import VoteModel from '../models/VoteModel';
+import { getSocket } from '../utils/socketIO';
 import generateShortId from '../utils/generateShortId';
 import SpotifyActions from '../utils/SpotifyActions';
 import JWT from '../utils/JWT';
@@ -130,6 +131,7 @@ export default class TrackService {
 
   async updateTrack(trackName: string, authorization: string) {
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
 
     try {
       const token = authorization.split(' ')[1];
@@ -165,6 +167,10 @@ export default class TrackService {
 
       await transaction.commit();
 
+      const trackUpdated = await this.trackModel.findOne({ id: decoded.id });
+
+      io.to(`track_${decoded.id}`).emit('track updated', { trackName: trackUpdated?.trackName });
+
       return { status: 'OK', data: { message: 'Track updated' } };
     } catch (error) {
       await transaction.rollback();
@@ -179,6 +185,7 @@ export default class TrackService {
 
   async deleteTrack(authorization: string) {
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
 
     try {
       const token = authorization.split(' ')[1];
@@ -194,9 +201,19 @@ export default class TrackService {
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
+      await Promise.all([
+        this.chatModel.delete({ trackId: decoded.id }, transaction),
+        this.djModel.delete({ trackId: decoded.id }, transaction),
+        this.messageModel.delete({ trackId: decoded.id }, transaction),
+        this.musicModel.delete({ trackId: decoded.id }, transaction),
+        this.voteModel.delete({ trackId: decoded.id }, transaction)
+      ]);
+
       await this.trackModel.delete({ where: { id: decoded.id } }, { transaction });
 
       await transaction.commit();
+
+      io.to(`track_${decoded.id}`).emit('track deleted', { trackId: decoded.id });
 
       return { status: 'OK', data: { message: 'Track deleted' } };
     } catch (error) {
@@ -211,6 +228,7 @@ export default class TrackService {
   }
 
   async deleteAllTracksWithSixHoursAbsence() {
+    const io = getSocket();
     const transaction = await this.sequelize.transaction();
     try {
       const tracksToDelete = await this.trackModel.findAll({
@@ -221,10 +239,10 @@ export default class TrackService {
         },
         transaction
       });
-  
+
       for (const track of tracksToDelete) {
         const trackId = track.id;
-  
+
         // Deletar entradas relacionadas nas tabelas Chat, DJ, Message, Music e Vote
         await Promise.all([
           this.chatModel.delete({ where: { trackId }, transaction }),
@@ -233,11 +251,12 @@ export default class TrackService {
           this.musicModel.delete({ where: { trackId }, transaction }),
           this.voteModel.delete({ where: { trackId }, transaction })
         ]);
-  
+
         // Deletar a track
         await this.trackModel.delete({ where: { id: trackId }, transaction });
+        io.to(`track_${trackId}`).emit('track deleted', { trackId });
       }
-  
+
       await transaction.commit();
       return { status: 'OK', data: { message: `${tracksToDelete.length} tracks deleted` } };
     } catch (error) {
@@ -249,6 +268,7 @@ export default class TrackService {
 
   async deleteDJ(id: number, authorization: string) {
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
 
     try {
       const token = authorization.split(' ')[1];
@@ -275,6 +295,8 @@ export default class TrackService {
       await this.trackModel.update({ updatedAt: now }, { id: decoded.id }, { transaction });
 
       await transaction.commit();
+
+      io.to(`track_${decoded.id}`).emit('dj deleted', { id });
 
       return { status: 'OK', data: { message: 'DJ deleted' } };
     } catch (error) {

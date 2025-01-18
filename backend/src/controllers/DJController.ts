@@ -23,15 +23,9 @@ export default class DJController {
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 
-  async findDJByToken(req: Request, res: Response) {
+  async findDJData(req: Request, res: Response) {
     const authorization = req.headers.authorization;
-    const response = await this.djService.findDJByToken(authorization as string);
-    res.status(mapStatusHTTP(response.status)).json(response.data);
-  }
-
-  async verifyIfDjHasAlreadyBeenCreatedForThisTrack(req: Request, res: Response) {
-    const authorization = req.headers.authorization;
-    const response = await this.djService.verifyIfDjHasAlreadyBeenCreatedForThisTrack(authorization as string);
+    const response = await this.djService.findDJData(authorization as string);
     res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 

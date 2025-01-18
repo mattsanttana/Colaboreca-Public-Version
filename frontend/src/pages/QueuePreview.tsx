@@ -24,6 +24,13 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
 
   const previewQueue = Array.isArray(queue) ? queue.slice(0, 3) : [];
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + '...';
+    }
+    return text;
+  };
+
   return (
     <Container className="py-4">
       <Card
@@ -32,7 +39,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
       >
         <Card.Body 
           style={{ 
-            height: '400px',
+            height: '360px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -75,7 +82,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
                         wordWrap: 'break-word',
                       }}
                     >
-                      {track.name}
+                      { truncateText(track.name, 23) }
                     </td>
                     <td
                       className='text-light'
@@ -86,7 +93,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
                         wordWrap: 'break-word',
                       }}
                     >
-                      {track.artists.map((artist) => artist.name).join(', ')}
+                      { truncateText(track.artists.map((artist) => artist.name).join(', '), 23) }
                     </td>
                     <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
                       <img 

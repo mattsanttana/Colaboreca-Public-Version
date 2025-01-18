@@ -27,13 +27,7 @@ router.delete(
 router.get(
   '/',
   Validations.validateToken,
-  (req, res) => djController.findDJByToken(req, res)
-);
-
-router.get(
-  '/verify-if-dj-has-already-been-created-for-this-track',
-  Validations.validateToken,
-  (req, res) => djController.verifyIfDjHasAlreadyBeenCreatedForThisTrack(req, res)
+  (req, res) => djController.findDJData(req, res)
 );
 
 router.get(

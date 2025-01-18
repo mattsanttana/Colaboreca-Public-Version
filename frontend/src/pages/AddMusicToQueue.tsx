@@ -12,6 +12,8 @@ import { Music } from '../types/SpotifySearchResponse';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
+import { io } from 'socket.io-client';
+import useTrack from '../utils/useTrack';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -19,6 +21,8 @@ const VotePopup = lazy(() => import('./VotePopup'));
 interface Props {
   token: string;
 }
+
+const socket = io('http://localhost:3001');
 
 const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const { trackId } = useParams();
@@ -41,12 +45,13 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
 
+  const trackActions = useTrack();
   const playbackActions = usePlayback();
   const djActions = useDJ();
   const voteActions = useVote();
   const debouncedSearch = useDebounce(search, 600);
   const menuRef = useRef<HTMLDivElement>(null);
-  const interval = useRef<NodeJS.Timeout | null>(null);
+  const interval = useRef<number | null>(null);
 
   // useEffect para carregar as músicas populares no Brasil apenas uma vez
   useEffect(() => {
@@ -67,67 +72,95 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // useEffect para carregar os dados periodicamente
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [
-          fetchedVerifyLogin,
-          fetchedDJ,
-          fetchedPlayingNow,
-          fetchedDJPlayingNow,
-          fetchedVerifyIfDJHasAlreadVoted
-        ] = await Promise.all([
-          djActions.verifyIfDJHasAlreadyBeenCreatedForThisTrack(token),
-          djActions.getDJByToken(token),
-          playbackActions.getState(trackId as string),
-          playbackActions.getDJAddedCurrentMusic(trackId),
-          voteActions.verifyIfDJHasAlreadVoted(token)
-        ]);
+    const fetchedData = async () => {
+      if (trackId) {
+        try {
+          const [fetchedTrack, fetchedDJData] = await Promise.all([
+            trackActions.getTrackById(trackId),
+            djActions.getDJData(token)
+          ]);
+  
+          if (!fetchedDJData?.data.dj) {
+            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+          }
 
-        if (fetchedVerifyLogin?.status !== 200) {
-          setPopupMessage('Você não está logado, por favor faça login novamente');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-          return;
+          if (fetchedTrack?.status === 200) {
+            setDJ(fetchedDJData?.data.dj);
+          } else {
+            setPopupMessage('Esta pista não existe');
+            setRedirectTo('/enter-track');
+            setShowPopup(true);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setIsLoading(false);
         }
-      
-        if (fetchedDJ?.status !== 200) {
-          setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-          return;
-        }
-
-        if (fetchedDJ?.status === 200) {
-          setDJ(fetchedDJ.data);
-          setPlayingNow(fetchedPlayingNow);
-          setDJPlayingNow(fetchedDJPlayingNow);
-          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-        } else {
-          console.error('Error fetching DJ');
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
-    fetchData();
-
-    interval.current = setInterval(() => {
-      fetchData();
-    }, 10000);
-
-    return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
-      }
-    };
+    fetchedData();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+      const fetchData = async () => {
+        if (trackId && playingNow) {
+
+          setDJPlayingNow(null);
+
+          try {
+            const [fetchedVerifyIfDJHasAlreadVoted, fetchedDJPlayingNow] = await Promise.all([
+              voteActions.verifyIfDJHasAlreadVoted(token),
+              playbackActions.getDJAddedCurrentMusic(trackId)
+            ]);
+  
+            setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
+            setDJPlayingNow(fetchedDJPlayingNow);
+      
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
+        }
+      };
+  
+      fetchData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [playingNow?.item?.uri || '']);
+
+  useEffect(() => {
+      const fetchData = async () => {
+        if (trackId) {
+          try {
+            const fetchedPlayingNow = await playbackActions.getState(trackId)
+  
+            setPlayingNow(fetchedPlayingNow);
+            
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      };
+  
+      fetchData();
+  
+      interval.current = window.setInterval(() => {
+        fetchData();
+      }, 10000);
+  
+      return () => {
+        if (interval.current) {
+          clearInterval(interval.current);
+        }
+      };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
   useEffect(() => {
     if (debouncedSearch.trim() === '') {
@@ -177,6 +210,43 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     };
   }, [isMenuOpen, closeMenu]);
 
+  useEffect(() => {
+    const handleTrackDeleted = (data: { trackId: number }) => {
+      if (Number(trackId) === Number(data.trackId)) {
+        setPopupMessage('Esta pista foi deletada');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    }
+
+    const handleDJUpdated = (data: { dj: DJ }) => {
+      if (Number(dj?.id) === Number(data.dj.id)) {
+        setDJ(data.dj);
+      }
+    };
+
+    const handleDJDeleted = (data: { djId: number }) => {
+      if (Number(dj?.id) === Number(data.djId)) {
+        setPopupMessage('Você foi removido desta pista');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    };
+
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('track deleted', handleTrackDeleted);
+    socket.on('dj updated', handleDJUpdated);
+    socket.on('dj deleted', handleDJDeleted);
+  
+    return () => {
+      socket.off('track deleted', handleTrackDeleted);
+      socket.off('dj updated', handleDJUpdated);
+      socket.off('dj deleted', handleDJDeleted);
+    };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
@@ -191,7 +261,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 200) {
+    if (distance > 100) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
   };
@@ -308,12 +378,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                     ) : memoizedSearchResults.length > 0 ? (
                       <>
                         <h1>Resultados da busca:</h1>
-                        <Row>
+                        <Row style={{ width: '100%' }}>
                           {memoizedSearchResults.map((track: Music, index) => (
                             <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
                               <Card
                                 className="image-col text-light"
-                                style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+                                style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', marginLeft: '5%' }}
                                 onClick={() => handleClick(track)}
                               >
                                 <Card.Img variant="top" src={track.album.images[0].url} />
@@ -337,12 +407,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                       !isDebouncing && (
                         <>
                           <h1>Populares no Brasil:</h1>
-                          <Row>
+                          <Row style={{ width: '100%' }}>
                             {memoizedTopTracksInBrazil.map((track: Music, index) => (
                               <Col key={index} xs={12} sm={6} md={4} lg={3} className="mb-4">
                                 <Card
                                   className="image-col text-light"
-                                  style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
+                                  style={{ cursor: 'pointer', backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', marginLeft: '5%' }}
                                   onClick={() => handleClick(track)}
                                 >
                                   <Card.Img variant="top" src={track.album.images[0].url} />

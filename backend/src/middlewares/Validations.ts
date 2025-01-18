@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import JWT from '../utils/JWT';
-import SequelizeDJ from '../database/models/SequelizeDJ';
 import { JwtPayload } from 'jsonwebtoken';
 import { trackNameSchema, djNameSchema } from '../utils/schemas';
 import SequelizeTrack from '../database/models/SequelizeTrack';
-import { log } from 'console';
 
 export default class Validations {
   static async validateToken(req: Request, res: Response, next: NextFunction) {
