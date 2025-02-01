@@ -16,6 +16,7 @@ import TQueue from '../types/TQueue';
 import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
 import { io } from 'socket.io-client';
+import { Music } from '../types/SpotifySearchResponse';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -203,9 +204,9 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
       }
     }
   
-    const handleDJUpdated = (data: { dj: DJ }) => {
-      if (Number(dj?.id) === Number(data.dj.id)) {
-        setDJ(data.dj);
+    const handleDJUpdated = (djUpdated: DJ) => {
+      if (Number(dj?.id) === Number(djUpdated.id)) {
+        setDJ(djUpdated);
       }
     };
 
@@ -217,19 +218,30 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
       }
     };
 
+    const handleQueueUpdated = (data: { queue: TQueue[], spotifyQueue: Music[]}) => {
+      setQueue(data.queue);
+    };
+
+
     socket.emit('joinRoom', `track_${trackId}`);
     socket.on('track deleted', handleTrackDeleted);
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
+    socket.on('queue updated', handleQueueUpdated);
+
+    if (socket.connected && dj) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
   
     return () => {
       socket.off('track deleted', handleTrackDeleted);
       socket.off('dj updated', handleDJUpdated);
       socket.off('dj deleted', handleDJDeleted);
+      socket.off('queue updated', handleQueueUpdated);
     };
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dj]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -245,8 +257,12 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 200) {
+    if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
 
@@ -367,7 +383,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                                 >
                                   <img
                                     src={track.characterPath}
-                                    alt={track.musicName}
+                                    alt={track.addedBy}
                                     className="img-thumbnail i"
                                     style={{
                                       width: '70px',

@@ -56,7 +56,7 @@ export default class VoteService {
 
         if (music?.musicURI !== currentMusicURI && musicInQueue === undefined && response.data.is_playing && music.id) {
           await this.musicModel.update({ pointsApllied: true }, { id: music.id }, { transaction });
-          await this.applyPointsToDJ(track.id, music.musicURI);
+          await this.applyPointsToDJ(track.id, music.id);
         }
       }
 
@@ -197,17 +197,17 @@ export default class VoteService {
     }
   }
 
-  async applyPointsToDJ(trackId: number, musicURI: string) {
+  async applyPointsToDJ(trackId: number, musicId: number) {
     const io = getSocket();
 
     try {
-      const music = await this.musicModel.findOne({ musicURI });
+      const music = await this.musicModel.findOne({ id: musicId });
 
       if (!music || !music.id) {
         return { status: 'OK', data: { message: 'Music not found' } };
       }
 
-      const votes = await this.getAllVotesForThisMusic(trackId, musicURI);
+      const votes = await this.getAllVotesForThisMusic(trackId, music.musicURI);
 
       if (votes.status !== 'OK') {
         return { status: 'OK', data: { message: 'Votes not found' } };

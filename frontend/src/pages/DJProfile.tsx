@@ -221,9 +221,11 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         }
       }
     
-      const handleDJUpdated = (data: { dj: DJ }) => {
-        if (Number(dj?.id) === Number(data.dj.id)) {
-          setDJ(data.dj);
+      const handleDJUpdated = (updatedDJ: DJ) => {
+        if (Number(menuDJ?.id) === Number(updatedDJ.id)) {
+          setMenuDJ(updatedDJ);
+        } else if (Number(dj?.id) === Number(updatedDJ.id)) {
+          setDJ(updatedDJ);
         }
       };
   
@@ -247,6 +249,10 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
       socket.on('track deleted', handleTrackDeleted);
       socket.on('dj updated', handleDJUpdated);
       socket.on('dj deleted', handleDJDeleted);
+
+      if (socket.connected && menuDJ) {
+        socket.emit('joinRoom', `track_${trackId}`);
+      }
     
       return () => {
         socket.off('track deleted', handleTrackDeleted);
@@ -255,7 +261,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
       };
       
   // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [menuDJ]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -271,8 +277,12 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 200) {
+    if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
 
@@ -503,7 +513,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                         <option value="3">Não tocadas</option>
                       </Form.Select>
                     </div>
-                <Card.Body style={{height: '370px', overflow: 'auto'}}>
+                <Card.Body style={{height: '36vh', overflow: 'auto'}}>
                   <Card.Title className="mt-4 text-light" style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
                     {musics.length > 0 ? (
                       <div className='table-responsive'>

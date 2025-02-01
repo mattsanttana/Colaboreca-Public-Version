@@ -43,7 +43,6 @@ class App {
   public start(PORT: string | number): void {
     this.server.listen(PORT, () => {
       console.log(`Running on port ${PORT}`);
-      console.log(`Socket.IO is running on port ${PORT}`);
     });
   }
 }

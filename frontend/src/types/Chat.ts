@@ -4,6 +4,7 @@ export type ChatMessage = {
   receiveDJId: string;
   message: string;
   chatId?: string;
+  createdAt: Date;
   read: boolean;
 }
 

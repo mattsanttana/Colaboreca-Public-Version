@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, lazy, useMemo } from '
 import { connect } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { RootState } from '../redux/store';
-import { Card, Col, Container, Form, Row, Spinner, Modal, Button } from 'react-bootstrap';
+import { Card, Col, Container, Form, Row, Spinner, Modal, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import MessagePopup from './MessagePopup';
 import useDebounce from '../utils/useDebounce';
 import usePlayback from '../utils/usePlayback';
@@ -14,6 +14,7 @@ import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
 import { io } from 'socket.io-client';
 import useTrack from '../utils/useTrack';
+import { FaQuestionCircle } from 'react-icons/fa';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -219,9 +220,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
       }
     }
 
-    const handleDJUpdated = (data: { dj: DJ }) => {
-      if (Number(dj?.id) === Number(data.dj.id)) {
-        setDJ(data.dj);
+    const handleDJUpdated = (updatedDJ: DJ) => {
+      if (Number(dj?.id) === Number(updatedDJ.id)) {
+        setDJ(updatedDJ);
       }
     };
 
@@ -237,6 +238,10 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     socket.on('track deleted', handleTrackDeleted);
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
+
+    if (socket.connected && dj) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
   
     return () => {
       socket.off('track deleted', handleTrackDeleted);
@@ -245,7 +250,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dj]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -261,8 +266,12 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 100) {
+    if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
 
@@ -445,6 +454,40 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
               ) : (
                 <div>
                   <p>{`Deseja adicionar a música "${selectedTrack?.name}" à fila?`}</p>
+                  {selectedTrack?.preview_url ? (
+                    <div className="audio-preview">
+                      <audio controls>
+                        <source src={selectedTrack.preview_url} type="audio/mpeg" />
+                        Seu navegador não suporta o elemento de áudio.
+                      </audio>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{color: 'red'}}>Prévia não disponível para esta faixa.</p>
+                      <Button
+                        className='menu-button-spotify'
+                        href={`https://open.spotify.com/track/${selectedTrack?.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Ouvir no Spotify
+                      </Button>
+                      <OverlayTrigger
+                        placement="bottom-start"
+                        overlay={
+                          <Tooltip>
+                            Normalmente oferecemos uma prévia da música para você confirmar se 
+                            é a que deseja adicionar à fila, mas este recurso não está disponível no momento. 
+                            Clique no botão para ouvi-la diretamente no Spotify!
+                          </Tooltip>
+                        }
+                      >
+                        <span className='ms-2'>
+                          <FaQuestionCircle style={{ cursor: 'pointer', color: '#ffffff' }} />
+                        </span>
+                      </OverlayTrigger>
+                    </div>
+                  )}
                 </div>
               )}
             </Modal.Body>

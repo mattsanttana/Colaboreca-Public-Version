@@ -13,11 +13,8 @@ export const initSocket = (server: HTTPServer) => {
   });
 
   io.on('connection', (socket) => {
-    console.log(`Usuário conectado: ${socket.id}`);
-
     // Quando um cliente se conecta, ele pode entrar em uma sala específica
     socket.on('joinRoom', (room) => {
-      console.log(`Usuário ${socket.id} entrando na sala: ${room}`);
       socket.join(room); // Adiciona o cliente à sala
     });
 
@@ -25,11 +22,13 @@ export const initSocket = (server: HTTPServer) => {
     socket.on('chat message', (message) => {
       const room = message.room || 'general'; // Se não for especificado, a sala é 'general'
       io.to(room).emit('chat message', message);
-      console.log(`Mensagem enviada para a sala ${room}:`, message);
+    });
+
+    socket.on('typing', (data) => {
+      socket.to(`track_${data.trackId}`).emit('typing', data);
     });
 
     socket.on('disconnect', () => {
-      console.log(`Usuário desconectado: ${socket.id}`);
     });
   });
 

@@ -173,7 +173,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
                   alt="DJ table"
                   className="img-fluid dj-table"
                 />
-                <FaExclamationTriangle className="img-fluid music-inside-table" style={{ width: '60px' }} />
+                <FaExclamationTriangle className="exclamation-inside-table" style={{ width: '60px' }} />
               </div>
             </div>
           )}

@@ -4,6 +4,7 @@ import TrackModel from '../models/TrackModel';
 import DJModel from '../models/DJModel';
 import SpotifyActions from '../utils/SpotifyActions';
 import JWT from '../utils/JWT';
+import { getSocket } from '../utils/socketIO';
 import { Track } from '../interfaces/spotify_response/SpotifyResponse';
 import * as config from '../database/config/database';
 import SequelizeMusic from '../database/models/SequelizeMusic';
@@ -15,7 +16,6 @@ export default class PlaybackService {
     private trackModel: TrackModel = new TrackModel(),
     private djModel: DJModel = new DJModel(),
     private musicModel: MusicModel = new MusicModel(),
-    private voteModel: VoteModel = new VoteModel()
   ) { }
 
   async findPlaybackState(id: number) {
@@ -127,6 +127,8 @@ export default class PlaybackService {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
+      // Conjunto para rastrear as URIs das músicas já processadas
+      const processedURIs = new Set<string>();
 
       // Construir a fila completa associando DJs e músicas do Spotify
       const completeQueue = spotifyQueue.queue.map((spotifyTrack: any) => {
@@ -134,13 +136,16 @@ export default class PlaybackService {
           cover: spotifyTrack.album.images[0].url,
           musicName: spotifyTrack.name,
           artists: spotifyTrack.artists.map((artist: any) => artist.name).join(', '),
-        }
+        };
 
         const correspondingColaborecaTrack = colaborecaQueue.find(
           (colaborecaTrack: any) => colaborecaTrack.musicURI === spotifyTrack.uri
         );
 
-        if (correspondingColaborecaTrack) {
+        if (correspondingColaborecaTrack && correspondingColaborecaTrack.pointsApllied === false && !processedURIs.has(spotifyTrack.uri)) {
+          // Marcar a URI como processada
+          processedURIs.add(spotifyTrack.uri);
+
           // Se encontrar correspondência, adicionar informações do DJ
           return {
             djId: correspondingColaborecaTrack.djId,
@@ -149,7 +154,7 @@ export default class PlaybackService {
             ...responseTrack
           };
         } else {
-          // Caso contrário, a música foi adicionada pelo dono da pista
+          // Caso contrário, a música foi adicionada pelo dono da pista ou pelo Spotify
           return {
             addedBy: track.trackName,
             characterPath: null,
@@ -257,6 +262,8 @@ export default class PlaybackService {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
+      const colaborecaQueueNotPlayed = colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.pointsApllied === false);
+
       const currentlyPlayingTrack = spotifyQueue.currently_playing;
 
       if (!currentlyPlayingTrack) {
@@ -264,7 +271,7 @@ export default class PlaybackService {
         return { status: 'OK', data: { message: 'No track currently playing' } };
       }
 
-      const colaborecaTracksWithURI = colaborecaQueue.filter(
+      const colaborecaTracksWithURI = colaborecaQueueNotPlayed.filter(
         (colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri
       );
 
@@ -282,19 +289,21 @@ export default class PlaybackService {
           addedBy = undefined;
           characterPath = null;
         } else {
-          // Se houver pelo menos uma ocorrência do DJ, considerar a última como a que adicionou a música
-          const lastColaborecaTrack = colaborecaTracksWithURI.reduce((latest, current) => {
-            if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
-              return current;
+          // Se houver pelo menos uma ocorrência do DJ, considerar a primeira como a que adicionou a música
+          const firstColaborecaTrack = colaborecaTracksWithURI.find(
+            (colaborecaTrack: any) => colaborecaTrack.djId !== null
+          );
+
+          if (firstColaborecaTrack) {
+            const dj = djs.find((dj: any) => dj.id === firstColaborecaTrack.djId);
+
+            if (dj) {
+              addedBy = dj.djName;
+              characterPath = dj.characterPath;
+            } else {
+              addedBy = undefined;
+              characterPath = null;
             }
-            return latest;
-          }, {} as InferAttributes<SequelizeMusic, { omit: never; }>); // Inicializa com um objeto vazio do tipo correto
-
-          const dj = djs.find((dj: any) => dj.id === lastColaborecaTrack.djId);
-
-          if (dj) {
-            addedBy = dj.djName;
-            characterPath = dj.characterPath;
           } else {
             addedBy = undefined;
             characterPath = null;
@@ -340,8 +349,9 @@ export default class PlaybackService {
     authorization: string
   ) {
     const transaction = await this.sequelize.transaction();
+    const io = getSocket();
     const { cover, name, artists, musicURI } = musicData;
-  
+
     try {
       const token = authorization.split(' ')[1];
       const decoded = JWT.verify(token);
@@ -349,7 +359,7 @@ export default class PlaybackService {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
-  
+
       const [dj, track] = await Promise.all([
         this.djModel.findOne({ id: decoded.id }, transaction),
         this.trackModel.findOne({ id: Number(trackId) }, { transaction })
@@ -358,29 +368,29 @@ export default class PlaybackService {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'DJ or Track not found' } };
       }
-  
+
       const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
-  
+
       const currentQueue = await SpotifyActions.getQueue(spotifyToken);
       const currentQueueURIs = currentQueue?.queue?.map((track: Track) => track.uri) ?? [];
-  
+
       const isMusicAlreadyInQueue = currentQueueURIs.includes(musicURI) ||
         currentQueue.currently_playing?.uri === musicURI;
       if (isMusicAlreadyInQueue) {
         await transaction.rollback();
         return { status: 'CONFLICT', data: { message: 'Music is already in queue or currently playing' } };
       }
-  
+
       // Verificar se o DJ já tem 3 músicas na fila que ainda não foram tocadas
-      const djMusicCount = await this.musicModel.count({djId: dj.id, trackId: Number(trackId), pointsApllied: false }, {
+      const djMusicCount = await this.musicModel.count({ djId: dj.id, trackId: Number(trackId), pointsApllied: false }, {
         transaction
       });
-  
+
       if (djMusicCount >= 3) {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'DJ already has 3 songs in the queue' } };
       }
-  
+
       const response = await this.musicModel.create({
         cover,
         name,
@@ -389,22 +399,28 @@ export default class PlaybackService {
         djId: dj.id as number,
         trackId: Number(trackId),
       }, { transaction });
+
       if (!response) {
         await transaction.rollback();
         return { status: 'Error', data: { message: 'An error occurred' } };
       }
-  
+
       const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI);
-  
+
       if (!addedToQueue) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Player command failed: No active device found' } };
       }
-  
+
       await this.trackModel.update({ updatedAt: new Date() }, { id: Number(trackId) }, { transaction });
-  
+
       await transaction.commit();
-  
+
+      const queue = await this.findQueue(trackId);
+      const spotifyQueue = await this.findSpotifyQueue(trackId);
+
+      io.to(`track_${trackId}`).emit('queue updated', { queue: queue.data, spotifyQueue: spotifyQueue.data });
+
       return { status: 'OK', data: response };
     } catch (error) {
       await transaction.rollback();

@@ -1,15 +1,17 @@
 import { Container, Nav } from 'react-bootstrap';
-import { FaHome, FaList, FaChartLine} from 'react-icons/fa';
+import { FaHome, FaList, FaChartLine, FaSignOutAlt} from 'react-icons/fa';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
   trackId: string | undefined;
 }
 
 const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
-
+  const navigate = useNavigate();
+  
   const handleRedirect = (path: string) => {
-    window.location.href = path;
+    navigate(path);
   };
   
   return (
@@ -44,6 +46,17 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
               style={{ color: '#0e99fc'}}
             >
               <FaChartLine className="me-2" />Ranque
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item className='menu-item'>
+            <Nav.Link
+              onClick={() => handleRedirect('/')}
+              className="d-flex align-items-left justify-content-left"
+              style={{ color: '#0e99fc'}}
+            >
+              <div className="d-flex align-items-center text-start">
+                <FaSignOutAlt className="me-2" />Página inicial
+              </div>
             </Nav.Link>
           </Nav.Item>
         </Nav>

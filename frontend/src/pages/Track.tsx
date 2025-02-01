@@ -17,6 +17,8 @@ import { DJ, DJPlayingNow } from '../types/DJ';
 import { Music } from '../types/SpotifySearchResponse';
 import { logo } from '../assets/images/characterPath';
 import { Vote, voteValues } from '../types/Vote';
+import RankChangePopup from './RankChangePopup';
+import TQueue from '../types/TQueue';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -39,6 +41,8 @@ const Track: React.FC<Props> = ({ token }) => {
   const [popupMessage, setPopupMessage] = useState('');
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
   const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
+  const [showRankChangePopup, setShowRankChangePopup] = useState(false);
+  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
   const [votes, setVotes] = useState<Vote | undefined>(undefined);
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
@@ -209,25 +213,41 @@ const Track: React.FC<Props> = ({ token }) => {
     };
 
     const handleDJUpdated = (updatedDJ: DJ) => {
-      // Atualiza a lista de DJs
-      setDJs((prevDJs) =>
-        prevDJs.map((dj) => {
-          if (Number(dj.id) === Number(updatedDJ.id)) {
-            return updatedDJ; // Substitui o DJ pelo atualizado
-          }
-          return dj; // Mantém o DJ atual
-        })
-      );
-    
       // Atualiza o DJ atual (se aplicável)
       setDJ((currentDJ) => {
         if (currentDJ?.id === updatedDJ.id) {
+          // Verifica se os pontos mudaram
+          if (currentDJ.score !== updatedDJ.ranking) {
+            // Verifica se os pontos aumentaram
+            if (updatedDJ.score > currentDJ.score) {
+              setPreviewRank(djs); // Atualiza o estado previewRank
+              setDJs((prevDJs) =>
+                prevDJs.map((dj) => {
+                  if (Number(dj.id) === Number(updatedDJ.id)) {
+                    return updatedDJ; // Substitui o DJ pelo atualizado
+                  }
+                  return dj; // Mantém o DJ atual
+                })
+              );
+              setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+            }
+          }
           return updatedDJ; // Atualiza o DJ atual
+        } else {
+           // Atualiza a lista de DJs
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
         }
         return currentDJ; // Mantém o DJ atual
       });
     };
-
+    
     const handleDJDeleted = (data: { id: number}) => {  
       if (Number(dj?.id) === Number(data.id)) {
         setPopupMessage('Você foi removido desta pista');
@@ -241,11 +261,15 @@ const Track: React.FC<Props> = ({ token }) => {
 
     const handleNewVote = (data: { vote: voteValues }) => {
       setVotes((prevVotes) => {
-        if (!prevVotes) {
+        if (!prevVotes || !prevVotes.voteValues) {
           return { voteValues: [data.vote] };
         }
         return { voteValues: [...prevVotes.voteValues, data.vote] };
       });
+    };
+
+    const handleQueueUpdated = (data: { queue: TQueue[], spotifyQueue: Music[]}) => {
+      setQueue(data.spotifyQueue);
     };
 
     socket.emit('joinRoom', `track_${trackId}`);
@@ -255,6 +279,7 @@ const Track: React.FC<Props> = ({ token }) => {
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
     socket.on('new vote', handleNewVote);
+    socket.on('queue updated', handleQueueUpdated);
 
     if (socket.connected && dj) {
       socket.emit('joinRoom', `track_${trackId}`);
@@ -266,10 +291,11 @@ const Track: React.FC<Props> = ({ token }) => {
       socket.off('dj updated', handleDJUpdated);
       socket.off('dj deleted', handleDJDeleted);
       socket.off('new vote', handleNewVote);
+      socket.off('queue updated', handleQueueUpdated);
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dj]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -288,10 +314,18 @@ const Track: React.FC<Props> = ({ token }) => {
     if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
     }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
+    }
   };
 
   const memoizedDJs = useMemo(() => djs, [djs]);
   const memoizedQueue = useMemo(() => queue, [queue]);
+
+  const handleClosePopup = () => {
+    setShowRankChangePopup(false);
+  };
 
   return (
     <div
@@ -345,6 +379,15 @@ const Track: React.FC<Props> = ({ token }) => {
               setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
+            />
+          )}
+          {showRankChangePopup && dj && (
+            <RankChangePopup
+              showRankChangePopup={showRankChangePopup}
+              dj={dj}
+              previousRank={previewRank}
+              currentRank={djs}
+              handleClosePopup={handleClosePopup}
             />
           )}
         </>

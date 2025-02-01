@@ -28,7 +28,6 @@ const socket = io('http://localhost:3001');
 const Chat: React.FC<Props> = ({ token }) => {
   const { trackId } = useParams();
   const { djChat } = useParams();
-  const [trackFound, setTrackFound] = useState(false);
   const [trackName, setTrackName] = useState('');
   const [dj, setDJ] = useState<DJ>();
   const [djs, setDJs] = useState<DJ[]>([]);
@@ -50,6 +49,7 @@ const Chat: React.FC<Props> = ({ token }) => {
   const [message, setMessage] = useState('');
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: number }>({});
   const [messagesLoaded, setMessagesLoaded] = useState(false);
+  const [djTyping, setDJTyping] = useState<{ [key: string]: { isTyping: boolean, typingDJId: string } }>({});
 
   const djActions = useDJ();
   const trackActions = useTrack();
@@ -60,6 +60,7 @@ const Chat: React.FC<Props> = ({ token }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const interval = useRef<number | null>(null);
+  const typingTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   useEffect(() => {
     if (djChat && !selectedChat) {
@@ -100,6 +101,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                 djId: message.djId,
                 receiveDJId: message.receiveDJId,
                 message: message.message,
+                createdAt: new Date(message.createdAt),
                 read: message.read
               }
             ];
@@ -155,8 +157,7 @@ const Chat: React.FC<Props> = ({ token }) => {
             }
   
             if (fetchedTrack?.status === 200) {
-              setTrackFound(true);
-              setTrackName(fetchedTrack.data.name);
+              setTrackName(fetchedTrack.data.trackName);
               setDJs(fetchedDJData?.data.djs);
               setDJ(fetchedDJData?.data.dj);
             } else {
@@ -205,181 +206,187 @@ const Chat: React.FC<Props> = ({ token }) => {
     }, [playingNow?.item?.uri || '']);
 
   useEffect(() => {
-      const fetchData = async () => {
-        if (trackId) {
-          try {
-            const fetchedPlayingNow = await playbackActions.getState(trackId)
-  
-            setPlayingNow(fetchedPlayingNow);
-            
-          } catch (error) {
-            console.error("Error fetching data:", error);
-          } finally {
-            setIsLoading(false);
-          }
-        }
-      };
-  
-      fetchData();
-  
-      interval.current = window.setInterval(() => {
-        fetchData();
-      }, 10000);
-  
-      return () => {
-        if (interval.current) {
-          clearInterval(interval.current);
-        }
-      };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const fetchData = async () => {
+      if (trackId) {
+        try {
+          const fetchedPlayingNow = await playbackActions.getState(trackId)
 
-    useEffect(() => {
-      const handleSocketConnect = () => {
-        // Solicita a entrada na sala geral
-        socket.emit('joinRoom', `general_${trackId}`);
-    
-        // Entra na sala do usuário se o DJ estiver disponível
-        if (dj) {
-          socket.emit('joinRoom', `user_${dj.id}`);
-        }
-      };
-    
-      const handleTrackDeleted = (data: { trackId: number }) => {
-        if (Number(trackId) === Number(data.trackId)) {
-          setPopupMessage('Esta pista foi deletada');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-        }
-      };
-    
-      const handleDJCreated = (data: { dj: DJ }) => {
-        setDJs((prevDJs) => [...prevDJs, data.dj]);
-      };
-    
-      const handleDJUpdated = (data: { dj: DJ }) => {
-        setDJs((prevDJs) =>
-          prevDJs.map((dj) => {
-            if (Number(dj.id) === Number(data.dj.id)) {
-              return data.dj;
-            }
-            return dj;
-          })
-        );
-    
-        if (Number(dj?.id) === Number(data.dj.id)) {
-          setDJ(data.dj);
-        }
-      };
-    
-      const handleDJDeleted = (data: { djId: number }) => {
-        if (Number(dj?.id) === Number(data.djId)) {
-          setPopupMessage('Você foi removido desta pista');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-        } else {
-          // Atualiza a lista de DJs removendo o DJ deletado
-          setDJs((prevDJs) => prevDJs.filter((dj) => Number(dj.id) !== Number(data.djId)));
-        }
-      };
-    
-      socket.on('connect', handleSocketConnect);
-    
-      // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
-      if (socket.connected && dj) {
-        socket.emit('joinRoom', `general_${trackId}`);
-        socket.emit('joinRoom', `user_${dj.id}`);
-      }
-    
-      // Recebe mensagens do servidor
-      socket.on('chat message', (message) => {
-        setChats((prevChats) => {
-          const chatId = message.chatId || 'general';
-          const updatedChats = { ...prevChats };
-    
-          // Atualizando o chat, incluindo o DJ ID e a mensagem
-          updatedChats[chatId] = [
-            ...(updatedChats[chatId] || []),
-            {
-              id: message.id,
-              djId: message.djId,
-              receiveDJId: message.receiveDJId,
-              message: message.message,
-              createdAt: message.createdAt,
-              read: message.read,
-            },
-          ];
-    
-          // Se o chat está aberto, marca as mensagens como lidas
-          console.log('Selected Chat: ', selectedChat, 'Chat ID: ', message.chatId, 'DJ Chat: ', selectedDJChat);
-          console.log(message.djId, message.receiveDJId, dj?.id);
+          setPlayingNow(fetchedPlayingNow);
           
-    
-          if (
-            Number(selectedChat) === Number(message.chatId) &&
-            Number(message.receiveDJId) === Number(dj?.id)
-          ) {
-            handleMarkAsRead(message.chatId);
-
-            
-            updatedChats[chatId] = updatedChats[chatId].map((msg) =>
-              msg.id === message.id ? { ...msg, read: true } : msg
-            );
-
-            console.log('Marking as read');
-          }
-    
-          return updatedChats;
-        });
-    
-        // Se o chat está aberto, marca as mensagens como lidas
-        if (Number(selectedChat) === Number(message.chatId) && message.djId !== dj?.id ||
-        Number(message.receiveDJId) !== Number(dj?.id)) {
-          handleMarkAsRead(message.chatId);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setIsLoading(false);
         }
-      });
-    
-      // Recebe notificações de mensagens lidas do servidor
-      socket.on('messagesMarkedAsRead', ({ messageIds }) => {
-        setChats((prevChats) => {
-          const updatedChats = { ...prevChats };
-    
-          // Atualiza o estado das mensagens para marcá-las como lidas
-          Object.keys(updatedChats).forEach((chatId) => {
-            updatedChats[chatId] = updatedChats[chatId].map((message) =>
-              messageIds.includes(message.id) ? { ...message, read: true } : message
-            );
-          });
-    
-          return updatedChats;
-        });
-      });
-    
-      socket.emit('joinRoom', `track_${trackId}`);
-      socket.on('track deleted', handleTrackDeleted);
-      socket.on('dj created', handleDJCreated);
-      socket.on('dj updated', handleDJUpdated);
-      socket.on('dj deleted', handleDJDeleted);
-    
-      // Limpeza do evento `connect` para evitar múltiplas adições
-      return () => {
-        socket.off('connect', handleSocketConnect);
-        socket.off('chat message');
-        socket.off('messagesMarkedAsRead');
-        socket.off('track deleted', handleTrackDeleted);
-        socket.off('dj created', handleDJCreated);
-        socket.off('dj updated', handleDJUpdated);
-        socket.off('dj deleted', handleDJDeleted);
-      };
-    
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+      }
+    };
 
-    useEffect(() => {
+    fetchData();
+
+    interval.current = window.setInterval(() => {
+      fetchData();
+    }, 10000);
+
+    return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const handleSocketConnect = () => {
+      // Solicita a entrada na sala geral
+      socket.emit('joinRoom', `general_${trackId}`);
+  
+      // Entra na sala do usuário se o DJ estiver disponível
       if (dj) {
         socket.emit('joinRoom', `user_${dj.id}`);
       }
-    }, [dj]);
+    };
+  
+    const handleTrackDeleted = (data: { trackId: number }) => {
+      if (Number(trackId) === Number(data.trackId)) {
+        setPopupMessage('Esta pista foi deletada');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+    };
+  
+    const handleDJCreated = (data: { dj: DJ }) => {
+      setDJs((prevDJs) => [...prevDJs, data.dj]);
+    };
+  
+    const handleDJUpdated = (data: { dj: DJ }) => {
+      setDJs((prevDJs) =>
+        prevDJs.map((dj) => {
+          if (Number(dj.id) === Number(data.dj.id)) {
+            return data.dj;
+          }
+          return dj;
+        })
+      );
+  
+      if (Number(dj?.id) === Number(data.dj.id)) {
+        setDJ(data.dj);
+      }
+    };
+  
+    const handleDJDeleted = (data: { djId: number }) => {
+      if (Number(dj?.id) === Number(data.djId)) {
+        setPopupMessage('Você foi removido desta pista');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      } else {
+        // Atualiza a lista de DJs removendo o DJ deletado
+        setDJs((prevDJs) => prevDJs.filter((dj) => Number(dj.id) !== Number(data.djId)));
+      }
+    };
+
+    const handleDJTyping = (data: { chatId: string; djId: string }) => {
+      setDJTyping((prevTyping) => ({
+        ...prevTyping,
+        [data.chatId]: {
+          isTyping: true,
+          typingDJId: data.djId,
+        },
+      }));
+  
+      // Limpar o temporizador anterior, se existir
+      if (typingTimeoutRef.current[data.chatId]) {
+        clearTimeout(typingTimeoutRef.current[data.chatId]);
+      }
+  
+      // Definir um novo temporizador
+      typingTimeoutRef.current[data.chatId] = setTimeout(() => {
+        setDJTyping((prevTyping) => ({
+          ...prevTyping,
+          [data.chatId]: {
+            isTyping: false,
+            typingDJId: '',
+          },
+        }));
+      }, 1000);
+    };
+  
+    socket.on('connect', handleSocketConnect);
+  
+    // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
+    if (socket.connected && dj) {
+      socket.emit('joinRoom', `general_${trackId}`);
+      socket.emit('joinRoom', `user_${dj.id}`);
+    }
+  
+    // Recebe mensagens do servidor
+    socket.on('chat message', async (message) => {
+      const isChatOpen = Number(selectedChat) === Number(message.chatId);
+      const isRecipient = Number(message.receiveDJId) === Number(dj?.id);
+    
+      if (isChatOpen && isRecipient) {
+        const messageId = [message.id];
+        await messageActions.markMessagesAsRead(messageId, token);
+      }
+      
+      setChats((prevChats) => {
+        const chatId = message.chatId || 'general';
+        const updatedChats = { ...prevChats };
+  
+        // Atualizando o chat, incluindo o DJ ID e a mensagem
+        updatedChats[chatId] = [
+          ...(updatedChats[chatId] || []),
+          {
+            id: message.id,
+            djId: message.djId,
+            receiveDJId: message.receiveDJId,
+            message: message.message,
+            createdAt: message.createdAt,
+            read: isChatOpen && isRecipient, // Marca como lida se o chat estiver aberto e o destinatário for o DJ atual
+          },
+        ];
+  
+        return updatedChats;
+      });
+    });
+  
+    // Recebe notificações de mensagens lidas do servidor
+    socket.on('messagesMarkedAsRead', ({ messageIds }) => {
+      setChats((prevChats) => {
+        const updatedChats = { ...prevChats };
+  
+        // Atualiza o estado das mensagens para marcá-las como lidas
+        Object.keys(updatedChats).forEach((chatId) => {
+          updatedChats[chatId] = updatedChats[chatId].map((message) =>
+            messageIds.includes(message.id) ? { ...message, read: true } : message
+          );
+        });
+  
+        return updatedChats;
+      });
+    });
+  
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('track deleted', handleTrackDeleted);
+    socket.on('dj created', handleDJCreated);
+    socket.on('dj updated', handleDJUpdated);
+    socket.on('dj deleted', handleDJDeleted);
+    socket.on('typing', handleDJTyping);
+
+  
+    // Limpeza do evento `connect` para evitar múltiplas adições
+    return () => {
+      socket.off('connect', handleSocketConnect);
+      socket.off('chat message');
+      socket.off('messagesMarkedAsRead');
+      socket.off('track deleted', handleTrackDeleted);
+      socket.off('dj created', handleDJCreated);
+      socket.off('dj updated', handleDJUpdated);
+      socket.off('dj deleted', handleDJDeleted);
+      socket.off('typing', handleDJTyping);
+    };
+  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dj]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -415,8 +422,12 @@ const Chat: React.FC<Props> = ({ token }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 100) {
+    if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
 
@@ -434,6 +445,12 @@ const Chat: React.FC<Props> = ({ token }) => {
 
   const handleChangeMessageInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(event.target.value);
+
+    socket.emit('typing', {
+      chatId: selectedChat,
+      djId: dj?.id,
+      trackId: trackId,
+    });
   }
 
   const handleSubmitMessage = async (djId: string | null, message: string, textareaElement: HTMLTextAreaElement) => {
@@ -598,7 +615,7 @@ const Chat: React.FC<Props> = ({ token }) => {
         >
           <img src={logo} alt="Loading Logo" className="logo-spinner" />
         </Container>
-      ) : trackFound && dj ? (
+      ) : (
         <>
           <Container>
             <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
@@ -606,7 +623,7 @@ const Chat: React.FC<Props> = ({ token }) => {
               <Col md={3} className="d-none d-xxl-block">
                 <Menu dj={dj} />
               </Col>
-              <Col md={12} lg={12} xl={12} xxl={3} className={`chat-list ${!selectedChat && !selectedDJChat ? 'active' : ''}`} style={{ borderRight: '1px solid #cccccc', overflowY: 'auto' }}>
+              <Col md={12} lg={12} xl={12} xxl={3} className={`chat-list ${!selectedChat && !selectedDJChat ? 'active' : ''}`} style={{ borderRight: '1px solid #cccccc', overflowY: 'auto', height: '90vh' }}>
                 <div style={{ position: 'relative' }}>
                   <Form.Control
                     type='text'
@@ -681,15 +698,30 @@ const Chat: React.FC<Props> = ({ token }) => {
                       <div>
                         <h5 style={{ margin: 0}}>{trackName}</h5>
                         <p style={{ margin: 0 }}>
-                          <strong>
-                            {lastGeneralMessage.djId === dj.id ? 'Você' : lastGeneralMessage.djId ? getDJName(lastGeneralMessage.djId) : ''}
-                          </strong>
-                          {lastGeneralMessage.message.message && (
+                          {djTyping['general']?.isTyping ? (
+                            <span style={{ color: 'rgb(13, 110, 253)'}}> 
+                              <strong>
+                              {getDJName(djTyping['general'].typingDJId)} está digitando...
+                              </strong>
+                            </span>
+                          ) : (
                             <>
-                              <strong>:</strong> &nbsp;
+                              <strong>
+                                {lastGeneralMessage.djId === dj?.id ? 'Você' : lastGeneralMessage.djId ? getDJName(lastGeneralMessage.djId) : ''}
+                              </strong>
+                              {lastGeneralMessage.message.message && (
+                                <>
+                                  <strong>:</strong> &nbsp;
+                                </>
+                              )}
+                              {(() => {
+                                const djName = lastGeneralMessage.djId === dj?.id ? 'Você' : getDJName(lastGeneralMessage.djId);
+                                const nameLength = djName.length; // Comprimento do nome + ": "
+                                const maxMessageLength = 29 - nameLength;
+                                return truncateText(lastGeneralMessage.message.message, maxMessageLength);
+                              })()}
                             </>
                           )}
-                          {truncateText(lastGeneralMessage.message.message, 10)}
                         </p>
                       </div>
                     </div>
@@ -727,7 +759,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                         setSelectedChat(chatId);
                         setSelectedDJChat(
                           chats[chatId][chats[chatId].length - 1].receiveDJId ===
-                            dj.id ? chats[chatId][chats[chatId].length - 1].djId :
+                            dj?.id ? chats[chatId][chats[chatId].length - 1].djId :
                             chats[chatId][chats[chatId].length - 1].receiveDJId
                         );
                         handleMarkAsRead(chatId)
@@ -760,9 +792,17 @@ const Chat: React.FC<Props> = ({ token }) => {
                               : chats[chatId][chats[chatId].length - 1].djId
                           )}
                         </h5>
+                        {djTyping[chatId]?.isTyping ? (
+                          <span style={{ color: 'rgb(13, 110, 253)'}}>
+                            <strong>
+                              digitando...
+                            </strong>
+                          </span>
+                        ) : (
                         <p style={{ margin: 0 }}>
-                          {truncateText(chats[chatId][chats[chatId].length - 1].message, 10)}
+                          {truncateText(chats[chatId][chats[chatId].length - 1].message, 28)}
                         </p>
+                        )}
                       </div>
                     </div>
                   </ListGroup.Item>
@@ -783,7 +823,6 @@ const Chat: React.FC<Props> = ({ token }) => {
                           setSelectedChat(null);
                           setSelectedDJChat(null);
                         }}
-                        className="mobile-only"
                         style={{ cursor: 'pointer', marginRight: '15px', color: 'white' }}
                       />
                         {selectedChat !== 'general' ? (
@@ -810,13 +849,26 @@ const Chat: React.FC<Props> = ({ token }) => {
                             style={{ width: '50px', height: '50px' }}
                           />
                         )}
-                        <h3 style={{ marginLeft: '15px', color: 'white' }}>
-                          {selectedDJChat ? getDJName(selectedDJChat) : selectedChat === 'general' ? trackName : getDJName(
-                            selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
-                              ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
-                              : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
+                        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '15px', color: 'white', height: '60px' }}>
+                          <h3>
+                            {selectedDJChat ? getDJName(selectedDJChat) : selectedChat === 'general' ? trackName : getDJName(
+                              selectedChat !== null && chats[selectedChat][chats[selectedChat].length - 1].djId === dj?.id
+                                ? chats[selectedChat][chats[selectedChat].length - 1].receiveDJId
+                                : selectedChat ? chats[selectedChat][chats[selectedChat].length - 1].djId : ''
                             )}
-                        </h3>
+                          </h3>
+                          <span>
+                            {selectedChat !== null && djTyping[selectedChat]?.isTyping ? (
+                              selectedChat === 'general' ? (
+                                `${getDJName(djTyping[selectedChat].typingDJId)} está digitando...`
+                              ) : (
+                                'digitando...'
+                              )
+                            ) : (
+                              ''
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div
@@ -831,12 +883,12 @@ const Chat: React.FC<Props> = ({ token }) => {
                           className="message"
                           style={{
                             display: 'flex',
-                            flexDirection: msg.djId === dj.id ? 'row-reverse' : 'row',
-                            alignItems: msg.djId === dj.id ? 'flex-end' : 'flex-start',
+                            flexDirection: msg.djId === dj?.id ? 'row-reverse' : 'row',
+                            alignItems: msg.djId === dj?.id ? 'flex-end' : 'flex-start',
                             marginBottom: '0.5%'
                           }}
                         >
-                          {msg.djId !== dj.id && (
+                          {msg.djId !== dj?.id && (
                               <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
                                 {selectedChat === 'general' && isFirstMessageInSeries(chats[selectedChat], index) && (
                                   <OverlayTrigger
@@ -855,39 +907,43 @@ const Chat: React.FC<Props> = ({ token }) => {
                                 )}
                               </div>
                             )}
-                          <div
-                            className={`message-text ${getRankClass(msg.djId)} bi bi-chat-dots ${msg.djId === dj.id ? 'bg-primary msg-right' : ''}`}
-                            style={{
-                              backgroundColor: msg.djId !== dj.id ? '#333333' : '',
-                              marginRight: '10px',
-                              color: 'white',
-                              borderRadius: '20px',
-                              padding: '10px 15px',
-                              position: 'relative',
-                              maxWidth: '80%',
-                              wordBreak: 'break-word',
-                              margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3% 0 0',
-                              marginLeft: selectedChat !== 'general' && msg.djId !== dj.id ? '-50px' : '0'
-                            }}
-                          >
-                            <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
-                              {selectedChat === 'general' && msg.djId !== dj.id && (
-                                <>
-                                  <strong>
-                                    {getDJName(msg.djId)}
-                                    {getMedalIcon(msg.djId)}
-                                  </strong>
-                                  <br />
-                                </>
-                              )}
-                              {msg.message}
-                            </p>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.djId === dj?.id ? 'flex-end' : 'flex-start', width: '100%' }}>
+                            <div
+                              className={`message-text ${getRankClass(msg.djId)} bi bi-chat-dots ${msg.djId === dj?.id ? 'bg-primary msg-right' : ''}`}
+                              style={{
+                                backgroundColor: msg.djId !== dj?.id ? '#333333' : '',
+                                marginRight: '10px',
+                                color: 'white',
+                                borderRadius: '20px',
+                                padding: '10px 15px',
+                                position: 'relative',
+                                maxWidth: '80%',
+                                wordBreak: 'break-word',
+                                margin: isFirstMessageInSeries(chats[selectedChat], index) ? '20px 0 0' : '0.3% 0 0',
+                                marginLeft: selectedChat !== 'general' && msg.djId !== dj?.id ? '-50px' : '0',
+                                display: 'flex',
+                                flexDirection: 'column',
+                              }}
+                            >
+                              <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
+                                {selectedChat === 'general' && msg.djId !== dj?.id && (
+                                  <>
+                                    <strong>
+                                      {getDJName(msg.djId)}
+                                      {getMedalIcon(msg.djId)}
+                                    </strong>
+                                    <br />
+                                  </>
+                                )}
+                                {msg.message}
+                              </p>
+                            </div>
+                            {msg.djId === dj?.id && msg.read && index === chats[selectedChat].length - 1 && selectedChat !== 'general' && (
+                              <small style={{ marginTop: '5px', color: 'gray', alignSelf: 'flex-end', marginRight: '10px' }}>
+                                visto
+                              </small>
+                            )}
                           </div>
-                          {msg.djId === dj.id && msg.read && index === chats[selectedChat].length - 1 && selectedChat !== 'general' && (
-                            <small style={{ marginTop: '5px', color: 'gray', alignSelf: 'flex-end' }}>
-                              visto
-                            </small>
-                          )}
                         </div>
                       ))}
                       </div>
@@ -961,11 +1017,6 @@ const Chat: React.FC<Props> = ({ token }) => {
             />
           )}
         </>
-      ) : (
-        <Container className="text-center">
-          <h1>Esta pista não existe</h1>
-          <Button onClick={() => navigate("/")}>Página inicial</Button>
-        </Container>
       )}
     </div>
   );

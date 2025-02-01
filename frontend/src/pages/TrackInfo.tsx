@@ -173,6 +173,41 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
   }, [closeMenu]);
 
   useEffect(() => {
+    const handleTrackUpdated = (updatedTrack: { trackName: string }) => { 
+      setTrackName(updatedTrack.trackName);
+    }
+
+    const handleTrackDeleted = (data: { trackId: number }) => {
+      if (Number(trackId) === Number(data.trackId)) {
+        setMessagePopup({
+          show: true,
+          message: 'Esta pista foi excluída',
+          redirectTo: '/enter-track'
+        });
+        setShowPopup(true);
+      }
+    };
+  
+    const handleDJCreated = (data: { dj: DJ }) => {
+      setDJs((prevDJs) => [...prevDJs, data.dj]);
+    };
+
+    const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza a lista de DJs
+      setDJs((prevDJs) =>
+        prevDJs.map((dj) => {
+          if (Number(dj.id) === Number(updatedDJ.id)) {
+            return updatedDJ; // Substitui o DJ pelo atualizado
+          }
+          return dj; // Mantém o DJ atual
+        })
+      );
+    };
+
+    const handleDJDeleted = (data: { id: number}) => {  
+      setDJs((prevDJs) => prevDJs.filter((dj) => Number(dj.id) !== Number(data.id)));
+    };
+
     const handleNewVote = (data: { vote: voteValues }) => {
       setVotes((prevVotes) => {
         if (!prevVotes) {
@@ -183,14 +218,23 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
     };
   
     socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('track updated', handleTrackUpdated);
+    socket.on('track deleted', handleTrackDeleted);
+    socket.on('dj created', handleDJCreated);
+    socket.on('dj updated', handleDJUpdated);
+    socket.on('dj deleted', handleDJDeleted);
     socket.on('new vote', handleNewVote);
+
+    if (socket.connected && trackId) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
   
     return () => {
       socket.off('new vote', handleNewVote);
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [trackId]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -206,8 +250,12 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 200) {
+    if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
   

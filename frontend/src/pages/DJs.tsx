@@ -178,9 +178,9 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
       }
     };
   
-    const handleDJUpdated = (data: { dj: DJ }) => {
-      if (Number(dj?.id) === Number(data.dj.id)) {
-        setDJ(data.dj);
+    const handleDJUpdated = (djUpdated: DJ) => {
+      if (Number(dj?.id) === Number(djUpdated.id)) {
+        setDJ(djUpdated);
       }
     };
 
@@ -197,7 +197,11 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     socket.on('dj created', handleDJCreated);
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
-  
+
+    if (socket.connected && dj) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
+
     return () => {
       socket.off('track deleted', handleTrackDeleted);
       socket.off('dj created', handleDJCreated);
@@ -206,7 +210,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dj]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -242,8 +246,12 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     const distance = touchEndX - touchStartX;
     
     // Define o valor mínimo para considerar um swipe
-    if (distance > 200) {
+    if (distance > 20) {
       setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
+    }
+
+    if (distance < -20) {
+      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
 
@@ -329,7 +337,7 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                 <Card.Body
                   style={{ backgroundColor: '#000000', padding: '0', width: '100%', height: '810px', overflowY: 'auto' }}
                 >
-                  <Row md={3} style={{width: '90%', marginLeft: '3%'}}>
+                  <Row sm={3} md={1} lg={1} xl={3} xxl={3}  style={{width: '90%', marginLeft: '7%'}}>
                     <Podium
                       dj={dj}
                       djs={djs}
@@ -421,7 +429,26 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                                     src={dj.characterPath} 
                                     alt={dj.djName} 
                                     className='img-thumbnail img-thumbnail-hover' 
-                                    style={{ width: '50px', height: '50px', cursor: 'pointer', backgroundColor: '#000000' }} 
+                                    style={{ 
+                                      width: '50px',
+                                      height: '50px',
+                                      cursor: 'pointer',
+                                      backgroundColor: '#000000',
+                                      border: dj.ranking === 1
+                                        ? '2px solid #FFD700'
+                                        : dj.ranking === 2
+                                        ? '2px solid #C0C0C0'
+                                        : dj.ranking === 3
+                                        ? '2px solid #CD7F32'
+                                        : 'none',
+                                      boxShadow: dj.ranking === 1 
+                                        ? '0 0 10px #FFD700' 
+                                        : dj.ranking === 2 
+                                        ? '0 0 10px #C0C0C0' 
+                                        : dj.ranking === 3 
+                                        ? '0 0 10px #CD7F32' 
+                                        : 'none',
+                                    }} 
                                   />
                                 </OverlayTrigger>
                               </td>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Nav, Image } from 'react-bootstrap';
-import { FaHome, FaUser, FaMusic, FaList, FaChartLine, FaComments } from 'react-icons/fa';
+import { FaHome, FaUser, FaMusic, FaList, FaChartLine, FaComments, FaSignOutAlt } from 'react-icons/fa';
 import { DJ } from '../types/DJ';
 
 type Props = {
@@ -34,7 +34,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track/${dj?.trackId}`)} // Corrigi a interpolação de string
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-left justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaHome className="me-2" />Início
@@ -43,7 +43,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track/profile/${dj?.trackId}/${dj?.id}`)} // Corrigi a interpolação de string
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-left justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaUser className="me-2" />Perfil
@@ -52,16 +52,18 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track/add-music/${dj?.trackId}`)} // Corrigi a interpolação de string
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-left justify-content-left"
               style={{ color: '#0e99fc'}}
             >
-              <FaMusic className="me-2" />Adicionar música à fila
+              <div className="d-flex align-items-center text-start">
+                <FaMusic className="me-2" />Adicionar música à fila
+              </div>
             </Nav.Link>
           </Nav.Item>
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track/queue/${dj?.trackId}`)} // Corrigi a interpolação de string
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-left justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaList className="me-2" />Fila
@@ -70,7 +72,7 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track/ranking/${dj?.trackId}`)} // Corrigi a interpolação de string
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-left justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaChartLine className="me-2" />Ranque
@@ -79,10 +81,21 @@ const Menu: React.FC<Props> = ({ dj }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track/chat/${dj?.trackId}`)} // Corrigi a interpolação de string
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-left justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaComments className="me-2" />Papinho
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item className='menu-item'>
+            <Nav.Link
+              onClick={() => handleRedirect('/')}
+              className="d-flex align-items-left justify-content-left"
+              style={{ color: '#0e99fc'}}
+            >
+              <div className="d-flex align-items-center text-start">
+                <FaSignOutAlt className="me-2" />Página inicial
+              </div>
             </Nav.Link>
           </Nav.Item>
         </Nav>
