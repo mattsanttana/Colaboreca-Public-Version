@@ -105,7 +105,9 @@ const Chat: React.FC<Props> = ({ token }) => {
                 receiveDJId: message.receiveDJId,
                 message: message.message,
                 createdAt: new Date(message.createdAt),
-                read: message.read
+                read: message.read,
+                isReply: message.isReply,
+                replyTo: message.replyTo
               }
             ];
             return acc;
@@ -345,6 +347,8 @@ const Chat: React.FC<Props> = ({ token }) => {
             message: message.message,
             createdAt: message.createdAt,
             read: isChatOpen && isRecipient, // Marca como lida se o chat estiver aberto e o destinatário for o DJ atual
+            isReply: message.isReply,
+            replyTo: message.replyTo
           },
         ];
   
@@ -460,18 +464,19 @@ const Chat: React.FC<Props> = ({ token }) => {
     }
   }
 
-  const handleSubmitMessage = async (djId: string | null, message: string, textareaElement: HTMLTextAreaElement) => {
+  const handleSubmitMessage = async (djId: string | null, message: string, messageToReply: Message | null, textareaElement: HTMLTextAreaElement ) => {
     if (selectedDJChat) {
-      const response = await messageActions.sendMessage(selectedDJChat, message, token);
+      const response = await messageActions.sendMessage(selectedDJChat, message, messageToReply, token);
          
       setSelectedChat(String(response?.data.chatId));
     } else if (djId === 'general') {
-      await messageActions.sendMessage(null, message, token);
+      await messageActions.sendMessage(null, message, messageToReply, token);
     } else {
-      await messageActions.sendMessage(djId, message, token);
+      await messageActions.sendMessage(djId, message, messageToReply, token);
     }
   
     setMessage('');
+    setMessageToReply(null);
     textareaElement.style.height = 'auto';
   }
 
@@ -510,6 +515,14 @@ const Chat: React.FC<Props> = ({ token }) => {
     const dj = djs.find(dj => dj.id === djId);
     return dj ? dj.characterPath : logo;
   }
+
+  const getDJMessageById = (messageId: number) => {
+    for (const chatId in chats) {
+      const message = chats[chatId].find(message => message.id === messageId);
+      if (message) return message;
+    }
+    return null;
+  };
 
   const truncateText = (text: string, maxLength: number) => {
     if (!text) return '';
@@ -939,6 +952,12 @@ const Chat: React.FC<Props> = ({ token }) => {
                                 flexDirection: 'column',
                               }}
                             >
+                              {msg.isReply && (
+                                <div className='text-light' style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '5px', borderRadius: '5px', marginBottom: '5px' }}>
+                                  <strong>{Number(getDJMessageById(msg.replyTo)?.djId) === Number(dj?.id) ? 'você' : getDJName(getDJMessageById(msg.replyTo)?.djId)}</strong>
+                                  <p>{ getDJMessageById(msg.replyTo)?.message || ''}</p>
+                                </div>
+                              )}
                               <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
                                 {selectedChat === 'general' && msg.djId !== dj?.id && (
                                   <>
@@ -1033,7 +1052,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
-                                handleSubmitMessage(selectedChat, message, e.target as HTMLTextAreaElement);
+                                handleSubmitMessage(selectedChat, message, messageToReply, e.target as HTMLTextAreaElement);
                               }
                             }}
                             style={{
@@ -1051,7 +1070,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                           className="my-3"
                           onClick={() => {
                             const textareaElement = document.querySelector('.search-input') as HTMLTextAreaElement;
-                            handleSubmitMessage(selectedChat, message, textareaElement);
+                            handleSubmitMessage(selectedChat, message, messageToReply, textareaElement);
                           }}
                           style={{
                             marginLeft: '8px',

@@ -4,6 +4,7 @@ import MessageModel from '../models/MessageModel';
 import JWT from '../utils/JWT';
 import { getSocket } from '../utils/socketIO';
 import TrackModel from '../models/TrackModel';
+import { IMessage } from '../interfaces/messages/IMessage';
 
 export default class ChatService {
   constructor(
@@ -12,7 +13,7 @@ export default class ChatService {
     private trackModel: TrackModel = new TrackModel()
   ) { }
 
-  async sendMessage(data: { djId: number; message: string; isReply?: boolean; replyTo?: number }, authorization: string) {
+  async sendMessage(data: { djId: number; message: string; messageToReply: IMessage | null }, authorization: string) {
     const { djId, message } = data;
     const now = new Date();
 
@@ -37,8 +38,8 @@ export default class ChatService {
           receiveDJId: null,
           message,
           createdAt: new Date(),
-          isReply: data.isReply ?? false,
-          replyTo: data.replyTo ?? null
+          isReply: data.messageToReply ? true : false,
+          replyTo: data.messageToReply?.id ?? null
         });
 
         if (!newMessage) {
@@ -77,8 +78,8 @@ export default class ChatService {
           receiveDJId: djId,
           message,
           createdAt: new Date(),
-          isReply: data.isReply ?? false,
-          replyTo: data.replyTo ?? null
+          isReply: data.messageToReply ? true : false,
+          replyTo: data.messageToReply?.id ?? null
         });
 
         if (!newMessage) {
@@ -101,8 +102,8 @@ export default class ChatService {
         receiveDJId: djId,
         message,
         createdAt: new Date(),
-        isReply: data.isReply ?? false,
-        replyTo: data.replyTo ?? null
+        isReply: data.messageToReply ? true : false,
+        replyTo: data.messageToReply?.id ?? null
       });
 
       if (!newMessage) {

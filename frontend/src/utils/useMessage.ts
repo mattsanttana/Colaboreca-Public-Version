@@ -1,5 +1,7 @@
+import { Message } from "../types/Chat";
+
 const useMessage = () => {
-  const sendMessage = async (djId: string | number | null, message: string, token: string) => {
+  const sendMessage = async (djId: string | number | null, message: string, messageToReply: Message | null, token: string) => {
     try {
       const response = await fetch('http://localhost:3001/chats', {
         method: 'POST',
@@ -10,6 +12,7 @@ const useMessage = () => {
         body: JSON.stringify({
           djId,
           message,
+          messageToReply
         }),
       });
 

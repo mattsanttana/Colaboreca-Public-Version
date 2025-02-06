@@ -6,6 +6,8 @@ export type Message = {
   chatId?: string;
   createdAt: Date;
   read: boolean;
+  isReply: boolean;
+  replyTo: number;
 }
 
 export type Chats = {
