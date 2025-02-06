@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaPaperPlane, FaArrowLeft } from 'react-icons/fa';
+import { FaPaperPlane, FaArrowLeft, FaReply, FaTimes } from 'react-icons/fa';
 import { connect } from 'react-redux';
 import { Container, Row, Col, Button, Form, ListGroup, Image, OverlayTrigger, Popover } from 'react-bootstrap';
 import { io } from 'socket.io-client';
@@ -14,7 +14,7 @@ import PlayingNow from '../types/PlayingNow';
 import { DJ, DJPlayingNow } from '../types/DJ';
 import { logo } from '../assets/images/characterPath';
 import useMessage from '../utils/useMessage';
-import { ChatMessage, Chats } from '../types/Chat';
+import { Chats, Message } from '../types/Chat';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -45,11 +45,14 @@ const Chat: React.FC<Props> = ({ token }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [selectedDJChat, setSelectedDJChat] = useState<string | number | null>(null);
-  const [chats, setChats] = useState<{ [key: string]: { id: number, djId: string; receiveDJId: string; message: string, createdAt: Date, read: boolean }[] }>({});
+  const [chats, setChats] = useState<Chats>({});
   const [message, setMessage] = useState('');
   const [unreadMessages, setUnreadMessages] = useState<{ [key: string]: number }>({});
   const [messagesLoaded, setMessagesLoaded] = useState(false);
   const [djTyping, setDJTyping] = useState<{ [key: string]: { isTyping: boolean, typingDJId: string } }>({});
+  const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
+  const [messageToReply, setMessageToReply] = useState<Message | null>(null);
+  const [inputHeight, setInputHeight] = useState(0); // valor inicial (por exemplo, 50px)
 
   const djActions = useDJ();
   const trackActions = useTrack();
@@ -92,7 +95,7 @@ const Chat: React.FC<Props> = ({ token }) => {
         const djMessages = await messageActions.getAllMessagesForThisDJ(token);
 
         if (djMessages?.status === 200) {
-          const newChats = djMessages.data.reduce((acc: Chats, message: ChatMessage) => {
+          const newChats = djMessages.data.reduce((acc: Chats, message: Message) => {
             const chatId = message.chatId || 'general';
             acc[chatId] = [
               ...(acc[chatId] || []),
@@ -451,6 +454,10 @@ const Chat: React.FC<Props> = ({ token }) => {
       djId: dj?.id,
       trackId: trackId,
     });
+
+    if (event.target.value === '') {
+      setInputHeight(0);
+    }
   }
 
   const handleSubmitMessage = async (djId: string | null, message: string, textareaElement: HTMLTextAreaElement) => {
@@ -583,6 +590,10 @@ const Chat: React.FC<Props> = ({ token }) => {
       default:
         return '';
     }
+  }
+
+  const handleReply = (message: Message) => {
+    setMessageToReply(message);
   }
 
   const renderPopover = (djId: string) => (
@@ -874,7 +885,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                     <div
                       ref={containerRef}
                       className="chat-container"
-                      style={{ backgroundColor: '#000000', color: 'white', height: '72vh', display: 'flex', flexDirection: 'column-reverse', overflowY: 'auto' }}
+                      style={{ backgroundColor: '#000000', color: 'white', height: '72vh', display: 'flex', flexDirection: 'column-reverse', overflowY: 'auto', paddingBottom: messageToReply ? `${inputHeight + 60}px` : `${inputHeight}px`}}
                     >
                       <div className="messages">
                       {selectedChat !== null && chats[selectedChat]?.map((msg, index) => (
@@ -909,6 +920,9 @@ const Chat: React.FC<Props> = ({ token }) => {
                             )}
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.djId === dj?.id ? 'flex-end' : 'flex-start', width: '100%' }}>
                             <div
+                              key={msg.id}
+                              onMouseEnter={() => setHoveredMessageId(msg.id)}
+                              onMouseLeave={() => setHoveredMessageId(null)}
                               className={`message-text ${getRankClass(msg.djId)} bi bi-chat-dots ${msg.djId === dj?.id ? 'bg-primary msg-right' : ''}`}
                               style={{
                                 backgroundColor: msg.djId !== dj?.id ? '#333333' : '',
@@ -937,6 +951,23 @@ const Chat: React.FC<Props> = ({ token }) => {
                                 )}
                                 {msg.message}
                               </p>
+                              {hoveredMessageId === msg.id && (
+                                <button
+                                  style={{
+                                    position: 'absolute',
+                                    right: '0px',
+                                    top: '7px',
+                                    transform: 'translateY(-50%)',
+                                    backgroundColor: 'transparent',
+                                    color: 'white',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => handleReply(msg)}
+                                >
+                                  <FaReply style={{ fontSize: '12px' }} />
+                                </button>
+                              )}
                             </div>
                             {msg.djId === dj?.id && msg.read && index === chats[selectedChat].length - 1 && selectedChat !== 'general' && (
                               <small style={{ marginTop: '5px', color: 'gray', alignSelf: 'flex-end', marginRight: '10px' }}>
@@ -948,45 +979,73 @@ const Chat: React.FC<Props> = ({ token }) => {
                       ))}
                       </div>
                     </div>
-                    <div style={{ position: 'relative', width: '100%' }}>
+                    <div style={{ position: 'relative', width: '100%', height: '100px' /* ou o tamanho que desejar */ }}>
                       <div
                         style={{
-                          display: 'flex', 
-                          alignItems: 'flex-end', 
-                          width: '100%', 
-                          backgroundColor: '#222222', 
-                          padding: '8px', 
-                          borderRadius: '5px',
-                          marginTop: '30px'
+                          position: 'absolute',  // Fixa a div em relação ao pai
+                          bottom: '0',           // Ancorada na parte inferior
+                          left: '0',
+                          right: '0',
+                          display: 'flex',
+                          alignItems: 'flex-end',
+                          backgroundColor: '#222222',
+                          padding: '8px',
+                          borderRadius: '5px'
+                          // Remova ou ajuste o marginTop se não for necessário
                         }}
                       >
-                        <Form.Control
-                          as="textarea"
-                          rows={1}
-                          placeholder="Digite sua mensagem"
-                          className="my-3 search-input"
-                          value={message}
-                          onChange={handleChangeMessageInput}
-                          onInput={(e) => {
-                            const target = e.target as HTMLTextAreaElement;
-                            target.style.height = 'auto';
-                            target.style.height = `${Math.min(target.scrollHeight, 150)}px`; // Limite de altura para o campo
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSubmitMessage(selectedChat, message, e.target as HTMLTextAreaElement);
-                            }
-                          }}
-                          style={{
-                            backgroundColor: '#000000',
-                            color: 'white',
-                            overflowY: 'auto',
-                            resize: 'none',
-                            width: '100%',
-                            maxHeight: '150px', // Altura máxima
-                          }}
-                        />
+                        <div style={{ width: '100%', position: 'relative' }}>
+                          {messageToReply && (
+                              <div className='text-light' style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '5px', borderRadius: '5px', marginBottom: '5px' }}>
+                                <strong>{messageToReply.djId === dj?.id ? 'você' : getDJName(messageToReply.djId)}</strong>
+                                <p>{messageToReply.message}</p>
+                                <button
+                                  onClick={() => setMessageToReply(null)}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '5px',
+                                    right: '5px',
+                                    backgroundColor: 'transparent',
+                                    color: 'white',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  <FaTimes />
+                                </button>
+                              </div>
+                            )}
+                          <Form.Control
+                            as="textarea"
+                            rows={1}
+                            placeholder="Digite sua mensagem"
+                            className="my-3 search-input"
+                            value={message}
+                            onChange={handleChangeMessageInput}
+                            onInput={(e) => {
+                              const target = e.target as HTMLTextAreaElement;
+                              target.style.height = 'auto';
+                              const newHeight = Math.min(target.scrollHeight, 150);
+                              target.style.height = `${newHeight}px`;
+                              // Se houver padding ou margens internas, adicione ao newHeight:
+                              setInputHeight(newHeight - 50); // 16px a mais para compensar o padding, por exemplo
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSubmitMessage(selectedChat, message, e.target as HTMLTextAreaElement);
+                              }
+                            }}
+                            style={{
+                              backgroundColor: '#000000',
+                              color: 'white',
+                              overflowY: 'auto',
+                              resize: 'none',
+                              width: '100%',
+                              maxHeight: '150px' // Altura máxima
+                            }}
+                          />
+                        </div>
                         <Button
                           variant="primary"
                           className="my-3"

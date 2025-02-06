@@ -1,4 +1,4 @@
-export type ChatMessage = {
+export type Message = {
   id: number
   djId: string;
   receiveDJId: string;
@@ -9,5 +9,5 @@ export type ChatMessage = {
 }
 
 export type Chats = {
-  [key: string]: ChatMessage[];
+  [key: string]: Message[];
 }

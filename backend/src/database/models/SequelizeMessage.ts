@@ -15,6 +15,8 @@ class SequelizeMessage extends Model<
   declare message: string;
   declare createdAt: Date;
   declare read?: boolean;
+  declare isReply?: boolean;
+  declare replyTo?: number | null;
 }
 
 SequelizeMessage.init(
@@ -59,6 +61,18 @@ SequelizeMessage.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    isReply: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_reply',
+    },
+    replyTo: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: 'reply_to',
     },
   },
   {

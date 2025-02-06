@@ -5,8 +5,22 @@ import { Op } from 'sequelize';
 export default class MessageModel {
   private messageModel = SequelizeMessage;
 
-  async create(data: { chatId: number | null, trackId: number, djId: number, receiveDJId: number | null, message: string, createdAt: Date }, p0?: unknown) {
-    const { chatId, trackId, djId, receiveDJId, message, createdAt } = data;
+  async create(
+    data: {
+      chatId: number | null,
+      trackId: number,
+      djId: number,
+      receiveDJId: number | null,
+      message: string,
+      createdAt: Date,
+      isReply?: boolean,
+      replyTo?: number | null
+    },
+    p0?: unknown
+  ) {
+
+    const { chatId, trackId, djId, receiveDJId, message, createdAt, isReply, replyTo } = data;
+
     const response = await this.messageModel.create({
       chatId,
       trackId,
@@ -14,6 +28,8 @@ export default class MessageModel {
       receiveDJId,
       message,
       createdAt,
+      isReply,
+      replyTo
     });
 
     return response.get();

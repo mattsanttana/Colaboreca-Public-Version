@@ -12,7 +12,7 @@ export default class ChatService {
     private trackModel: TrackModel = new TrackModel()
   ) { }
 
-  async sendMessage(data: { djId: number; message: string; }, authorization: string) {
+  async sendMessage(data: { djId: number; message: string; isReply?: boolean; replyTo?: number }, authorization: string) {
     const { djId, message } = data;
     const now = new Date();
 
@@ -36,7 +36,9 @@ export default class ChatService {
           djId: decoded.id,
           receiveDJId: null,
           message,
-          createdAt: new Date()
+          createdAt: new Date(),
+          isReply: data.isReply ?? false,
+          replyTo: data.replyTo ?? null
         });
 
         if (!newMessage) {
@@ -74,7 +76,9 @@ export default class ChatService {
           djId: decoded.id,
           receiveDJId: djId,
           message,
-          createdAt: new Date()
+          createdAt: new Date(),
+          isReply: data.isReply ?? false,
+          replyTo: data.replyTo ?? null
         });
 
         if (!newMessage) {
@@ -96,7 +100,9 @@ export default class ChatService {
         djId: decoded.id,
         receiveDJId: djId,
         message,
-        createdAt: new Date()
+        createdAt: new Date(),
+        isReply: data.isReply ?? false,
+        replyTo: data.replyTo ?? null
       });
 
       if (!newMessage) {

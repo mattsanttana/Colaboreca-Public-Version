@@ -8,4 +8,6 @@ export interface IMessage extends Identifiable {
   message: string;
   createdAt: Date;
   read: boolean;
+  isReply?: boolean;
+  replyTo?: number;
 }

@@ -45,6 +45,16 @@ export default {
         allowNull: false,
         defaultValue: false,
       },
+      isReply: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        field: 'is_reply',
+      },
+      replyTo: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'reply_to',
+      },
     });
   },
   down(queryInterface: QueryInterface) {
