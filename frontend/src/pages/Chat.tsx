@@ -60,10 +60,11 @@ const Chat: React.FC<Props> = ({ token }) => {
   const voteActions = useVote();
   const messageActions = useMessage();
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const interval = useRef<number | null>(null);
   const typingTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
+  const messageRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (djChat && !selectedChat) {
@@ -478,6 +479,10 @@ const Chat: React.FC<Props> = ({ token }) => {
     setMessage('');
     setMessageToReply(null);
     textareaElement.style.height = 'auto';
+
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }
 
   const handleMarkAsRead = async (chatId: string) => {
@@ -486,6 +491,20 @@ const Chat: React.FC<Props> = ({ token }) => {
     const unreadMessageIds = unreadMessages.map(message => message.id); // Extrai os IDs das mensagens não lidas
     if (unreadMessageIds.length > 0) {
       await messageActions.markMessagesAsRead(unreadMessageIds, token);
+    }
+  };
+
+  const scrollToMessage = (messageId: number) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement && chatContainerRef.current) {
+      const containerTop = chatContainerRef.current.getBoundingClientRect().top;
+      const elementTop = messageElement.getBoundingClientRect().top;
+      const offset = elementTop - containerTop + chatContainerRef.current.scrollTop;
+      chatContainerRef.current.scrollTop = offset;
+      messageElement.classList.add('blink');
+      setTimeout(() => {
+        messageElement.classList.remove('blink');
+      }, 3000); // Remove a classe após 3 segundos
     }
   };
 
@@ -896,7 +915,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                       </div>
                     </div>
                     <div
-                      ref={containerRef}
+                      ref={chatContainerRef}
                       className="chat-container"
                       style={{ backgroundColor: '#000000', color: 'white', height: '72vh', display: 'flex', flexDirection: 'column-reverse', overflowY: 'auto', paddingBottom: messageToReply ? `${inputHeight + 60}px` : `${inputHeight}px`}}
                     >
@@ -953,12 +972,16 @@ const Chat: React.FC<Props> = ({ token }) => {
                               }}
                             >
                               {msg.isReply && (
-                                <div className='text-light' style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '5px', borderRadius: '5px', marginBottom: '5px' }}>
+                                <div
+                                  className='text-light'
+                                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '5px', borderRadius: '5px', marginBottom: '5px', cursor: 'pointer' }}
+                                  onClick={() => scrollToMessage(msg.replyTo)}
+                                >
                                   <strong>{Number(getDJMessageById(msg.replyTo)?.djId) === Number(dj?.id) ? 'você' : getDJName(getDJMessageById(msg.replyTo)?.djId)}</strong>
-                                  <p>{ getDJMessageById(msg.replyTo)?.message || ''}</p>
+                                  <p>{ truncateText(getDJMessageById(msg.replyTo)?.message || '', 62)}</p>
                                 </div>
                               )}
-                              <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }}>
+                              <p className={`message-text ${getRankClass(msg.djId)}`} style={{ margin: 0 }} ref={(el) => (messageRefs.current[msg.id] = el)}>
                                 {selectedChat === 'general' && msg.djId !== dj?.id && (
                                   <>
                                     <strong>
@@ -1015,9 +1038,13 @@ const Chat: React.FC<Props> = ({ token }) => {
                       >
                         <div style={{ width: '100%', position: 'relative' }}>
                           {messageToReply && (
-                              <div className='text-light' style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '5px', borderRadius: '5px', marginBottom: '5px' }}>
+                              <div
+                                className='text-light'
+                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '5px', borderRadius: '5px', marginBottom: '5px', cursor: 'pointer' }}
+                                onClick={() => scrollToMessage(messageToReply.id)}
+                              >
                                 <strong>{messageToReply.djId === dj?.id ? 'você' : getDJName(messageToReply.djId)}</strong>
-                                <p>{messageToReply.message}</p>
+                                <p>{truncateText(messageToReply.message, 77)}</p>
                                 <button
                                   onClick={() => setMessageToReply(null)}
                                   style={{
