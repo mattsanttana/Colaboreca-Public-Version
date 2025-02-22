@@ -53,12 +53,12 @@ SequelizeVote.init(
 
 SequelizeMusic.hasMany(SequelizeVote, {
   foreignKey: 'musicId',
-  as: 'vote',
+  as: 'votes',
 });
 
 SequelizeDJ.hasMany(SequelizeVote, {
   foreignKey: 'djId',
-  as: 'vote',
+  as: 'votes',
 });
 
 export default SequelizeVote;

@@ -1,18 +1,22 @@
 import { Sequelize } from 'sequelize';
 import * as config from '../database/config/database';
-import PlaybackService from './PlaybackService';
+import { IDJ } from '../interfaces/djs/IDJ';
+import { Music } from '../interfaces/spotify_response/SpotifyResponse';
+import { Vote } from '../interfaces/votes/IVote';
 import DJModel from '../models/DJModel';
-import VoteModel from '../models/VoteModel';
 import MusicModel from '../models/MusicModel';
+import TrackModel from '../models/TrackModel';
+import VoteModel from '../models/VoteModel';
+import PlaybackService from './PlaybackService';
+import { getDJScore, updateDJsRanking } from '../utils/applyPointsToDJ';
 import JWT from '../utils/JWT';
 import { getSocket } from '../utils/socketIO';
-import { Vote } from '../interfaces/votes/IVote';
 import SpotifyActions from '../utils/SpotifyActions';
-import { Track } from '../interfaces/spotify_response/SpotifyResponse';
-import TrackModel from '../models/TrackModel';
 
+// Essa classe é responsável por gerenciar as votações dos DJs e aplicar os pontos ao DJ que adicionou a música
 export default class VoteService {
   constructor(
+    // Injeção de dependências
     private sequelize: Sequelize = new Sequelize(config),
     private voteModel: VoteModel = new VoteModel(),
     private djModel: DJModel = new DJModel(),
@@ -20,340 +24,262 @@ export default class VoteService {
     private trackModel: TrackModel = new TrackModel(),
     private playbackService: PlaybackService = new PlaybackService()
   ) {
-    setInterval(this.checkPlaybackState.bind(this), 25000);
+    // Começa o processo de verificação
+    setInterval(this.checkPlaybackState.bind(this), 30000);
   }
 
+
+  // Método para verificar se a música que não teve seus pontos aplicados foi tocada e aplicar os pontos ao DJ
   async checkPlaybackState() {
-    const transaction = await this.sequelize.transaction();
-
     try {
-      const tracks = await this.trackModel.findAll({ transaction });
+      const tracksData = await this.trackModel.findAll(); // Busca todas as tracks
 
-      for (const track of tracks) {
-        const token = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      // Para cada track, verifica o estado de reprodução
+      for (const track of tracksData) {
+        const token = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualiza o token de acesso
 
+        // Se não houver token, pula para a próxima track
         if (!token) {
           continue;
         }
 
-        const response = await SpotifyActions.getPlaybackState(token);
+        const music = track.colaborecaQueue.find((music) => !music.pointsApllied); // Busca a música que não teve seus pontos aplicados
 
-        if (!response) {
+        // Se não houver música, pula para a próxima track
+        if (!music || !music.id) {
           continue;
         }
 
-        const music = await this.musicModel.findOne({ trackId: track.id, pointsApllied: false }, { transaction });
+        const queue = await SpotifyActions.getQueue(token); // Busca a fila de reprodução
+        const musicInQueue = queue.queue.find((track: Music) => track.uri === music?.musicURI); // Verifica se a música está na fila
+        const currentMusicURI = queue.currently_playing?.uri; // Pega a URI da música atual
 
-        if (!music) {
-          continue;
-        }
-
-        const queue = await SpotifyActions.getQueue(token);
-
-        const musicInQueue = queue.queue.find((track: Track) => track.uri === music?.musicURI);
-
-        const currentMusicURI = response?.data?.item?.uri;
-
-        if (music?.musicURI !== currentMusicURI && musicInQueue === undefined && response.data.is_playing && music.id) {
-          await this.musicModel.update({ pointsApllied: true }, { id: music.id }, { transaction });
-          await this.applyPointsToDJ(track.id, music.id);
+        // Se a música não estiver na fila e a música atual for diferente da música que não teve seus pontos aplicados
+        if (currentMusicURI && music?.musicURI !== currentMusicURI && musicInQueue === undefined) {
+          await this.applyPointsToDJ(track.id, music.id); // Aplica os pontos ao DJ
         }
       }
-
-      await transaction.commit();
     } catch (error) {
-      await transaction.rollback();
-      console.error('Erro ao verificar o estado de reprodução:', error);
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
+      console.error(error);
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
+  // Método para verificar se o DJ já votou na música atual
   async verifyIfDJHasAlreadVoted(authorization: string) {
     try {
-      const token = authorization.split(' ')[1];
+      const token = authorization.split(' ')[1]; // Pega o token do cabeçalho
 
-      const decoded = JWT.verify(token);
+      const decoded = JWT.verify(token); // Decodifica o token
 
+      // Se o token for inválido, retorna uma mensagem de erro
       if (typeof decoded === 'string') {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
-      const dj = await this.djModel.findOne({ id: decoded.id });
+      const dj = await this.djModel.findOne({ id: decoded.id }); // Busca o DJ
 
-      const music = await this.playbackService.findDJAddedCurrentMusic(decoded.trackId);
+      const music = await this.playbackService.findDJAddedCurrentMusic(decoded.trackId); // Busca a música atual
 
-      if (!music?.data.musicId || music.data.addedBy === dj?.djName) {
+      // Se a música não for encontrada, retorna uma mensagem de erro
+      if ('musicId' in music.data && (!music.data.musicId || music.data.addedBy === dj?.djName)) {
         return {
-          status: 'OK',
+          status: 'UNAUTHORIZED',
           data: { message: 'The song was added for currently DJ, or was not added by track DJ' }
         };
       }
 
-      const response = await this.voteModel.findOne({ djId: decoded.id, musicId: music.data.musicId });
+      // Verifica se a música contém o musicId (ou se não ela foi adicionada pelo aplicativo)
+      if ('musicId' in music.data) {
+        const response = await this.voteModel.findOne({ djId: decoded.id, musicId: music.data.musicId }); // Busca o voto do DJ
 
-      if (!response) {
-        return { status: 'OK', data: { message: 'The DJ has not yet voted on the current song' } };
+        // Se o voto não for encontrado, retorna uma mensagem de que o DJ ainda não votou
+        if (!response) {
+          return { status: 'OK', data: { message: 'The DJ has not yet voted on the current song' } };
+        }
+
+        return { status: 'UNAUTHORIZED', data: { message: 'The DJ has already voted' } }; // Retorna uma mensagem de que o DJ já votou
       }
 
-      return { status: 'OK', data: { message: 'The DJ has already voted' } };
+      return { status: 'UNAUTHORIZED', data: { message: 'Music added by app' } }; // Retorna uma mensagem de que a música foi adicionada pelo aplicativo
     } catch (error) {
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
+  // Método para criar um voto
   async createVote(authorization: string, musicURI: string, vote: Vote) {
-    const transaction = await this.sequelize.transaction();
+    const io = getSocket(); // Pega o socket
+
     try {
-      const io = getSocket();
+      const token = authorization.split(' ')[1]; // Pega o token do cabeçalho
+      const decoded = JWT.verify(token); // Decodifica o token
 
-      const token = authorization.split(' ')[1];
-      const decoded = JWT.verify(token);
-
+      // Se o token for inválido, desfaz a transação e retorna uma mensagem de erro
       if (typeof decoded === 'string') {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
-      const musics = await this.musicModel.findAll({ musicURI }, { transaction });
+      const musics = await this.musicModel.findAll({ musicURI, trackId: decoded.trackId }); // Busca todas as músicas com a URI
 
-      const music = musics.reduce((max, current) => {
-        if (!current || !current.id) {
-          return max;
-        }
-        if (!max || !max.id) {
-          return current;
-        }
-        return current.id > max.id ? current : max;
-      }
-        , musics[0]);
+      const music = musics.find(music => music.pointsApllied === false); // Busca a música que não teve seus pontos aplicados
 
-      if (!music || !music.id || music.djId === decoded.id) {
-        await transaction.rollback();
-        return { status: 'UNAUTHORIZED', data: { message: 'Music not found or invalid dj' } };
+      // Se a música não for encontrada, retorna uma mensagem de erro
+      if (!music || !music.id) {
+        return { status: 'UNAUTHORIZED', data: { message: 'Music not found' } };
       }
 
-      const alreadyVoted = await this.voteModel.findOne({ djId: decoded.id, musicId: music.id }, { transaction });
+      const alreadyVoted = music?.votes?.some(vote => vote.djId === decoded.id); // Verifica se o DJ já votou
 
+      // Se o DJ já votou retorna uma mensagem de erro
       if (alreadyVoted) {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'This DJ has already voted' } };
       }
 
-      const response = await this.voteModel.create({ djId: decoded.id, musicId: music.id, vote, trackId: decoded.trackId }, { transaction });
-      io.to(`track_${decoded.trackId}`).emit('new vote', response);
+      const response = await this.voteModel.create({ djId: decoded.id, musicId: music.id, vote, trackId: decoded.trackId }); // Cria o voto
 
-      await transaction.commit();
-      return { status: 'OK', data: response };
+      // Se o voto não for criado retorna uma mensagem de erro
+      if (!response) {
+        return { status: 'ERROR', data: { message: 'An error occurred' } };
+      }
+
+      io.to(`track_${decoded.trackId}`).emit('new vote', response); // Emite um evento de novo voto
+
+      return { status: 'OK', data: response }; // Retorna o voto criado
     } catch (error) {
-      await transaction.rollback();
+      // Em caso de erro, rollback a transação, exibe o erro e retorna uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
+  // Método para pegar todos os votos de uma música
   async getAllVotesForThisMusic(trackId: number, musicURI: string) {
     try {
-      const musics = await this.musicModel.findAll({ musicURI, trackId });
+      const musics = await this.musicModel.findAll({ musicURI, trackId }); // Busca todas as músicas com a URI
 
+      // Se a música não for encontrada, retorna uma mensagem de erro
       if (!musics || musics.length === 0) {
         return { status: 'OK', data: { message: 'Music not found' } };
       }
 
-      const music = musics.reduce((max, current) => {
-        if (!current || !current.id) {
-          return max;
-        }
-        if (!max || !max.id) {
-          return current;
-        }
-        return current.id > max.id ? current : max;
-      }, musics[0]);
+      const music = musics.find(music => music.pointsApllied === false); // Busca a música que não teve seus pontos aplicados
 
+      // Se a música não for encontrada, retorna uma mensagem de erro
       if (!music || !music.id) {
         return { status: 'OK', data: { message: 'Music not found' } };
       }
 
-      const votes = await this.voteModel.findAll({ musicId: music.id });
+      const voteValues = music?.votes?.map(vote => vote.vote); // Pega os valores dos votos
 
-      const voteValues = votes.map(vote => vote.vote);
-
-      return { status: 'OK', data: { voteValues } };
+      return { status: 'OK', data: { voteValues } }; // Retorna os valores dos votos com o status correspondente
     } catch (error) {
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
       return { status: 'ERROR', data: { message: 'An error occurred' } };
     }
   }
 
-  async getAllVotesForDJ(djId: number) {
-    try {
-      const votes = await this.voteModel.findAll({ djId });
-
-      const voteValues = votes.map(vote => vote.vote);
-
-      return { status: 'OK', data: { voteValues } };
-    } catch (error) {
-      console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
-    }
-  }
-
+  // Método para aplicar os pontos ao DJ
   async applyPointsToDJ(trackId: number, musicId: number) {
-    const io = getSocket();
+    const transaction = await this.sequelize.transaction();
+    const io = getSocket(); // Pega o socket
 
     try {
-      const music = await this.musicModel.findOne({ id: musicId });
+      const musics = await this.musicModel.findAll({ trackId }, { transaction }) // busca todas as músicas
+
+      const music = musics.find(music => music.id === musicId); // Busca a música pelo id
 
       if (!music || !music.id) {
         return { status: 'OK', data: { message: 'Music not found' } };
       }
 
-      const votes = await this.getAllVotesForThisMusic(trackId, music.musicURI);
+      const score = getDJScore(music); // Calcula o score do DJ
 
-      if (votes.status !== 'OK') {
-        return { status: 'OK', data: { message: 'Votes not found' } };
-      }
+      if (score.newScore !== 0) {
+        const updateDJSCORE = await this.djModel.update({ score: score.newScore }, { id: music.djId }, { transaction }); // Atualiza o score do DJ
 
-      if (!votes.data || !votes.data.voteValues) {
-        return { status: 'OK', data: { message: 'No vote values found' } };
-      }
-
-      const voteCounts = votes.data.voteValues.reduce(
-        (acc, vote) => {
-          acc[vote as keyof typeof acc] = (acc[vote as keyof typeof acc] || 0) + 1;
-          return acc;
-        },
-        { very_good: 0, good: 0, normal: 0, bad: 0, very_bad: 0 }
-      );
-
-      // Determinar a opção com mais votos
-      const maxVotes = Math.max(...Object.values(voteCounts));
-      const topOptions = Object.keys(voteCounts).filter(option => voteCounts[option as keyof typeof voteCounts] === maxVotes);
-
-      // Calcular os pontos de acordo com as regras
-      const pointsMap = {
-        very_good: 3,
-        good: 1,
-        normal: 0,
-        bad: -1,
-        very_bad: -3
-      };
-
-      let totalPoints = 0;
-      if (topOptions.length === 1) {
-        // Apenas uma opção tem mais votos
-        totalPoints = pointsMap[topOptions[0] as keyof typeof pointsMap];
-      } else {
-        // Empate: calcular a média dos pontos das opções empatadas
-        const total = topOptions.reduce((sum, option) => sum + pointsMap[option as keyof typeof pointsMap], 0);
-        totalPoints = total / topOptions.length;
-      }
-
-      // Aplicar os pontos ao DJ
-      const dj = await this.djModel.findOne({ id: music.djId });
-
-      if (!dj) {
-        return { status: 'OK', data: { message: 'DJ not found' } };
-      }
-
-      // Garantir que dj.score tenha um valor padrão de 0 se estiver indefinido
-      const currentScore = dj.score ?? 0;
-
-      // Verificar se é para adicionar ou subtrair pontos
-      if (totalPoints < 0 && currentScore === 0) {
-        // Verificar se a opção com mais votos é "bad" ou "very bad" (ou empate entre os dois)
-        const negativeVotes = ["bad", "very_bad"];
-        const isNegativeVote = topOptions.every(option => negativeVotes.includes(option));
-
-        if (isNegativeVote) {
-          // Não fazer nada se o score atual é 0 e os pontos são negativos
-          return { status: 'OK', data: { message: 'No points subtracted as DJ score is already 0' } };
+        if (!updateDJSCORE || !updateDJSCORE[0]) {
+          transaction.rollback();
+          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ score' } };
         }
       }
 
-      // Ajustar os pontos para evitar valores negativos
-      if (totalPoints < 0) {
-        if (currentScore < 3 && topOptions.includes("very_bad")) {
-          totalPoints = -currentScore; // Reduzir para 0
-        } else if (currentScore < 1 && topOptions.includes("bad")) {
-          totalPoints = -currentScore; // Reduzir para 0
+      const allDJs = await this.djModel.findAll({ trackId }, { transaction }); // Busca todos os DJs
+
+      // Aplicar 0.50 pontos para DJs que votaram na música com o voto majoritário e 0.25 para os demais que votaram
+      const votes = music.votes ?? []; // Pega os votos da música
+      const votingDJs = allDJs.filter(dj => votes.some(vote => vote.djId === dj.id)); // Filtra os DJs que votaram na música
+
+      // Atualizar o score de todos os DJs que votaram na música
+      for (const dj of votingDJs) {
+        const djVote = votes.find(vote => vote.djId === dj.id); // Busca o voto do DJ
+        const newScore = (dj.score ?? 0) + (djVote?.vote === score.majorityVote ? 0.50 : 0.25); // Calcula o novo score
+
+        const updateDJSCORE = await this.djModel.update({ score: newScore }, { id: dj.id }, { transaction }); // Atualiza o score do DJ
+
+        if (!updateDJSCORE || !updateDJSCORE[0]) {
+          transaction.rollback();
+          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ score' } };
         }
       }
 
-      // Calcular o novo score garantindo que não seja negativo
-      const newScore = Math.max(currentScore + totalPoints, 0);
+      const allDJsUpdated = await this.djModel.findAll({ trackId: music.trackId }, { transaction }); // Busca todos os DJs atualizados
 
-      await this.djModel.update({ score: newScore }, { id: dj.id });
-
-      // Atualizar o rank de todos os DJs
-      const allDJs = await this.djModel.findAll({ trackId: music.trackId });
-
-      // Buscar todos os votos de todas as músicas dos DJs empatados
-      const allVotes = await Promise.all(allDJs.map(async (dj) => {
-        if (typeof dj.id === 'string') {
-          const djVotes = await this.getAllVotesForDJ(dj.id);
-          if (djVotes.status === 'OK' && djVotes.data && djVotes.data.voteValues) {
-            return { dj, votes: djVotes };
-          }
-        }
-        // Trate o caso onde dj.id é undefined ou não é uma string
-        return { dj, votes: { status: 'OK', data: { voteValues: [] } } }; // ou outra lógica apropriada
-      }));
-
-      // Ordenar DJs por score (descendente) e aplicar critérios de desempate
-      const sortedDJs = allDJs.sort((a, b) => {
-        const scoreA = a.score ?? 0;
-        const scoreB = b.score ?? 0;
-
-        if (scoreB !== scoreA) {
-          return scoreB - scoreA;
-        }
-
-        // Critério de desempate 1: mais votos "very good"
-        const veryGoodVotesA = allVotes.find(v => v.dj.id === a.id)?.votes.data?.voteValues?.filter(v => v === 'very_good').length ?? 0;
-        const veryGoodVotesB = allVotes.find(v => v.dj.id === b.id)?.votes.data?.voteValues?.filter(v => v === 'very_good').length ?? 0;
-        if (veryGoodVotesB !== veryGoodVotesA) {
-          return veryGoodVotesB - veryGoodVotesA;
-        }
-
-        // Critério de desempate 2: mais votos "good"
-        const goodVotesA = allVotes.find(v => v.dj.id === a.id)?.votes.data?.voteValues?.filter(v => v === 'good').length ?? 0;
-        const goodVotesB = allVotes.find(v => v.dj.id === b.id)?.votes.data?.voteValues?.filter(v => v === 'good').length ?? 0;
-        if (goodVotesB !== goodVotesA) {
-          return goodVotesB - goodVotesA;
-        }
-
-        // Critério de desempate 3: menos votos "very bad"
-        const veryBadVotesA = allVotes.find(v => v.dj.id === a.id)?.votes.data?.voteValues?.filter(v => v === 'very_bad').length ?? 0;
-        const veryBadVotesB = allVotes.find(v => v.dj.id === b.id)?.votes.data?.voteValues?.filter(v => v === 'very_bad').length ?? 0;
-        if (veryBadVotesA !== veryBadVotesB) {
-          return veryBadVotesA - veryBadVotesB;
-        }
-
-        // Critério de desempate 4: menos votos "bad"
-        const badVotesA = allVotes.find(v => v.dj.id === a.id)?.votes.data?.voteValues?.filter(v => v === 'bad').length ?? 0;
-        const badVotesB = allVotes.find(v => v.dj.id === b.id)?.votes.data?.voteValues?.filter(v => v === 'bad').length ?? 0;
-        if (badVotesA !== badVotesB) {
-          return badVotesA - badVotesB;
-        }
-
-        // Critério de desempate 5: quem alcançou o empate (menor id)
-        if (a.id === undefined || b.id === undefined) {
-          return 0; // Tratar como iguais se id for indefinido
-        }
-        return a.id - b.id;
-      });
+      const sortedDJs = updateDJsRanking(allDJsUpdated as IDJ[], musics); // Ordenar DJs por score (descendente) e aplicar critérios de desempate
 
       // Atualizar o rank de todos os DJs
       for (let i = 0; i < sortedDJs.length; i += 1) {
-        const newRanking = sortedDJs[i].score === 0 ? 0 : i + 1;
-        await this.djModel.update({ ranking: newRanking }, { id: sortedDJs[i].id });
-        const djUpdated = await this.djModel.findOne({ id: sortedDJs[i].id });
-        io.to(`track_${music.trackId}`).emit('dj updated', djUpdated);
+        const newRanking = sortedDJs[i].score === 0 ? 0 : i + 1; // Calcula o novo ranking
+
+        if (sortedDJs[i].ranking !== newRanking) {
+          const updateDJRank = await this.djModel.update({ ranking: newRanking }, { id: sortedDJs[i].id }, { transaction });
+    
+          if (!updateDJRank || !updateDJRank[0]) {
+            console.log('Erro ao atualizar ranking do DJ');
+            await transaction.rollback();
+            return { status: 'ERROR', data: { message: 'An error occurred while updating DJ ranking' } };
+          }
+        }
+
+        const djUpdated = await this.djModel.findOne({ id: sortedDJs[i].id }, { transaction }); // Busca o DJ atualizado
+
+        if (!djUpdated) {
+          transaction.rollback();
+          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ' } };
+        }
+
+        io.to(`track_${trackId}`).emit('dj updated', djUpdated); // Emite um evento de DJ atualizado
       }
 
-      return { status: 'OK', data: { message: 'Points and rank applied to DJ' } };
+      const updateMusicPointApplied = await this.musicModel.update({ pointsApllied: true }, { id: music.id }, { transaction }); // Atualiza a música para que os pontos sejam aplicados
 
+      if (!updateMusicPointApplied || !updateMusicPointApplied[0]) {
+        transaction.rollback();
+        return { status: 'ERROR', data: { message: 'An error occurred while updating music points applied' } };
+      }
+
+      transaction.commit(); // Comita a transação
+
+      return { status: 'OK', data: { message: 'Points applied to DJ and ranking updated' } };
     } catch (error) {
+      // Em caso de erro, rollback a transação, exibe o erro e retorna uma mensagem de erro
+      transaction.rollback();
       console.error('Erro ao aplicar pontos ao DJ:', error);
       return { status: 'ERROR', data: { message: 'An error occurred while applying points to DJ' } };
     }

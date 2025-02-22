@@ -24,7 +24,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track-info/${trackId}`)}
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-center justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaHome className="me-2" />Início
@@ -33,7 +33,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track-info/queue/${trackId}`)}
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-center justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaList className="me-2" />Fila
@@ -42,7 +42,7 @@ const TrackInfoMenu: React.FC<Props> = ({ trackId }) => {
           <Nav.Item className='menu-item'>
             <Nav.Link
               onClick={() => handleRedirect(`/track-info/ranking/${trackId}`)}
-              className="d-flex align-items-center justify-content-center"
+              className="d-flex align-items-center justify-content-left"
               style={{ color: '#0e99fc'}}
             >
               <FaChartLine className="me-2" />Ranque

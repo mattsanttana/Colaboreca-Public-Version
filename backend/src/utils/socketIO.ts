@@ -25,7 +25,7 @@ export const initSocket = (server: HTTPServer) => {
     });
 
     socket.on('typing', (data) => {
-      socket.to(`track_${data.trackId}`).emit('typing', data);
+      socket.to(`track_${data.trackId}`).emit('dj typing', data);
     });
 
     socket.on('disconnect', () => {

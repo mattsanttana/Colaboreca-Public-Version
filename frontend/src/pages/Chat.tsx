@@ -15,6 +15,7 @@ import { DJ, DJPlayingNow } from '../types/DJ';
 import { logo } from '../assets/images/characterPath';
 import useMessage from '../utils/useMessage';
 import { Chats, Message } from '../types/Chat';
+import RankingChangePopup from './RankingChangePopup';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -31,6 +32,8 @@ const Chat: React.FC<Props> = ({ token }) => {
   const [trackName, setTrackName] = useState('');
   const [dj, setDJ] = useState<DJ>();
   const [djs, setDJs] = useState<DJ[]>([]);
+  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
+  const [showRankChangePopup, setShowRankChangePopup] = useState(false);
   const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
   const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -64,7 +67,7 @@ const Chat: React.FC<Props> = ({ token }) => {
   const interval = useRef<number | null>(null);
   const typingTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
   const messageRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null); 
 
   useEffect(() => {
     if (djChat && !selectedChat) {
@@ -264,19 +267,34 @@ const Chat: React.FC<Props> = ({ token }) => {
       setDJs((prevDJs) => [...prevDJs, data.dj]);
     };
   
-    const handleDJUpdated = (data: { dj: DJ }) => {
-      setDJs((prevDJs) =>
-        prevDJs.map((dj) => {
-          if (Number(dj.id) === Number(data.dj.id)) {
-            return data.dj;
-          }
-          return dj;
-        })
-      );
-  
-      if (Number(dj?.id) === Number(data.dj.id)) {
-        setDJ(data.dj);
-      }
+    const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza o DJ atual (se aplicável)
+      setDJ((currentDJ) => {
+        if (currentDJ?.id === updatedDJ.id  && updatedDJ.ranking < currentDJ.ranking) {
+          setPreviewRank(djs); // Atualiza o estado previewRank
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          return updatedDJ; // Atualiza o DJ atual
+        } else {
+            // Atualiza a lista de DJs
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+        }
+        return currentDJ; // Mantém o DJ atual
+      });
     };
   
     const handleDJDeleted = (data: { djId: number }) => {
@@ -358,7 +376,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     });
   
     // Recebe notificações de mensagens lidas do servidor
-    socket.on('messagesMarkedAsRead', ({ messageIds }) => {
+    socket.on('messages marked as read', ({ messageIds }) => {
       setChats((prevChats) => {
         const updatedChats = { ...prevChats };
   
@@ -369,6 +387,7 @@ const Chat: React.FC<Props> = ({ token }) => {
           );
         });
   
+        setInputHeight(0);
         return updatedChats;
       });
     });
@@ -378,23 +397,23 @@ const Chat: React.FC<Props> = ({ token }) => {
     socket.on('dj created', handleDJCreated);
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
-    socket.on('typing', handleDJTyping);
+    socket.on('dj typing', handleDJTyping);
 
   
     // Limpeza do evento `connect` para evitar múltiplas adições
     return () => {
       socket.off('connect', handleSocketConnect);
       socket.off('chat message');
-      socket.off('messagesMarkedAsRead');
+      socket.off('messages marked as read');
       socket.off('track deleted', handleTrackDeleted);
       socket.off('dj created', handleDJCreated);
       socket.off('dj updated', handleDJUpdated);
       socket.off('dj deleted', handleDJDeleted);
-      socket.off('typing', handleDJTyping);
+      socket.off('dj typing', handleDJTyping);
     };
   
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dj]);
+  }, [dj, selectedChat]);
 
   const closeMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -457,7 +476,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     socket.emit('typing', {
       chatId: selectedChat,
       djId: dj?.id,
-      trackId: trackId,
+      trackId,
     });
 
     if (event.target.value === '') {
@@ -518,6 +537,9 @@ const Chat: React.FC<Props> = ({ token }) => {
   const existingChatDJIds = useMemo(() => {
     return Object.keys(chats).reduce((acc, chatId) => {
       const chat = chats[chatId];
+      // Ignorar mensagens do chat "general"
+      if (chatId === 'general') return acc;
+  
       const lastMessage = chat[chat.length - 1];
       const otherDJId = lastMessage.djId === dj?.id ? lastMessage.receiveDJId : lastMessage.djId;
       acc.add(otherDJId);
@@ -628,6 +650,10 @@ const Chat: React.FC<Props> = ({ token }) => {
     setMessageToReply(message);
   }
 
+  const handleClosePopup = () => {
+    setShowRankChangePopup(false);
+  };
+
   const renderPopover = (djId: string) => (
     <Popover id={`popover-${djId}`}>
       <Popover.Body>
@@ -711,7 +737,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                   <ListGroup.Item
                     className="text-center"
                     style={{
-                      backgroundColor: '#000000',
+                      backgroundColor: selectedChat === 'general' ? '#333333' : '#000000',
                       color: 'white',
                       border: 'none',
                       borderBottom: '1px solid #cccccc',
@@ -780,7 +806,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                     key={chatId}
                     className="text-center"
                     style={{
-                      backgroundColor: '#000000',
+                      backgroundColor: selectedChat === chatId ? '#333333' : '#000000',
                       color: 'white',
                       border: 'none',
                       borderBottom: '1px solid #cccccc',
@@ -1119,6 +1145,15 @@ const Chat: React.FC<Props> = ({ token }) => {
               setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
+            />
+          )}
+          {showRankChangePopup && dj && (
+            <RankingChangePopup
+              showRankingChangePopup={showRankChangePopup}
+              dj={dj}
+              previousRanking={previewRank}
+              currentRanking={djs}
+              handleClosePopup={handleClosePopup}
             />
           )}
         </>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Row, Col } from 'react-bootstrap';
+import { FaArrowLeft } from 'react-icons/fa';
 import { saveTrack } from '../redux/actions';
 import { RootState } from '../redux/store';
 import MessagePopup from './MessagePopup';
@@ -99,7 +100,16 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
     ) : (
       <Container className="d-flex align-items-center justify-content-center vh-100">
         <Row className="justify-content-center d-flex flex-column">
-          <Col xs={12} md={8} lg={11} className="text-center mb-5">
+          <Col xs={12} md={8} lg={11} className="mb-5">
+            <Button
+              variant="link"
+              onClick={() => navigate('/')}
+              style={{ color: 'white', fontSize: '1.5rem' }}
+            >
+              <FaArrowLeft />
+            </Button>
+          </Col>
+          <Col className="text-center mb-5">
             <img 
               src={logo} 
               alt='logo' 
@@ -107,11 +117,11 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
               style={{ maxWidth: '300px' }} 
             />
             <Form.Group className="mb-3" style={{ maxWidth: '500px' }}>
-            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
-              <span style={{ color: trackName.length < 3 ? 'red' : 'white' }}>
-                {trackName.length}/32
-              </span>
-            </div>
+              <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                <span style={{ color: trackName.length < 3 ? 'red' : 'white' }}>
+                  {trackName.length}/32
+                </span>
+              </div>
               <Form.Control
                 type="text"
                 placeholder="Nome da Pista"

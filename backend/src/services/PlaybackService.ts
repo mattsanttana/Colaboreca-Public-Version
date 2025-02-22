@@ -1,431 +1,352 @@
-import { InferAttributes, Sequelize } from 'sequelize';
+import { Sequelize } from 'sequelize';
+import * as config from '../database/config/database';
 import MusicModel from '../models/MusicModel';
 import TrackModel from '../models/TrackModel';
-import DJModel from '../models/DJModel';
-import SpotifyActions from '../utils/SpotifyActions';
+import { Music } from '../interfaces/spotify_response/SpotifyResponse';
 import JWT from '../utils/JWT';
+import PlaybackActions from '../utils/PlaybackActions';
 import { getSocket } from '../utils/socketIO';
-import { Track } from '../interfaces/spotify_response/SpotifyResponse';
-import * as config from '../database/config/database';
-import SequelizeMusic from '../database/models/SequelizeMusic';
-import VoteModel from '../models/VoteModel';
+import SpotifyActions from '../utils/SpotifyActions';
 
+// Essa classe contém toda a lógica de negócio relacionada à reprodução de músicas
 export default class PlaybackService {
   constructor(
+    // Injeção de dependências
+    private musicModel: MusicModel = new MusicModel(),
     private sequelize: Sequelize = new Sequelize(config),
     private trackModel: TrackModel = new TrackModel(),
-    private djModel: DJModel = new DJModel(),
-    private musicModel: MusicModel = new MusicModel(),
   ) { }
 
+  // Método para buscar o estado de reprodução atual
   async findPlaybackState(id: number) {
-    const transaction = await this.sequelize.transaction();
     try {
-      const track = await this.trackModel.findOne({ id }, { transaction });
+      const track = await this.trackModel.findOne({ id }) // Buscar a pista pelo ID
 
+      // Se a pista não for encontrada, retornar um erro
       if (!track) {
-        await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
-      const token = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const token = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
 
+      // Se o token não for válido, retornar um erro
       if (!token) {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      const response = await SpotifyActions.getPlaybackState(token);
+      const response = await SpotifyActions.getPlaybackState(token); // Buscar o estado de reprodução atual
 
+      // Se ocorrer um erro, retornar um erro
       if (!response) {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      await transaction.commit();
-      return { status: 'OK', data: response.data };
+      return { status: 'OK', data: response.data }; // Retornar o estado de reprodução atual
     } catch (error) {
-      await transaction.rollback();
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
-  async findTopTracksInBrazil(trackId: string) {
-    const transaction = await this.sequelize.transaction();
+  // Método para buscar as músicas populares no Brasil
+  async findTopTracksInBrazil(trackId: number) {
     try {
-      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
+      const track = await this.trackModel.findOne({ id: trackId }); // Buscar a pista pelo ID
 
+      // Se a pista não for encontrada, retornar um erro
       if (!track) {
-        await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
 
-      const response = await SpotifyActions.getTopTracksInBrazil(spotifyToken);
+      const response = await SpotifyActions.getTopTracksInBrazil(spotifyToken); // Buscar as músicas populares no Brasil
 
+      // Se ocorrer um erro, retornar um erro
       if (!response) {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      await transaction.commit();
-      return { status: 'OK', data: response };
+      return { status: 'OK', data: response }; // Retornar as músicas populares no Brasil
     } catch (error) {
-      await transaction.rollback();
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
-  async findTrackBySearch(trackId: string, search: string) {
-    const transaction = await this.sequelize.transaction();
+  // Método para buscar uma músicas pelo nome
+  async findTrackBySearch(trackId: number, search: string) {
     try {
-      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
+      const track = await this.trackModel.findOne({ id: trackId }); // Buscar a pista pelo ID
 
+      // Se a pista não for encontrada, retornar um erro
       if (!track) {
-        await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
 
-      const response = await SpotifyActions.getTrackBySearch(spotifyToken, search);
+      const response = await SpotifyActions.getTrackBySearch(spotifyToken, search); // Buscar as músicas pelo nome
 
+      // Se ocorrer um erro, retornar um erro
       if (!response) {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      await transaction.commit();
-      return { status: 'OK', data: response };
+      return { status: 'OK', data: response }; // Retornar as músicas encontradas pelo nome informado na busca e o status correspondente
     } catch (error) {
-      await transaction.rollback();
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
-  async findQueue(trackId: string) {
-    const transaction = await this.sequelize.transaction();
+  // Método para buscar a fila de músicas do Colaboreca
+  async findQueue(trackId: number) {
     try {
-      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
-      const djs = await this.djModel.findAll({ trackId: Number(trackId) }, { transaction });
+      const track = await this.trackModel.findOne({ id: trackId }); // Buscar os dados da pist
 
-      if (!track || !djs) {
-        await transaction.rollback();
-        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
-      }
-
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
-
-      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
-      const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId) }, { transaction });
-
-      if (!spotifyQueue || !colaborecaQueue) {
-        await transaction.rollback();
-        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
-      }
-      // Conjunto para rastrear as URIs das músicas já processadas
-      const processedURIs = new Set<string>();
-
-      // Construir a fila completa associando DJs e músicas do Spotify
-      const completeQueue = spotifyQueue.queue.map((spotifyTrack: any) => {
-        const responseTrack = {
-          cover: spotifyTrack.album.images[0].url,
-          musicName: spotifyTrack.name,
-          artists: spotifyTrack.artists.map((artist: any) => artist.name).join(', '),
-        };
-
-        const correspondingColaborecaTrack = colaborecaQueue.find(
-          (colaborecaTrack: any) => colaborecaTrack.musicURI === spotifyTrack.uri
-        );
-
-        if (correspondingColaborecaTrack && correspondingColaborecaTrack.pointsApllied === false && !processedURIs.has(spotifyTrack.uri)) {
-          // Marcar a URI como processada
-          processedURIs.add(spotifyTrack.uri);
-
-          // Se encontrar correspondência, adicionar informações do DJ
-          return {
-            djId: correspondingColaborecaTrack.djId,
-            addedBy: djs.find((dj: any) => dj.id === correspondingColaborecaTrack.djId)?.djName,
-            characterPath: djs.find((dj: any) => dj.id === correspondingColaborecaTrack.djId)?.characterPath,
-            ...responseTrack
-          };
-        } else {
-          // Caso contrário, a música foi adicionada pelo dono da pista ou pelo Spotify
-          return {
-            addedBy: track.trackName,
-            characterPath: null,
-            ...responseTrack
-          };
-        }
-      });
-
-      await transaction.commit();
-      return { status: 'OK', data: completeQueue };
-    } catch (error) {
-      await transaction.rollback();
-      console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
-    }
-  }
-
-  async findSpotifyQueue(trackId: string) {
-    const transaction = await this.sequelize.transaction();
-    try {
-      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
-
+      // Se os dados da pista não forem encontrados, retornar um erro
       if (!track) {
-        await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
 
-      const response = await SpotifyActions.getQueue(spotifyToken);
-
-      if (!response) {
-        await transaction.rollback();
+      // Se a fila do Spotify não for encontrada, retornar um erro
+      if (!spotifyToken) {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      await transaction.commit();
-      return { status: 'OK', data: response.queue };
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
+
+      const completeQueue = PlaybackActions.getQueue(spotifyQueue, track.colaborecaQueue, track.djs, track.trackName); // Construir a fila completa associando DJs e músicas do Spotify
+
+      return { status: 'OK', data: completeQueue }; // Retornar a fila completa e o status correspondente
     } catch (error) {
-      await transaction.rollback();
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
-  async findAddedMusicsByDJ(djId: string, trackId: string) {
-    const transaction = await this.sequelize.transaction();
+  // Método pra buscar a fila de músicas do Spotify
+  async findSpotifyQueue(trackId: number) {
     try {
-      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
-      const dj = await this.djModel.findOne({ id: Number(djId) }, { transaction });
+      const track = await this.trackModel.findOne({ id: trackId }); // Buscar a pista pelo ID
 
-      if (!track || !dj) {
-        await transaction.rollback();
+      // Se a pista não for encontrada, retornar um erro
+      if (!track) {
+        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      }
+
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
+
+      const response = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
+
+      // Se ocorrer um erro, retornar um erro
+      if (!response) {
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
+      }
+
+      return { status: 'OK', data: response.queue }; // Retornar a fila de músicas do Spotify e o status correspondente 
+    } catch (error) {
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
+      console.error(error);
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
+    }
+  }
+
+  // Método para buscar as músicas adicionadas por um DJ
+  async findAddedMusicsByDJ(djId: number, trackId: number) {
+    try {
+      const track = await this.trackModel.findOne({ id: trackId }); // Buscar os dados da pista
+
+      // Se os dados da pista não forem encontrados, retornar um erro
+      if (!track) {
         return { status: 'NOT_FOUND', data: { message: 'DJ or Track not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
-      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
-      const colaborecaQueue = await this.musicModel.findAll({ djId: Number(djId), trackId: Number(trackId) }, { transaction });
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
+      const colaborecaQueue = track.colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.djId === djId); // Filtrar a fila do Colaboreca pelo DJ
 
+      // Se a fila do Spotify ou do Colaboreca não forem encontradas, retornar um erro
       if (!spotifyQueue || !colaborecaQueue) {
-        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      const completeQueue = colaborecaQueue.map((colaborecaTrack: any) => {
-        const spotifyTrack = spotifyQueue.queue.find((spotifyTrack: any) => spotifyTrack.uri === colaborecaTrack.musicURI);
-        const trackWasPlayed = !spotifyTrack; // Se a música não estiver na fila, ela foi tocada
+      const completeQueue = PlaybackActions.getMusicAddedBy(spotifyQueue, colaborecaQueue); // Construir a fila completa associando DJs e músicas do Spotify
 
-        return {
-          cover: colaborecaTrack.cover, // usar a capa do colaboreca se não estiver na fila
-          name: colaborecaTrack.name, // usar o nome da música do colaboreca se não estiver na fila
-          artists: colaborecaTrack.artists,
-          wasPlayed: trackWasPlayed, // flag indicando se a música foi tocada
-        };
-      });
-
-      await transaction.commit();
-      return { status: 'OK', data: completeQueue };
+      return { status: 'OK', data: completeQueue }; // Retornar a fila completa e o status correspondente
     } catch (error) {
-      await transaction.rollback();
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
-
-  async findDJAddedCurrentMusic(trackId: string) {
-    const transaction = await this.sequelize.transaction();
+  // Método para buscar a música adicionada pelo DJ que está tocando no momento
+  async findDJAddedCurrentMusic(trackId: number) {
     try {
-      const track = await this.trackModel.findOne({ id: Number(trackId) }, { transaction });
-      const djs = await this.djModel.findAll({ trackId: Number(trackId) }, { transaction });
+      const track = await this.trackModel.findOne({ id: trackId }); // Buscar os dados da pista
 
-      if (!track || !djs) {
-        await transaction.rollback();
+      // Se os dados da pista não forem encontrados, retornar um erro
+      if (!track) {
         return { status: 'NOT_FOUND', data: { message: 'Track or DJs not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
-      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken);
-      const colaborecaQueue = await this.musicModel.findAll({ trackId: Number(trackId) }, { transaction });
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
 
-      if (!spotifyQueue || !colaborecaQueue) {
-        await transaction.rollback();
+      // Se a fila do Spotify não for encontrada, retornar um erro
+      if (!spotifyQueue) {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      const colaborecaQueueNotPlayed = colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.pointsApllied === false);
+      const data = PlaybackActions.getDJAddedCurrentMusic(spotifyQueue, track.colaborecaQueue, track.djs); // Pegar todas as informações do DJ que adicionou a música
 
-      const currentlyPlayingTrack = spotifyQueue.currently_playing;
-
-      if (!currentlyPlayingTrack) {
-        await transaction.commit();
-        return { status: 'OK', data: { message: 'No track currently playing' } };
-      }
-
-      const colaborecaTracksWithURI = colaborecaQueueNotPlayed.filter(
-        (colaborecaTrack: any) => colaborecaTrack.musicURI === currentlyPlayingTrack.uri
-      );
-
-      let addedBy;
-      let characterPath;
-
-      if (colaborecaTracksWithURI.length > 0) {
-        // Verificar se todas as ocorrências são do Spotify ou se há alguma do DJ
-        const isAllSpotify = colaborecaTracksWithURI.every(
-          (colaborecaTrack: any) => colaborecaTrack.djId === null
-        );
-
-        if (isAllSpotify) {
-          // Se todas as ocorrências são do Spotify, então consideramos que a música foi adicionada pelo Spotify
-          addedBy = undefined;
-          characterPath = null;
-        } else {
-          // Se houver pelo menos uma ocorrência do DJ, considerar a primeira como a que adicionou a música
-          const firstColaborecaTrack = colaborecaTracksWithURI.find(
-            (colaborecaTrack: any) => colaborecaTrack.djId !== null
-          );
-
-          if (firstColaborecaTrack) {
-            const dj = djs.find((dj: any) => dj.id === firstColaborecaTrack.djId);
-
-            if (dj) {
-              addedBy = dj.djName;
-              characterPath = dj.characterPath;
-            } else {
-              addedBy = undefined;
-              characterPath = null;
-            }
-          } else {
-            addedBy = undefined;
-            characterPath = null;
-          }
-        }
-      } else {
-        addedBy = undefined;
-        characterPath = null;
-      }
-
-      await transaction.commit();
-
-      const musicId = colaborecaTracksWithURI.reduce((latest, current) => {
-        if (latest.id === undefined || (current.id !== undefined && current.id > latest.id)) {
-          return current;
-        }
-        return latest;
-      }, {} as InferAttributes<SequelizeMusic, { omit: never; }>).id;
-
-      return {
-        status: 'OK',
-        data: {
-          musicId: musicId,
-          cover: currentlyPlayingTrack.album.images[0].url,
-          musicName: currentlyPlayingTrack.name,
-          artists: currentlyPlayingTrack.artists.map((artist: any) => artist.name),
-          djId: addedBy === undefined ? null : colaborecaTracksWithURI[0]?.djId,
-          addedBy,
-          characterPath,
-          spotifyQueue,
-        },
-      };
+      return { status: 'OK', data }; // Retornar as informações da música que está tocando no momento e o status correspondente
     } catch (error) {
-      await transaction.rollback();
+      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 
+  // Método para adicionar uma música à fila
   async addTrackToQueue(
-    trackId: string,
+    trackId: number,
     musicData: { cover: string, name: string, artists: string, musicURI: string },
     authorization: string
   ) {
-    const transaction = await this.sequelize.transaction();
-    const io = getSocket();
-    const { cover, name, artists, musicURI } = musicData;
+    const transaction = await this.sequelize.transaction(); // Iniciar uma transação
+    const io = getSocket(); // Buscar a instância do socket
+    const { cover, name, artists, musicURI } = musicData; // Desestruturar os dados da música
 
     try {
-      const token = authorization.split(' ')[1];
-      const decoded = JWT.verify(token);
+      const token = authorization.split(' ')[1]; // Separar o token do cabeçalho de autorização
+      const decoded = JWT.verify(token); // Verificar o token
+
+      // Se o token não for válido, retornar um erro
       if (typeof decoded === 'string') {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
-      const [dj, track] = await Promise.all([
-        this.djModel.findOne({ id: decoded.id }, transaction),
-        this.trackModel.findOne({ id: Number(trackId) }, { transaction })
-      ]);
-      if (!dj || !track) {
+      const track = await this.trackModel.findOne({ id: trackId }, { transaction }); // Buscar os dados da pista
+
+      // Se os dados da pista não forem encontrados, retornar um erro
+      if (!track) {
         await transaction.rollback();
-        return { status: 'UNAUTHORIZED', data: { message: 'DJ or Track not found' } };
+        return { status: 'UNAUTHORIZED', data: { message: 'Track not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+      const dj = track.djs.find((dj) => dj.id === decoded.id); // Buscar o DJ
 
-      const currentQueue = await SpotifyActions.getQueue(spotifyToken);
-      const currentQueueURIs = currentQueue?.queue?.map((track: Track) => track.uri) ?? [];
+      // Se o DJ não for encontrado, retornar um erro
+      if (!dj) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'DJ not found' } };
+      }
 
+      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
+
+      const currentQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
+      const currentQueueURIs = currentQueue?.queue?.map((track: Music) => track.uri) ?? []; // Buscar as URIs das músicas na fila
+
+      // Verificar se a música já está na fila ou se está tocando no momento
       const isMusicAlreadyInQueue = currentQueueURIs.includes(musicURI) ||
         currentQueue.currently_playing?.uri === musicURI;
+      // Se a música já estiver na fila ou estiver tocando no momento, retornar um erro
       if (isMusicAlreadyInQueue) {
         await transaction.rollback();
         return { status: 'CONFLICT', data: { message: 'Music is already in queue or currently playing' } };
       }
 
       // Verificar se o DJ já tem 3 músicas na fila que ainda não foram tocadas
-      const djMusicCount = await this.musicModel.count({ djId: dj.id, trackId: Number(trackId), pointsApllied: false }, {
-        transaction
-      });
+      const djMusicCount = await this.musicModel.count({ djId: dj.id, trackId, pointsApllied: false }, { transaction });
 
+      // Se o DJ já tiver 3 músicas na fila que ainda não foram tocadas, retornar um erro
       if (djMusicCount >= 3) {
         await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'DJ already has 3 songs in the queue' } };
       }
 
+      const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI); // Adicionar a música à fila do Spotify
+
+      // Se a música não for adicionada à fila, retornar um erro
+      if (!addedToQueue) {
+        await transaction.rollback();
+        return { status: 'NOT_FOUND', data: { message: 'Player command failed: No active device found' } };
+      }
+
+      // Criar a música na fila
       const response = await this.musicModel.create({
         cover,
         name,
         artists,
         musicURI,
         djId: dj.id as number,
-        trackId: Number(trackId),
+        trackId: trackId,
       }, { transaction });
 
+      // Se a música não for criada, retornar um erro
       if (!response) {
         await transaction.rollback();
         return { status: 'Error', data: { message: 'An error occurred' } };
       }
 
-      const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI);
+      await this.trackModel.update({ updatedAt: new Date() }, { id: trackId }, { transaction }); // Atualizar a pista
 
-      if (!addedToQueue) {
-        await transaction.rollback();
-        return { status: 'NOT_FOUND', data: { message: 'Player command failed: No active device found' } };
-      }
+      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify atualizada
+      const colaborecaQueue = await this.musicModel.findAll({ trackId }, { transaction }); // Buscar a fila de músicas do Colaboreca atualizada
+      const queue = PlaybackActions.getQueue(spotifyQueue, colaborecaQueue, track.djs, track.trackName); // Construir a fila completa
 
-      await this.trackModel.update({ updatedAt: new Date() }, { id: Number(trackId) }, { transaction });
+      io.to(`track_${trackId}`).emit('queue updated', { queue, spotifyQueue }); // Emitir um evento de atualização da fila
 
-      await transaction.commit();
+      await transaction.commit(); // Confirmar a transação
 
-      const queue = await this.findQueue(trackId);
-      const spotifyQueue = await this.findSpotifyQueue(trackId);
-
-      io.to(`track_${trackId}`).emit('queue updated', { queue: queue.data, spotifyQueue: spotifyQueue.data });
-
-      return { status: 'OK', data: response };
+      return { status: 'OK', data: response }; // Retornar a música criada e o status correspondente
     } catch (error) {
+      // Se ocorrer um erro, rollback a transação, exiba no console e retorne uma mensagem de erro
       await transaction.rollback();
       console.error(error);
-      return { status: 'ERROR', data: { message: 'An error occurred' } };
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
     }
   }
 }

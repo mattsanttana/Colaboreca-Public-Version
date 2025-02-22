@@ -6,14 +6,14 @@ import { DJ } from "../types/DJ";
 
 interface Props {
   dj: DJ;
-  previousRank: DJ[];
-  currentRank: DJ[];
-  showRankChangePopup: boolean;
+  previousRanking: DJ[];
+  currentRanking: DJ[];
+  showRankingChangePopup: boolean;
   handleClosePopup: () => void;
 }
 
-const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showRankChangePopup, handleClosePopup }) => {
-  const [sortedRank, setSortedRank] = useState<DJ[]>([]);
+const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanking, showRankingChangePopup, handleClosePopup }) => {
+  const [sortedRanking, setSortedRanking] = useState<DJ[]>([]);
   const [showPodium, setShowPodium] = useState(false);
   const [showRanking, setShowRanking] = useState(true);
   const [djPodium, setPodium] = useState<DJ[]>([]);
@@ -22,12 +22,12 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
   const updatedDJRef = useRef<HTMLTableRowElement>(null);
 
 
-  const rankChangeAnimation = useSpring({
+  const rankingChangeAnimation = useSpring({
     from: { opacity: 0, transform: "translateY(-20px)" },
     to: { opacity: 1, transform: "translateY(0px)" },
     config: { duration: 800 },
     onRest: () => {
-      if (currentRank.some((dj) => dj.id === dj?.id && dj.ranking <= 3)) {
+      if (currentRanking.some((dj) => dj.id === dj?.id && dj.ranking <= 3)) {
         setTimeout(() => {
           setShowRanking(false);
           setShowPodium(true);
@@ -37,23 +37,23 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
   });
 
   useEffect(() => {
-    const sortedDJs = [...currentRank].sort((a, b) => b.score - a.score);
+    const sortedDJs = [...currentRanking].sort((a, b) => b.score - a.score);
     const newPodium = sortedDJs.filter(dj => dj.ranking > 0).slice(0, 3);
-    setSortedRank(sortedDJs);
+    setSortedRanking(sortedDJs);
     setPodium(newPodium);
-  }, [currentRank]);
+  }, [currentRanking]);
 
   useEffect(() => {
-    if (!showRankChangePopup) {
+    if (!showRankingChangePopup) {
       setShowRanking(true);
       setShowPodium(false);
     }
-  }, [showRankChangePopup]);
+  }, [showRankingChangePopup]);
 
   useEffect(() => {
     const newPoints: { [key: number]: number } = {};
-    previousRank.forEach((prevDJ) => {
-      const currentDJ = currentRank.find((dj) => dj.id === prevDJ.id);
+    previousRanking.forEach((prevDJ) => {
+      const currentDJ = currentRanking.find((dj) => dj.id === prevDJ.id);
       if (currentDJ) {
         newPoints[Number(prevDJ.id)] = prevDJ.score;
         const increment = currentDJ.score - prevDJ.score;
@@ -73,7 +73,7 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
         }
       }
     });
-  }, [previousRank, currentRank]);
+  }, [previousRanking, currentRanking]);
 
   useEffect(() => {
     if (updatedDJRef.current) {
@@ -89,19 +89,19 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
     loop: { reverse: true },
   });
   
-  const transitions = useTransition(sortedRank, {
+  const transitions = useTransition(sortedRanking, {
     key: (dj: DJ) => dj.id,
     from: (item) => {
-      const prevIndex = previousRank.findIndex((dj) => dj.id === item.id);
-      const currentIndex = sortedRank.findIndex((dj) => dj.id === item.id);
+      const prevIndex = previousRanking.findIndex((dj) => dj.id === item.id);
+      const currentIndex = sortedRanking.findIndex((dj) => dj.id === item.id);
       const delta = prevIndex !== -1 ? (prevIndex - currentIndex) * 100 : 0; // 100px por item
       return { transform: `translateY(${delta}px)` }; // Desloca conforme a troca de lugar
     },
     enter: { transform: "translateY(0px)" }, // Finaliza na posição normal
     leave: { transform: "translateY(0px)" }, // Mantém a posição normal
     update: (item) => {
-      const prevIndex = previousRank.findIndex((dj) => dj.id === item.id);
-      const currentIndex = sortedRank.findIndex((dj) => dj.id === item.id);
+      const prevIndex = previousRanking.findIndex((dj) => dj.id === item.id);
+      const currentIndex = sortedRanking.findIndex((dj) => dj.id === item.id);
       const delta = prevIndex !== -1 ? (prevIndex - currentIndex) * 100 : 0; // Delta baseado na troca
       return { transform: `translateY(${delta}px)` };
     },
@@ -109,7 +109,7 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
   });
 
   return (
-    <Modal className="custom-modal custom-modal-header" show={showRankChangePopup} onHide={handleClosePopup}>
+    <Modal className="custom-modal custom-modal-header" show={showRankingChangePopup} onHide={handleClosePopup}>
       <Modal.Header closeButton style={{ borderBottom: "none" }}>
         <Modal.Title> Você subiu no ranque! </Modal.Title>
       </Modal.Header>
@@ -150,7 +150,7 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
                     key={dj.id}
                     ref={dj.id === updatedDJRef.current?.id ? updatedDJRef : null}
                     className={Number(dj.id) === Number(updatedDJId) ? 'highlighted' : ''}
-                    style={{ ...style, ...rankChangeAnimation }}>
+                    style={{ ...style, ...rankingChangeAnimation }}>
                     <td
                       className="text-light"
                       style={{
@@ -228,7 +228,7 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
                       style={djPodium[0].id === dj?.id ? jumpAnimation : {}}
                     >
                       <p className="text-light mt-3" style={{
-                        marginLeft: '-160px',
+                        marginLeft: '-170px',
                         marginBottom: !djPodium[1] && !djPodium[2] ? '310px' : !djPodium[2] ? '40px' : '0px',
                         }}
                       >
@@ -296,4 +296,4 @@ const RankChangePopup: React.FC<Props> = ({ dj, previousRank, currentRank, showR
   );
 };
 
-export default RankChangePopup;
+export default RankingChangePopup;

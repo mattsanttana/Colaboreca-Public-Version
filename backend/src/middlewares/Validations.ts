@@ -51,7 +51,7 @@ export default class Validations {
   static async validateTrackId(req: Request, res: Response, next: NextFunction) {
     const { trackId } = req.params;
 
-    if (!trackId) {
+    if (!trackId || isNaN(Number(trackId))) {
       return res.status(400).json({ message: 'Missing parameters' });
     }
 
@@ -71,7 +71,7 @@ export default class Validations {
   static async validateId(req: Request, res: Response, next: NextFunction) {
     const { id } = req.params;
 
-    if (!id) {
+    if (!id || isNaN(Number(id))) {
       return res.status(400).json({ message: 'Missing parameters' });
     }
 

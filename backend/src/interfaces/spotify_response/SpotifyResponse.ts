@@ -1,4 +1,4 @@
-export interface Track {
+export interface Music {
   id: string;
   name: string;
   artists: Array<{
@@ -16,12 +16,17 @@ export interface Track {
 
 export interface GetTopTracksInBrazilResponse {
   items: Array<{
-    track: Track;
+    track: Music;
   }>;
 }
 
 export interface GetTrackBySearchResponse {
   tracks: {
-    items: Array<Track>;
+    items: Array<Music>;
   };
+}
+
+export interface SpotifyQueue {
+  queue: Array<Music>;
+  currently_playing: Music | null;
 }

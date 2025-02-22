@@ -35,8 +35,8 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   useEffect(() => {
     const fetchData = async () => {
       const response = await djActions.getDJData(token);
-      if (response?.data.dj !== undefined) {
-        navigate(`/track/${response.data.trackId}`);
+      if (Number(response?.data?.dj?.trackId) === Number(trackId)) {
+        navigate(`/track/${response?.data.dj.trackId}`);
       }
       setIsLoading(false);
     };
@@ -175,7 +175,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
                 onChange={handleChange}
                 onKeyDown={handleKeyPress}
                 className="my-3 custom-input"
-                style={{ textAlign: 'center'}}
+                style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
                 autoComplete="off"
                 maxLength={16}
               />
@@ -183,7 +183,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
                 variant="primary"
                 onClick={handleClick}
                 disabled={buttonDisabled}
-                style={{ width: '100%', maxWidth: '300px' }}
+                style={{ height: '50px', fontSize: '1.2rem', marginTop: '10px', width: '100%' }}
                 >
                   Ok
               </Button>

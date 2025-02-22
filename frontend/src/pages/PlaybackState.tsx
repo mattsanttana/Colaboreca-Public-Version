@@ -102,7 +102,7 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
               <div className="d-flex justify-content-center align-items-center squeres-container">
                 <div className="dj-square mx-2 hide-scrollbar">
                   <div style={{ fontWeight: 'bold' }}>Discotecando:</div>
-                  <div>{djPlayingNow?.addedBy === trackName ? '-' : djPlayingNow?.addedBy}</div>
+                  <div>{djPlayingNow?.addedBy === undefined ? '-' : djPlayingNow?.addedBy}</div>
                 </div>
                 <div className="track-square mx-2 hide-scrollbar">{trackName}</div>
                 <div className="music-square mx-2 hide-scrollbar" ref={containerRef}>

@@ -72,7 +72,7 @@ SequelizeMusic.init(
 
 SequelizeDJ.hasMany(SequelizeMusic, {
   foreignKey: 'djId',
-  as: 'music',
+  as: 'colaborecaQueue',
 });
 
 SequelizeMusic.belongsTo(SequelizeDJ, {
@@ -82,7 +82,7 @@ SequelizeMusic.belongsTo(SequelizeDJ, {
 
 SequelizeTrack.hasMany(SequelizeMusic, {
   foreignKey: 'trackId',
-  as: 'music',
+  as: 'colaborecaQueue',
 });
 
 SequelizeMusic.belongsTo(SequelizeTrack, {

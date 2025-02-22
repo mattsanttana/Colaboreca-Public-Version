@@ -1,4 +1,6 @@
 import { Identifiable } from "..";
+import { IDJ } from "../djs/IDJ";
+import { IVote } from "../votes/IVote";
 
 export interface IMusic extends Identifiable {
   cover: string;
@@ -8,4 +10,9 @@ export interface IMusic extends Identifiable {
   djId: number;
   trackId: number;
   pointsApllied: boolean;
+}
+
+export interface IMusicWithDJAndVotes extends IMusic {
+  votes: IVote[];
+  dj: IDJ;
 }

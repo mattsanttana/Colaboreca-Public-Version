@@ -80,10 +80,11 @@ const Vote: React.FC<Props> = ({ showVotePopup, setShowVotePopup, playingNow, dj
               Tanto faz: 0 pontos
               Ruim: -1 ponto
               Ninguém merece: -3 pontos
-              Os votos não são acumulativos! A maioria dos votos decide a pontuação que será atribuída à música.
+              Os votos não são acumulativos! A maioria dos votos decide a pontuação que será atribuída à música ou a média entre eles em caso de empate.
 
-              Em caso de empate: A média dos votos empatados será considerada para calcular a pontuação final.
               Vote e faça a diferença no ranking! 🎶
+
+              OBS: Votar também é uma forma de ganhar pontos, o voto vale 0,25 pontos e caso o seu voto for o que a maioria votou, você ganha 0,50 pontos.
             </Tooltip>
           }
         >

@@ -1,16 +1,16 @@
-import { WhereOptions } from 'sequelize';
+import { Transaction, WhereOptions } from 'sequelize';
 import SequelizeVote from '../database/models/SequelizeVote';
 import { Vote } from '../interfaces/votes/IVote';
 
 export default class VoteModel {
   private voteModel = SequelizeVote;
 
-  async create(data: { djId: number; musicId: number; vote: Vote, trackId: number }, p0?: unknown) {
-    const vote = await this.voteModel.create(data);
+  async create(data: { djId: number; musicId: number; vote: Vote, trackId: number }, options?: { transaction: Transaction }) {
+    const vote = options ? await this.voteModel.create(data, options) : await this.voteModel.create(data);
     return vote.get();
   }
 
-  async findOne(where: WhereOptions, p0?: unknown) {    
+  async findOne(where: WhereOptions) {    
     const vote = await this.voteModel.findOne({ where });
     return vote?.get();
   }
@@ -20,8 +20,8 @@ export default class VoteModel {
     return votes.map((vote) => vote.get());
   }
 
-  async delete(where: WhereOptions, p0?: unknown) {
-    const response = await this.voteModel.destroy({ where });
+  async delete(where: WhereOptions, options: { transaction: Transaction }) {
+    const response = await this.voteModel.destroy({ where, ...options });
     return response;
   }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar, Nav, Button, Modal } from 'react-bootstrap';
-import { FaBars } from 'react-icons/fa';
+import { FaBars, FaInfoCircle, FaShareAlt } from 'react-icons/fa';
 import Menu from './Menu';
 import TrackInfoMenu from './TrackInfoMenu';
 import ShareTrack from './ShareTrack';
@@ -118,9 +118,9 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
         <Navbar.Brand className="text-primary" onClick={() => handleClickLogo()} style={{ marginLeft: '180px', cursor: 'pointer' }}>
           <img src={horizontalLogo} alt="horizontal_logo" className="horizontal_logo" style={{width: '200px'}}/>
         </Navbar.Brand>
-        <Button onClick={handleClick} style={{ marginRight: '30px' }} variant="primary">
-          {pageType === 'track' ? 'Compartilhar' : 'Detalhes'}
-        </Button>
+        <div onClick={handleClick} style={{ marginRight: '30px', cursor: 'pointer' }}>
+          {pageType === 'track' ? <FaShareAlt style={{ fontSize: '1.5rem' }} /> : <FaInfoCircle style={{ fontSize: '1.5rem' }} />}
+        </div>
       </Navbar>
       <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup} size="lg">
         <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>

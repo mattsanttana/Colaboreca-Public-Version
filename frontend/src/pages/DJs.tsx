@@ -18,6 +18,7 @@ import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
 import { FaQuestionCircle } from 'react-icons/fa';
 import { io } from 'socket.io-client';
+import RankingChangePopup from './RankingChangePopup';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -35,6 +36,8 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
   const [isOwner, setIsOwner] = useState<boolean>(true);
   const [dj, setDJ] = useState<DJ | undefined>(undefined);
   const [djs, setDJs] = useState<DJ[]>([]);
+  const [showRankChangePopup, setShowRankChangePopup] = useState<boolean>(false);
+  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [selectedDJ, setSelectedDJ] = useState<DJ | null>(null);
@@ -178,10 +181,34 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
       }
     };
   
-    const handleDJUpdated = (djUpdated: DJ) => {
-      if (Number(dj?.id) === Number(djUpdated.id)) {
-        setDJ(djUpdated);
-      }
+    const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza o DJ atual (se aplicável)
+      setDJ((currentDJ) => {
+        if (currentDJ?.id === updatedDJ.id  && updatedDJ.ranking < currentDJ.ranking) {
+          setPreviewRank(djs); // Atualiza o estado previewRank
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          return updatedDJ; // Atualiza o DJ atual
+        } else {
+            // Atualiza a lista de DJs
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+        }
+        return currentDJ; // Mantém o DJ atual
+      });
     };
 
     const handleDJDeleted = (data: { djId: number }) => {
@@ -289,6 +316,10 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
     }
   };
 
+  const handleClosePopup = () => {
+    setShowRankChangePopup(false);
+  };
+
   const renderPopover = (pDJ: DJ) => (
     <Popover id={`popover-${pDJ.id}`}>
       <Popover.Body>
@@ -343,7 +374,6 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
                       djs={djs}
                       isOwner={false}
                       trackId={trackId}
-                      hasDJs={djs.length > 0}
                     />
                   </Row>
                   <Card.Title>Ranque:</Card.Title>
@@ -496,6 +526,15 @@ const DJs: React.FC<Props> = ({ trackToken, djToken }) => {
             setShowVotePopup={setShowVotePopup} 
             playingNow={playingNow}
             djPlayingNow={djPlayingNow}
+          />
+        )}
+        {showRankChangePopup && dj && (
+          <RankingChangePopup
+            showRankingChangePopup={showRankChangePopup}
+            dj={dj}
+            previousRanking={previewRank}
+            currentRanking={djs}
+            handleClosePopup={handleClosePopup}
           />
         )}
         </Container>

@@ -34,7 +34,7 @@ SequelizeDJ.init(
       field: 'character_path'
     },
     score: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
       allowNull: false,
       defaultValue: 0
     },
@@ -57,7 +57,7 @@ SequelizeDJ.init(
 
 SequelizeTrack.hasMany(SequelizeDJ, {
   foreignKey: 'trackId',
-  as: 'dj',
+  as: 'djs',
 });
 
 SequelizeDJ.belongsTo(SequelizeTrack, {

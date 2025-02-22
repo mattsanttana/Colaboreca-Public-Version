@@ -169,7 +169,7 @@ export default class SpotifyActions {
   static async getTrackBySearch(token: string, query: string) {
     try {
       const response = await axios.get<GetTrackBySearchResponse>(
-        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=50`, {
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50&market=BR`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

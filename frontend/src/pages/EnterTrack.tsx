@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
-import MessagePopup from './MessagePopup';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
 import CreateDJConnected from './CreateDJ'
-import useTrack from '../utils/useTrack';
+import MessagePopup from './MessagePopup';
 import { logo } from '../assets/images/characterPath';
-import { useParams } from 'react-router-dom';
+import useTrack from '../utils/useTrack';
 
 const EnterTrack: React.FC = () => {
   const { trackIdParam } = useParams();
@@ -15,6 +16,7 @@ const EnterTrack: React.FC = () => {
   const [popupMessage, setPopupMessage] = useState<string>('');
 
   const trackActions = useTrack();
+  const navigate = useNavigate();
 
   const inputValidation = useCallback(() => {
     setButtonDisabled(!(trackId && trackId.replace(/\s/g, '').length === 6));
@@ -66,44 +68,64 @@ const EnterTrack: React.FC = () => {
     setShowPopup(false);
   };
 
+  const handleRedirect = () => {
+    if (phase === 1) {
+      navigate('/');
+    } else {
+      
+      setPhase(1);
+    }
+  };
+
   return (
     <Container className="d-flex align-items-center justify-content-center vh-100">
-      <Row className="justify-content-center d-flex flex-column">
-        <Col className="text-center mb-5">
-          {phase === 1 ? (
-            <>
-              <img
-                src={logo}
-                alt='logo'
-                className='img-fluid shadow-lg mb-5'
-                style={{ maxWidth: '300px' }}
-              />
-              <Form.Group className="mb-3" style={{ maxWidth: '500px'}}>
-                <Form.Control
-                  type="text"
-                  placeholder="Pin da Pista"
-                  name="trackId"
-                  value={trackId}
-                  onChange={handleChange}
-                  onKeyPress={handleKeyPress}
-                  style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
-                  className="text-center custom-input"
-                  autoComplete="off"
+      <Row className="justify-content-center">
+        <div className="d-flex flex-column align-items-center">
+          <Col xs={12} md={8} lg={11} className="mb-5">
+            <Button
+              variant="link"
+              onClick={() => handleRedirect()}
+              style={{ color: 'white', fontSize: '1.5rem', position: 'fixed' }}
+            >
+              <FaArrowLeft />
+            </Button>
+          </Col>
+          <Col className="text-center mb-5">
+            {phase === 1 ? (
+              <>
+                <img
+                  src={logo}
+                  alt='logo'
+                  className='img-fluid shadow-lg mb-5'
+                  style={{ maxWidth: '300px' }}
                 />
-                <Button
-                  variant="primary"
-                  disabled={buttonDisabled}
-                  onClick={handleClick}
-                  style={{ height: '50px', fontSize: '1.2rem', marginTop: '10px', width: '100%' }}
-                >
-                  Entrar
-                </Button>
-              </Form.Group>
-            </>
-          ) : (
-            <CreateDJConnected trackId={trackId.replace(/\s/g, '')} />
-          )}
-        </Col>
+                <Form.Group className="mb-3" style={{ maxWidth: '500px'}}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Pin da Pista"
+                    name="trackId"
+                    value={trackId}
+                    onChange={handleChange}
+                    onKeyPress={handleKeyPress}
+                    style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
+                    className="text-center custom-input"
+                    autoComplete="off"
+                  />
+                  <Button
+                    variant="primary"
+                    disabled={buttonDisabled}
+                    onClick={handleClick}
+                    style={{ height: '50px', fontSize: '1.2rem', marginTop: '10px', width: '100%' }}
+                  >
+                    Entrar
+                  </Button>
+                </Form.Group>
+              </>
+            ) : (
+              <CreateDJConnected trackId={trackId.replace(/\s/g, '')} />
+            )}
+          </Col>
+        </div>
       </Row>
       <MessagePopup show={showPopup} handleClose={handleClosePopup} message={popupMessage} />
     </Container>

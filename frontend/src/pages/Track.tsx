@@ -17,7 +17,7 @@ import { DJ, DJPlayingNow } from '../types/DJ';
 import { Music } from '../types/SpotifySearchResponse';
 import { logo } from '../assets/images/characterPath';
 import { Vote, voteValues } from '../types/Vote';
-import RankChangePopup from './RankChangePopup';
+import RankingChangePopup from './RankingChangePopup';
 import TQueue from '../types/TQueue';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
@@ -215,23 +215,17 @@ const Track: React.FC<Props> = ({ token }) => {
     const handleDJUpdated = (updatedDJ: DJ) => {
       // Atualiza o DJ atual (se aplicável)
       setDJ((currentDJ) => {
-        if (currentDJ?.id === updatedDJ.id) {
-          // Verifica se os pontos mudaram
-          if (currentDJ.score !== updatedDJ.ranking) {
-            // Verifica se os pontos aumentaram
-            if (updatedDJ.score > currentDJ.score) {
-              setPreviewRank(djs); // Atualiza o estado previewRank
-              setDJs((prevDJs) =>
-                prevDJs.map((dj) => {
-                  if (Number(dj.id) === Number(updatedDJ.id)) {
-                    return updatedDJ; // Substitui o DJ pelo atualizado
-                  }
-                  return dj; // Mantém o DJ atual
-                })
-              );
-              setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
-            }
-          }
+        if (currentDJ?.id === updatedDJ.id && updatedDJ.ranking < currentDJ.ranking) {
+          setPreviewRank(djs); // Atualiza o estado previewRank
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
           return updatedDJ; // Atualiza o DJ atual
         } else {
            // Atualiza a lista de DJs
@@ -364,7 +358,6 @@ const Track: React.FC<Props> = ({ token }) => {
                     djs={memoizedDJs}
                     isOwner={false}
                     trackId={trackId}
-                    hasDJs={memoizedDJs?.length > 0}
                   />
                 </div>
                 <div className="queue-container">
@@ -382,11 +375,11 @@ const Track: React.FC<Props> = ({ token }) => {
             />
           )}
           {showRankChangePopup && dj && (
-            <RankChangePopup
-              showRankChangePopup={showRankChangePopup}
+            <RankingChangePopup
+              showRankingChangePopup={showRankChangePopup}
               dj={dj}
-              previousRank={previewRank}
-              currentRank={djs}
+              previousRanking={previewRank}
+              currentRanking={djs}
               handleClosePopup={handleClosePopup}
             />
           )}

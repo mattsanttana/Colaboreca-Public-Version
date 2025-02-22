@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Container, Table } from 'react-bootstrap';
+import { Card, Container, Table } from 'react-bootstrap';
 import { Music } from '../types/SpotifySearchResponse';
 
 type Props = {
@@ -32,7 +32,7 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
   };
 
   return (
-    <Container className="py-4">
+    <Container className="py-4" onClick={() => navigate(redirectLink) } style={{ cursor: 'pointer' }}>
       <Card
         className="text-center text-light"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
@@ -108,7 +108,6 @@ const QueuePreview: React.FC<Props> = ({ trackId, queue }) => {
               </tbody>
             </Table>
           </div>
-          <Button onClick={() => navigate(redirectLink) }>Ver fila completa</Button>
         </Card.Body>
       </Card>
     </Container>

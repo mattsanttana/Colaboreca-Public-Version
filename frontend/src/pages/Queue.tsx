@@ -17,6 +17,7 @@ import PlayingNow from '../types/PlayingNow';
 import { logo } from '../assets/images/characterPath';
 import { io } from 'socket.io-client';
 import { Music } from '../types/SpotifySearchResponse';
+import RankingChangePopup from './RankingChangePopup';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
@@ -34,6 +35,9 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const navigate = useNavigate();
   const [isOwner, setIsOwner] = useState<boolean>(true);
   const [dj, setDJ] = useState<DJ | undefined>(undefined);
+  const [djs, setDJs] = useState<DJ[]>([]);
+  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
+  const [showRankChangePopup, setShowRankChangePopup] = useState<boolean>(false);
   const [queue, setQueue] = useState<TQueue[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -171,7 +175,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   useEffect(() => {
     // Rolar para o item selecionado sempre que currentTrackIndex mudar
     if (trackRefs.current[currentTrackIndex]) {
-      trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [currentTrackIndex]);
 
@@ -204,10 +208,34 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
       }
     }
   
-    const handleDJUpdated = (djUpdated: DJ) => {
-      if (Number(dj?.id) === Number(djUpdated.id)) {
-        setDJ(djUpdated);
-      }
+    const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza o DJ atual (se aplicável)
+      setDJ((currentDJ) => {
+        if (currentDJ?.id === updatedDJ.id  && updatedDJ.ranking < currentDJ.ranking) {
+          setPreviewRank(djs); // Atualiza o estado previewRank
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          return updatedDJ; // Atualiza o DJ atual
+        } else {
+            // Atualiza a lista de DJs
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+        }
+        return currentDJ; // Mantém o DJ atual
+      });
     };
 
     const handleDJDeleted = (data: { djId: number }) => {
@@ -284,6 +312,10 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     navigate(chatUrl);
   }
 
+  const handleClosePopup = () => {
+    setShowRankChangePopup(false);
+  };
+
   const renderPopover = (djId: number) => (
     <Popover id={`popover-${djId}`}>
       <Popover.Body>
@@ -342,7 +374,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                 className="text-center text-light"
                 style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff' }}
               >
-                <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '846px', overflow: 'auto', paddingTop: '0%' }}>
+                <Card.Body className='hide-scrollbar' style={{ width: '100%', height: '814px', overflow: 'auto', paddingTop: '0%' }}>
                   {queue.length > 0 ? (
                     <div>
                       <div className="mx-auto sticky-carousel d-flex justify-content-center">
@@ -421,13 +453,22 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                       ))}
                     </Row>
                     {showVotePopup && !isOwner && (
-                    <VotePopup
-                      showVotePopup={showVotePopup}
-                      setShowVotePopup={setShowVotePopup} 
-                      playingNow={playingNow}
-                      djPlayingNow={djPlayingNow}
-                    />
-                  )}
+                      <VotePopup
+                        showVotePopup={showVotePopup}
+                        setShowVotePopup={setShowVotePopup} 
+                        playingNow={playingNow}
+                        djPlayingNow={djPlayingNow}
+                      />
+                    )}
+                    {showRankChangePopup && dj && (
+                      <RankingChangePopup
+                        showRankingChangePopup={showRankChangePopup}
+                        dj={dj}
+                        previousRanking={previewRank}
+                        currentRanking={djs}
+                        handleClosePopup={handleClosePopup}
+                      />
+                    )}
                   </div>
                   ) : (
                     <h3 className="text-light" style={{marginTop: '40%'}}>Dispositivo desconectado</h3>

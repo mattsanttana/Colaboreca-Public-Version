@@ -15,6 +15,7 @@ import { logo } from '../assets/images/characterPath';
 import { io } from 'socket.io-client';
 import useTrack from '../utils/useTrack';
 import { FaQuestionCircle } from 'react-icons/fa';
+import RankingChangePopup from './RankingChangePopup';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
 const VotePopup = lazy(() => import('./VotePopup'));
@@ -29,6 +30,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const { trackId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [dj, setDJ] = useState<DJ>();
+  const [djs, setDJs] = useState<DJ[]>([]);
+  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
+  const [showRankChangePopup, setShowRankChangePopup] = useState(false);
   const [topTracksInBrazil, setTopTracksInBrazil] = useState<Music[]>([]);
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<Music[]>([]);
@@ -177,6 +181,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           console.error('Error response from Spotify:', response?.data);
           return;
         } else {
+          console.log(response.data);
           setSearchResults(response.data);
         }
 
@@ -221,9 +226,33 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     }
 
     const handleDJUpdated = (updatedDJ: DJ) => {
-      if (Number(dj?.id) === Number(updatedDJ.id)) {
-        setDJ(updatedDJ);
-      }
+      // Atualiza o DJ atual (se aplicável)
+      setDJ((currentDJ) => {
+        if (currentDJ?.id === updatedDJ.id  && updatedDJ.ranking < currentDJ.ranking) {
+          setPreviewRank(djs); // Atualiza o estado previewRank
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          return updatedDJ; // Atualiza o DJ atual
+        } else {
+            // Atualiza a lista de DJs
+          setDJs((prevDJs) =>
+            prevDJs.map((dj) => {
+              if (Number(dj.id) === Number(updatedDJ.id)) {
+                return updatedDJ; // Substitui o DJ pelo atualizado
+              }
+              return dj; // Mantém o DJ atual
+            })
+          );
+        }
+        return currentDJ; // Mantém o DJ atual
+      });
     };
 
     const handleDJDeleted = (data: { djId: number }) => {
@@ -329,6 +358,10 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
     setShowModal(false);
     setSelectedTrack(null);
   }
+
+  const handleClosePopup = () => {
+    setShowRankChangePopup(false);
+  };
 
   const memoizedSearchResults = useMemo(() => searchResults, [searchResults]);
   const memoizedTopTracksInBrazil = useMemo(() => topTracksInBrazil, [topTracksInBrazil]);
@@ -510,6 +543,15 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
               setShowVotePopup={setShowVotePopup} 
               playingNow={playingNow}
               djPlayingNow={djPlayingNow}
+            />
+          )}
+          {showRankChangePopup && dj && (
+            <RankingChangePopup
+              showRankingChangePopup={showRankChangePopup}
+              dj={dj}
+              previousRanking={previewRank}
+              currentRanking={djs}
+              handleClosePopup={handleClosePopup}
             />
           )}
         </Container>

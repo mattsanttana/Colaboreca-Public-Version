@@ -21,8 +21,9 @@ export default {
         field: 'character_path'
       },
       score: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0
       },
       ranking: {
         type: DataTypes.INTEGER,

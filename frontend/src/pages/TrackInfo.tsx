@@ -77,6 +77,7 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
           });
         } else {
           setTrackName(fetchedTrack?.data.trackName);
+          setEditedTrackName(fetchedTrack?.data.trackName);
           setDJs(fetchedDJData);
         }
       }
@@ -148,7 +149,8 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
   useEffect(() => {
     const isSameAsTrack = trackName === editedTrackName;
     const isNameTooShort = editedTrackName.length < 3;
-    const isNameTooBig = editedTrackName.length > 16;
+    const isNameTooBig = editedTrackName.length > 32;
+  
     setIsButtonDisabled(isSameAsTrack || isNameTooShort || isNameTooBig);
   }, [trackName, editedTrackName]);
 
@@ -393,7 +395,7 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
               </Col>
               <Col md={3} className="d-none d-xxl-block">
                 <div className="podium-container">
-                  <Podium dj={undefined} djs={djs} isOwner={true} trackId={trackId} hasDJs={djs.length > 0} />
+                  <Podium dj={undefined} djs={djs} isOwner={true} trackId={trackId} />
                 </div>
                 <div className="queue-container">
                   <QueuePreview trackId={trackId} queue={queue} />

@@ -9,21 +9,11 @@ type Props = {
   djs: DJ[];
   isOwner: boolean;
   trackId: string | undefined;
-  hasDJs: boolean;
 }
 
-const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId, hasDJs }) => {
+const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId }) => {
   const navigate = useNavigate();
   const [djPodium, setPodium] = useState<DJ[]>([]);
-  const [isRankingPage, setIsRankingPage] = useState(false);
-
-  useEffect(() => {
-    const pageType = window.location.pathname.split('/')[2];
-
-    if (pageType === 'ranking') {
-      setIsRankingPage(true);
-    }
-  }, []);
 
   useEffect(() => {
     const sortedDJs = [...djs].sort((a, b) => b.score - a.score);
@@ -64,7 +54,7 @@ const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId, hasDJs }) => {
   
 
   return (
-    <Container className="py-4">
+    <Container className="py-4" onClick={ handleClick } style={{ cursor: 'pointer' }}>
       <Card
         className="text-center text-light"
         style={{ backgroundColor: '#000000', boxShadow: '0 0 0 0.5px #ffffff', top: '60px' }}
@@ -139,13 +129,6 @@ const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId, hasDJs }) => {
               </p>
             </div>
           )}
-          <div>
-            {hasDJs && !isRankingPage && (
-              <Button onClick={handleClick} variant="primary" className="mt-3">
-                {isOwner ? 'Ver todos os DJs' : 'Ver ranque'}
-              </Button>
-            )}
-          </div>
         </Card.Body>
       </Card>
     </Container>

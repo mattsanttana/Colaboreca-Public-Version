@@ -1,4 +1,4 @@
-import { FindOptions, WhereOptions } from "sequelize";
+import { FindOptions, Transaction, WhereOptions } from "sequelize";
 import SequelizeMessage from "../database/models/SequelizeMessage";
 import { Op } from 'sequelize';
 
@@ -16,7 +16,7 @@ export default class MessageModel {
       isReply?: boolean,
       replyTo?: number | null
     },
-    p0?: unknown
+    options: { transaction: Transaction }
   ) {
 
     const { chatId, trackId, djId, receiveDJId, message, createdAt, isReply, replyTo } = data;
@@ -30,12 +30,11 @@ export default class MessageModel {
       createdAt,
       isReply,
       replyTo
-    });
-
+    }, options);
     return response.get();
   }
 
-  async update(messageIds: (number | string)[], p0?: unknown) { 
+  async update(messageIds: (number | string)[], options: { transaction: Transaction }) { 
     const response = await this.messageModel.update(
       {
         read: true,
@@ -46,24 +45,30 @@ export default class MessageModel {
             [Op.in]: messageIds,
           },
         },
+        ...options,
       }
     );
-  
     return response;
   }
 
-  async findOne(options: FindOptions, p0?: unknown) {
-    const response = await this.messageModel.findOne(options);
+  async findOne(findOptions: FindOptions, options?: { transaction: Transaction }) {
+    const response = options ? await this.messageModel.findOne({
+      ...findOptions,
+      ...options
+    }) : await this.messageModel.findOne(findOptions);
     return response?.get();
   }
 
-  async findAll(options: FindOptions, p0?: unknown) {
-    const response = await this.messageModel.findAll(options);
+  async findAll(findOptions: FindOptions, options?: { transaction: Transaction }) {
+    const response = options ? await this.messageModel.findAll({
+      ...findOptions,
+      ...options
+    }) : await this.messageModel.findAll(findOptions);
     return response.map((message) => message.get());
   }
 
-  async delete(where: WhereOptions, p0?: unknown) {
-    const response = await this.messageModel.destroy({ where });
+  async delete(where: WhereOptions, options: { transaction: Transaction }) {
+    const response = await this.messageModel.destroy({ where, ...options });
     return response;
   }
 }
