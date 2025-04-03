@@ -6,12 +6,14 @@ import voteRouter from './vote.routes';
 import chatRouter from './chat.routes';
 import { limiter } from '../utils/limiter';
 
-const router = Router();
+// Classe responsável por controlar as rotas
 
-router.use('/tracks', limiter, trackRouter);
-router.use('/djs', djRouter);
-router.use('/playback', limiter, playbackRouter);
-router.use('/votes', limiter, voteRouter);
-router.use('/chats', chatRouter);
+const router = Router(); // Instancia o roteador
+
+router.use('/tracks', limiter, trackRouter); // Adiciona as rotas de música
+router.use('/djs', djRouter); // Adiciona as rotas de DJ
+router.use('/playback', limiter, playbackRouter); // Adiciona as rotas de reprodução
+router.use('/votes', limiter, voteRouter); // Adiciona as rotas de voto
+router.use('/chats', chatRouter); // Adiciona as rotas de chat
 
 export default router;

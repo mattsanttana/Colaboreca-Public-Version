@@ -200,6 +200,10 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   }, [closeMenu]);
 
   useEffect(() => {
+    if (socket.connected && dj) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
+
     const handleTrackDeleted = (data: { trackId: number }) => {
       if (Number(trackId) === Number(data.trackId)) {
         setPopupMessage('Esta pista foi deletada');
@@ -209,30 +213,26 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     }
   
     const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza a lista de DJs
+      setDJs((prevDJs) =>
+        prevDJs.map((dj) => {
+          if (Number(dj.id) === Number(updatedDJ.id)) {
+            return updatedDJ; // Substitui o DJ pelo atualizado
+          }
+          return dj; // Mantém o DJ atual
+        })
+      );
+
       // Atualiza o DJ atual (se aplicável)
       setDJ((currentDJ) => {
-        if (currentDJ?.id === updatedDJ.id  && updatedDJ.ranking < currentDJ.ranking) {
-          setPreviewRank(djs); // Atualiza o estado previewRank
-          setDJs((prevDJs) =>
-            prevDJs.map((dj) => {
-              if (Number(dj.id) === Number(updatedDJ.id)) {
-                return updatedDJ; // Substitui o DJ pelo atualizado
-              }
-              return dj; // Mantém o DJ atual
-            })
-          );
-          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+        if (currentDJ?.id === updatedDJ.id) {
+          const updatedDJRanking = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking;
+          const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking;
+          if (updatedDJRanking < currentDJRanking) {
+            setPreviewRank(djs); // Atualiza o estado previewRank
+            setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          }
           return updatedDJ; // Atualiza o DJ atual
-        } else {
-            // Atualiza a lista de DJs
-          setDJs((prevDJs) =>
-            prevDJs.map((dj) => {
-              if (Number(dj.id) === Number(updatedDJ.id)) {
-                return updatedDJ; // Substitui o DJ pelo atualizado
-              }
-              return dj; // Mantém o DJ atual
-            })
-          );
         }
         return currentDJ; // Mantém o DJ atual
       });
@@ -256,10 +256,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
     socket.on('queue updated', handleQueueUpdated);
-
-    if (socket.connected && dj) {
-      socket.emit('joinRoom', `track_${trackId}`);
-    }
   
     return () => {
       socket.off('track deleted', handleTrackDeleted);

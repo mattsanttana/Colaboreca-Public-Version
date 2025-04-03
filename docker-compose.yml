@@ -1,48 +1,54 @@
-version: '3.9'
+version: '3.9' # Define a versão do Docker Compose a ser usada
+
 services:
+  # Serviço do frontend
   frontend:
-    container_name: app_frontend
-    build: ./frontend
+    container_name: app_frontend # Nome do container para o serviço do frontend
+    build: ./frontend # Diretório onde está o Dockerfile do frontend
     ports:
-      - 3000:3000
-    working_dir: /app-frontend
-    healthcheck:
-      test: [ "CMD", "lsof", "-t", "-i:3000" ]
-      timeout: 10s
-      retries: 5
+      - 3000:3000 # Mapeia a porta 3000 do container para a porta 3000 do host
+    working_dir: /app-frontend # Define o diretório de trabalho dentro do container
+    healthcheck: # Configuração para verificar a saúde do serviço
+      test: [ "CMD", "lsof", "-t", "-i:3000" ] # Verifica se a porta 3000 está em uso
+      timeout: 10s # Tempo limite para a verificação
+      retries: 5 # Número de tentativas antes de considerar o serviço como não saudável
+
+  # Serviço do backend
   backend:
-    container_name: app_backend
-    build: ./backend
+    container_name: app_backend # Nome do container para o serviço do backend
+    build: ./backend # Diretório onde está o Dockerfile do backend
     ports:
-      - 3001:3001
-    working_dir: /app-backend
+      - 3001:3001 # Mapeia a porta 3001 do container para a porta 3001 do host
+    working_dir: /app-backend # Define o diretório de trabalho dentro do container
     volumes:
-      - ./backend/src:/app-backend/src
-    depends_on:
+      - ./backend/src:/app-backend/src # Monta o diretório local no container para desenvolvimento
+    depends_on: # Define dependências para o serviço
       db:
-        condition: service_healthy
-    environment:
-      - APP_PORT=3001
-      - JWT_SECRET=${JWT_SECRET}
-      - DB_USER=root
-      - DB_PASS=${DB_PASS}
-      - DB_HOST=db
-      - DB_PORT=3306
-    healthcheck:
-      test: [ "CMD", "lsof", "-t", "-i:3001" ]
-      timeout: 10s
-      retries: 5
+        condition: service_healthy # Aguarda o serviço do banco de dados estar saudável antes de iniciar
+    environment: # Variáveis de ambiente para o backend
+      - APP_PORT=3001 # Porta onde o backend será executado
+      - JWT_SECRET=${JWT_SECRET} # Segredo para geração de tokens JWT (definido no arquivo .env)
+      - DB_USER=root # Usuário do banco de dados
+      - DB_PASS=${DB_PASS} # Senha do banco de dados (definida no arquivo .env)
+      - DB_HOST=db # Nome do serviço do banco de dados
+      - DB_PORT=3306 # Porta do banco de dados
+    healthcheck: # Configuração para verificar a saúde do serviço
+      test: [ "CMD", "lsof", "-t", "-i:3001" ] # Verifica se a porta 3001 está em uso
+      timeout: 10s # Tempo limite para a verificação
+      retries: 5 # Número de tentativas antes de considerar o serviço como não saudável
+
+  # Serviço do banco de dados MySQL
   db:
-    image: mysql:8.0.32
-    container_name: db
+    image: mysql:8.0.32 # Imagem do MySQL a ser usada
+    container_name: db # Nome do container para o serviço do banco de dados
     ports:
-      - 3306:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASS}
-    restart: 'always'
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      timeout: 10s
-      retries: 5
+      - 3306:3306 # Mapeia a porta 3306 do container para a porta 3306 do host
+    environment: # Variáveis de ambiente para o banco de dados
+      - MYSQL_ROOT_PASSWORD=${DB_PASS} # Senha do usuário root do MySQL (definida no arquivo .env)
+    restart: 'always' # Reinicia o container automaticamente em caso de falha
+    healthcheck: # Configuração para verificar a saúde do serviço
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ] # Verifica se o MySQL está respondendo
+      timeout: 10s # Tempo limite para a verificação
+      retries: 5 # Número de tentativas antes de considerar o serviço como não saudável
     cap_add:
-      - SYS_NICE
+      - SYS_NICE # Adiciona a capacidade SYS_NICE ao container para ajustar prioridades de processos

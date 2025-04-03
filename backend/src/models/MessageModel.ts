@@ -2,9 +2,11 @@ import { FindOptions, Transaction, WhereOptions } from "sequelize";
 import SequelizeMessage from "../database/models/SequelizeMessage";
 import { Op } from 'sequelize';
 
+// Classe responsável pelo modelo de mensagem
 export default class MessageModel {
-  private messageModel = SequelizeMessage;
+  private messageModel = SequelizeMessage; // Instância do modelo de mensagem
 
+  // Método para criar uma mensagem
   async create(
     data: {
       chatId: number | null,
@@ -19,8 +21,9 @@ export default class MessageModel {
     options: { transaction: Transaction }
   ) {
 
-    const { chatId, trackId, djId, receiveDJId, message, createdAt, isReply, replyTo } = data;
+    const { chatId, trackId, djId, receiveDJId, message, createdAt, isReply, replyTo } = data; // Destruturação dos dados
 
+    // Cria uma mensagem
     const response = await this.messageModel.create({
       chatId,
       trackId,
@@ -31,10 +34,13 @@ export default class MessageModel {
       isReply,
       replyTo
     }, options);
-    return response.get();
+
+    return response.get(); // Retorna a mensagem criada
   }
 
+  // Método para atualizar mensagens
   async update(messageIds: (number | string)[], options: { transaction: Transaction }) { 
+    // Atualiza mensagens
     const response = await this.messageModel.update(
       {
         read: true,
@@ -48,27 +54,32 @@ export default class MessageModel {
         ...options,
       }
     );
-    return response;
+    return response; // Retorna a resposta
   }
 
+  // Método para buscar uma mensagem
   async findOne(findOptions: FindOptions, options?: { transaction: Transaction }) {
+    // Verifica se existem opções de transação e busca uma mensagem
     const response = options ? await this.messageModel.findOne({
       ...findOptions,
       ...options
     }) : await this.messageModel.findOne(findOptions);
-    return response?.get();
+    return response?.get(); // Retorna a mensagem encontrada
   }
 
+  // Método para buscar todas as mensagens
   async findAll(findOptions: FindOptions, options?: { transaction: Transaction }) {
+    // Verifica se existem opções de transação e busca todas as mensagens
     const response = options ? await this.messageModel.findAll({
       ...findOptions,
       ...options
     }) : await this.messageModel.findAll(findOptions);
-    return response.map((message) => message.get());
+    return response.map((message) => message.get()); // Retorna as mensagens encontradas
   }
 
+  // Método para buscar todas as mensagens
   async delete(where: WhereOptions, options: { transaction: Transaction }) {
-    const response = await this.messageModel.destroy({ where, ...options });
-    return response;
+    const response = await this.messageModel.destroy({ where, ...options }); // Deleta uma mensagem
+    return response; // Retorna a resposta
   }
 }

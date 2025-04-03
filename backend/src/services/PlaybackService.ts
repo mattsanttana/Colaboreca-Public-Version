@@ -189,18 +189,16 @@ export default class PlaybackService {
         return { status: 'NOT_FOUND', data: { message: 'DJ or Track not found' } };
       }
 
-      const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
-      const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
-      const colaborecaQueue = track.colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.djId === djId); // Filtrar a fila do Colaboreca pelo DJ
+      const musicsAddedByDJ = track.colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.djId === djId); // Filtrar as músicas que foram adicionadas pelo DJ
 
       // Se a fila do Spotify ou do Colaboreca não forem encontradas, retornar um erro
-      if (!spotifyQueue || !colaborecaQueue) {
+      if (!musicsAddedByDJ) {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      const completeQueue = PlaybackActions.getMusicAddedBy(spotifyQueue, colaborecaQueue); // Construir a fila completa associando DJs e músicas do Spotify
+      const musics = PlaybackActions.wasPlayed(musicsAddedByDJ); // Separar as múiscas por tocadas ou não
 
-      return { status: 'OK', data: completeQueue }; // Retornar a fila completa e o status correspondente
+      return { status: 'OK', data: musics }; // Retornar a fila completa e o status correspondente
     } catch (error) {
       // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
       console.error(error);
@@ -333,7 +331,7 @@ export default class PlaybackService {
       const colaborecaQueue = await this.musicModel.findAll({ trackId }, { transaction }); // Buscar a fila de músicas do Colaboreca atualizada
       const queue = PlaybackActions.getQueue(spotifyQueue, colaborecaQueue, track.djs, track.trackName); // Construir a fila completa
 
-      io.to(`track_${trackId}`).emit('queue updated', { queue, spotifyQueue }); // Emitir um evento de atualização da fila
+      io.to(`track_${trackId}`).emit('queue updated', { queue, spotifyQueue: spotifyQueue.queue }); // Emitir um evento de atualização da fila
 
       await transaction.commit(); // Confirmar a transação
 

@@ -1,3 +1,4 @@
+// Esta função mapeia o status HTTP para o número correspondente
 export default function mapStatusHTTP(status: string): number {
   switch (status) {
     case 'OK': return 200;

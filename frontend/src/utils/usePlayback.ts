@@ -52,18 +52,6 @@ const usePlayback = () => {
     }
   }
 
-  const getSpotifyQueue = async (trackId: string | undefined) => {
-    try {
-      const response = await fetch(`http://localhost:3001/playback/spotify-queue/${ trackId }`);
-
-      const data = await response.json();
-
-      return data;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   const getAddedMusicsByDJ = async (djId: string | undefined, trackId: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/added-musics-by-dj/${ djId }/${ trackId }`);
@@ -117,7 +105,6 @@ const usePlayback = () => {
     getTopMusicsInBrazil,
     getTrackBySearch,
     getQueue,
-    getSpotifyQueue,
     getAddedMusicsByDJ,
     getDJAddedCurrentMusic,
     addTrackToQueue

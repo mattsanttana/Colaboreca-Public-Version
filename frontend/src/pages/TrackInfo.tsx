@@ -175,6 +175,10 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
   }, [closeMenu]);
 
   useEffect(() => {
+    if (socket.connected && trackId) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
+
     const handleTrackUpdated = (updatedTrack: { trackName: string }) => { 
       setTrackName(updatedTrack.trackName);
     }
@@ -226,10 +230,6 @@ const TrackInfo: React.FC<Props> = ({ trackToken }) => {
     socket.on('dj updated', handleDJUpdated);
     socket.on('dj deleted', handleDJDeleted);
     socket.on('new vote', handleNewVote);
-
-    if (socket.connected && trackId) {
-      socket.emit('joinRoom', `track_${trackId}`);
-    }
   
     return () => {
       socket.off('new vote', handleNewVote);

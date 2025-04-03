@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, lazy, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy } from 'react';
 import { useParams } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Container, Row, Col } from 'react-bootstrap';
@@ -195,7 +195,11 @@ const Track: React.FC<Props> = ({ token }) => {
     };
   }, [closeMenu]);
 
-  useEffect(() => {
+  useEffect(() => {   
+    if (socket.connected && dj) {
+      socket.emit('joinRoom', `track_${trackId}`);
+    }
+
     const handleTrackUpdated = (updatedTrack: { trackName: string }) => { 
       setTrackName(updatedTrack.trackName);
     }
@@ -213,30 +217,26 @@ const Track: React.FC<Props> = ({ token }) => {
     };
 
     const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza a lista de DJs
+      setDJs((prevDJs) =>
+        prevDJs.map((dj) => {
+          if (Number(dj.id) === Number(updatedDJ.id)) {
+            return updatedDJ; // Substitui o DJ pelo atualizado
+          }
+          return dj; // Mantém o DJ atual
+        })
+      );
+
       // Atualiza o DJ atual (se aplicável)
       setDJ((currentDJ) => {
-        if (currentDJ?.id === updatedDJ.id && updatedDJ.ranking < currentDJ.ranking) {
-          setPreviewRank(djs); // Atualiza o estado previewRank
-          setDJs((prevDJs) =>
-            prevDJs.map((dj) => {
-              if (Number(dj.id) === Number(updatedDJ.id)) {
-                return updatedDJ; // Substitui o DJ pelo atualizado
-              }
-              return dj; // Mantém o DJ atual
-            })
-          );
-          setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+        if (currentDJ?.id === updatedDJ.id) {
+          const updatedDJRanking = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking;
+          const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking;
+          if (updatedDJRanking < currentDJRanking) {
+            setPreviewRank(djs); // Atualiza o estado previewRank
+            setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          }
           return updatedDJ; // Atualiza o DJ atual
-        } else {
-           // Atualiza a lista de DJs
-          setDJs((prevDJs) =>
-            prevDJs.map((dj) => {
-              if (Number(dj.id) === Number(updatedDJ.id)) {
-                return updatedDJ; // Substitui o DJ pelo atualizado
-              }
-              return dj; // Mantém o DJ atual
-            })
-          );
         }
         return currentDJ; // Mantém o DJ atual
       });
@@ -274,10 +274,6 @@ const Track: React.FC<Props> = ({ token }) => {
     socket.on('dj deleted', handleDJDeleted);
     socket.on('new vote', handleNewVote);
     socket.on('queue updated', handleQueueUpdated);
-
-    if (socket.connected && dj) {
-      socket.emit('joinRoom', `track_${trackId}`);
-    }
   
     return () => {
       socket.off('track deleted', handleTrackDeleted);
@@ -313,9 +309,6 @@ const Track: React.FC<Props> = ({ token }) => {
       setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
     }
   };
-
-  const memoizedDJs = useMemo(() => djs, [djs]);
-  const memoizedQueue = useMemo(() => queue, [queue]);
 
   const handleClosePopup = () => {
     setShowRankChangePopup(false);
@@ -355,13 +348,13 @@ const Track: React.FC<Props> = ({ token }) => {
                 <div>
                   <Podium
                     dj={dj}
-                    djs={memoizedDJs}
+                    djs={djs}
                     isOwner={false}
                     trackId={trackId}
                   />
                 </div>
                 <div className="queue-container">
-                  <QueuePreview trackId={trackId} queue={memoizedQueue} />
+                  <QueuePreview trackId={trackId} queue={queue} />
                 </div>
               </Col>
             </Row>

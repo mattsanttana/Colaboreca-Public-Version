@@ -1,51 +1,47 @@
 import * as express from 'express';
 import * as http from 'http';
-
+import accessControl from './middlewares/accessControl';
 import router from './routes';
-import { initSocket } from './utils/socketIO'; // Importe a função de inicialização do Socket.IO
+import { initSocket } from './utils/socketIO';
 
+// Classe principal da aplicação
 class App {
-  public app: express.Express;
-  private server: http.Server;
+  public app: express.Express; // Instância do Express
+  private server: http.Server; // Instância do servidor HTTP
 
   constructor() {
-    this.app = express();
+    this.app = express(); // Inicialize o Express
 
-    // Criar o servidor HTTP
-    this.server = http.createServer(this.app);
+    this.server = http.createServer(this.app); // Criar o servidor HTTP
 
-    // Inicialize o Socket.IO
-    initSocket(this.server);
+    initSocket(this.server); // Inicialize o Socket.IO
 
-    this.config();
-    this.routes();
+    this.config(); // Configure o Express
 
-    // Não remover essa rota
-    this.app.get('/', (req, res) => res.json({ ok: true }));
+    this.routes(); // Configure as rotas
+
+    this.app.get('/', (req, res) => res.json({ ok: true })); // Rota pra verificar se o servidor está online
   }
 
+  // Método para configurar o Express
   private config(): void {
-    const accessControl: express.RequestHandler = (_req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*'); // Ajuste aqui se necessário
-      res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS,PUT,PATCH');
-      res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type'); // Inclua explicitamente os cabeçalhos permitidos
-      next();
-    };
-
-    this.app.use(express.json());
-    this.app.use(accessControl);
+    this.app.use(express.json()); // Habilita o uso de JSON
+    this.app.use(accessControl); // Habilita o middleware de controle de acesso
   }
 
+  // Método para configurar as rotas
   private routes(): void {
-    this.app.use(router);
+    this.app.use(router); // Habilita as rotas
   }
 
+  // Método para iniciar o servidor
   public start(PORT: string | number): void {
+    // Inicia o servidor na porta especificada
     this.server.listen(PORT, () => {
-      console.log(`Running on port ${PORT}`);
+      console.log(`Running on port ${PORT}`); // Exibe uma mensagem no console
     });
   }
 }
 
-export { App };
-export const { app } = new App();
+export { App }; // Exporta a classe App
+export const { app } = new App(); // Exporta a instância do Express

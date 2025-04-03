@@ -217,77 +217,72 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   }, [closeMenu]);
 
   useEffect(() => {
-      const handleTrackDeleted = (data: { trackId: number }) => {
-        if (Number(trackId) === Number(data.trackId)) {
-          setPopupMessage('Esta pista foi deletada');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-        }
-      }
-    
-      const handleDJUpdated = (updatedDJ: DJ) => {
-        // Atualiza o DJ atual (se aplicável)
-        setDJ((currentDJ) => {
-          if (currentDJ?.id === updatedDJ.id  && updatedDJ.ranking < currentDJ.ranking) {
-            setPreviewRank(djs); // Atualiza o estado previewRank
-            setDJs((prevDJs) =>
-              prevDJs.map((dj) => {
-                if (Number(dj.id) === Number(updatedDJ.id)) {
-                  return updatedDJ; // Substitui o DJ pelo atualizado
-                }
-                return dj; // Mantém o DJ atual
-              })
-            );
-            setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
-            return updatedDJ; // Atualiza o DJ atual
-          } else {
-              // Atualiza a lista de DJs
-            setDJs((prevDJs) =>
-              prevDJs.map((dj) => {
-                if (Number(dj.id) === Number(updatedDJ.id)) {
-                  return updatedDJ; // Substitui o DJ pelo atualizado
-                }
-                return dj; // Mantém o DJ atual
-              })
-            );
-          }
-          return currentDJ; // Mantém o DJ atual
-        });
-      };
-  
-      const handleDJDeleted = (data: { djId: number }) => {
-        if (Number(menuDJ) === Number(data.djId)) {
-          setPopupMessage('Você foi removido desta pista');
-          setRedirectTo('/enter-track');
-          setShowPopup(true);
-        }
-
-        const redirect = isTrackOwner ? `/track-info/${trackId}` : `/track/${trackId}`;
-
-        if (Number(dj?.id) === Number(data.djId)) {
-          setPopupMessage('Este DJ foi deletado');
-          setRedirectTo(redirect);
-          setShowPopup(true);
-        }
-      };
-  
+    if (socket.connected && menuDJ) {
       socket.emit('joinRoom', `track_${trackId}`);
-      socket.on('track deleted', handleTrackDeleted);
-      socket.on('dj updated', handleDJUpdated);
-      socket.on('dj deleted', handleDJDeleted);
-
-      if (socket.connected && menuDJ) {
-        socket.emit('joinRoom', `track_${trackId}`);
+    }
+    const handleTrackDeleted = (data: { trackId: number }) => {
+      if (Number(trackId) === Number(data.trackId)) {
+        setPopupMessage('Esta pista foi deletada');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
       }
+    }
+  
+    const handleDJUpdated = (updatedDJ: DJ) => {
+      // Atualiza a lista de DJs
+      setDJs((prevDJs) =>
+        prevDJs.map((dj) => {
+          if (Number(dj.id) === Number(updatedDJ.id)) {
+            return updatedDJ; // Substitui o DJ pelo atualizado
+          }
+          return dj; // Mantém o DJ atual
+        })
+      );
+
+      // Atualiza o DJ atual (se aplicável)
+      setDJ((currentDJ) => {
+        if (currentDJ?.id === updatedDJ.id) {
+          const updatedDJRanking = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking;
+          const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking;
+          if (updatedDJRanking < currentDJRanking) {
+            setPreviewRank(djs); // Atualiza o estado previewRank
+            setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
+          }
+          return updatedDJ; // Atualiza o DJ atual
+        }
+        return currentDJ; // Mantém o DJ atual
+      });
+    };
+
+    const handleDJDeleted = (data: { djId: number }) => {
+      if (Number(menuDJ) === Number(data.djId)) {
+        setPopupMessage('Você foi removido desta pista');
+        setRedirectTo('/enter-track');
+        setShowPopup(true);
+      }
+
+      const redirect = isTrackOwner ? `/track-info/${trackId}` : `/track/${trackId}`;
+
+      if (Number(dj?.id) === Number(data.djId)) {
+        setPopupMessage('Este DJ foi deletado');
+        setRedirectTo(redirect);
+        setShowPopup(true);
+      }
+    };
+
+    socket.emit('joinRoom', `track_${trackId}`);
+    socket.on('track deleted', handleTrackDeleted);
+    socket.on('dj updated', handleDJUpdated);
+    socket.on('dj deleted', handleDJDeleted);
+  
+    return () => {
+      socket.off('track deleted', handleTrackDeleted);
+      socket.off('dj updated', handleDJUpdated);
+      socket.off('dj deleted', handleDJDeleted);
+    };
     
-      return () => {
-        socket.off('track deleted', handleTrackDeleted);
-        socket.off('dj updated', handleDJUpdated);
-        socket.off('dj deleted', handleDJDeleted);
-      };
-      
   // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [menuDJ]);
+  }, [menuDJ]);
 
   // Funções para lidar com o toque
   const handleTouchStart = (e: React.TouchEvent) => {

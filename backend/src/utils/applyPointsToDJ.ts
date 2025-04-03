@@ -1,7 +1,9 @@
 import { IDJ } from "../interfaces/djs/IDJ";
 import { IMusicWithDJAndVotes } from "../interfaces/musics/IMusic";
 
+// Função que calcula os pontos de um DJ com base nos votos recebidos
 export const getDJScore = (music: IMusicWithDJAndVotes) => {
+  // Contar quantos votos cada opção recebeu
   const voteCounts = music.votes.reduce((acc, vote) => {
     acc[vote.vote] = (acc[vote.vote] || 0) + 1;
     return acc;
@@ -26,46 +28,25 @@ export const getDJScore = (music: IMusicWithDJAndVotes) => {
     very_bad: -3
   };
 
-  let totalPoints = 0;
+  let totalPoints = 0; // Pontuação total a ser adicionada ao score do DJ
+
+  // Se houver apenas uma opção com mais votos, atribuir os pontos dessa opção
   if (topOptions.length === 1) {
-    // Apenas uma opção tem mais votos
     totalPoints = pointsMap[topOptions[0] as keyof typeof pointsMap];
   } else {
-    // Empate: calcular a média dos pontos das opções empatadas
+    // Em caso de empate, calcular a média dos pontos das opções empatadas
     const total = topOptions.reduce((sum, option) => sum + pointsMap[option as keyof typeof pointsMap], 0);
     totalPoints = total / topOptions.length;
   }
 
-  // Garantir que dj.score tenha um valor padrão de 0 se estiver indefinido
-  const currentScore = music.dj.score ?? 0;
+  const currentScore = music.dj.score ?? 0; // Garantir que dj.score tenha um valor padrão de 0 se estiver indefinido
 
-  // Verificar se é para adicionar ou subtrair pontos
-  if (totalPoints < 0 && currentScore === 0) {
-    // Verificar se a opção com mais votos é "bad" ou "very bad" (ou empate entre os dois)
-    const negativeVotes = ["bad", "very_bad"];
-    const isNegativeVote = topOptions.every(option => negativeVotes.includes(option));
+  const newScore = Math.max(currentScore + totalPoints, 0); // Calcular o novo score garantindo que não seja negativo
 
-    if (isNegativeVote) {
-      // Não fazer nada se o score atual é 0 e os pontos são negativos
-      totalPoints = 0;
-    }
-  }
-
-  // Ajustar os pontos para evitar valores negativos
-  if (totalPoints < 0) {
-    if (currentScore < 3 && topOptions.includes("very_bad")) {
-      totalPoints = -currentScore; // Reduzir para 0
-    } else if (currentScore < 1 && topOptions.includes("bad")) {
-      totalPoints = -currentScore; // Reduzir para 0
-    }
-  }
-
-  // Calcular o novo score garantindo que não seja negativo
-  const newScore = Math.max(currentScore + totalPoints, 0);
-
-  return { newScore, majorityVote: topOptions[0] };
+  return { newScore, majorityVote: topOptions }; // Retornar o novo score e a(s) opção(ões) com mais votos
 };
 
+// Função que atualiza o ranking de DJs com base nos votos recebidos
 export const updateDJsRanking = (djs: IDJ[], musics: IMusicWithDJAndVotes[]) => {
   // Pegar todos os votos que os DJs receberam nas músicas que eles adicionaram
   const allVotes = musics
@@ -116,5 +97,5 @@ export const updateDJsRanking = (djs: IDJ[], musics: IMusicWithDJAndVotes[]) => 
     return a.id - b.id;
   });
 
-  return sortedDJs;
+  return sortedDJs; // Retornar DJs ordenados
 };

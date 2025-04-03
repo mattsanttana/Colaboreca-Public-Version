@@ -229,7 +229,7 @@ export default class VoteService {
       // Atualizar o score de todos os DJs que votaram na música
       for (const dj of votingDJs) {
         const djVote = votes.find(vote => vote.djId === dj.id); // Busca o voto do DJ
-        const newScore = (dj.score ?? 0) + (djVote?.vote === score.majorityVote ? 0.50 : 0.25); // Calcula o novo score
+        const newScore = (dj.score ?? 0) + (djVote?.vote && score.majorityVote.includes(djVote.vote) ? 0.50 : 0.25); // Calcula o novo score
 
         const updateDJSCORE = await this.djModel.update({ score: newScore }, { id: dj.id }, { transaction }); // Atualiza o score do DJ
 
