@@ -26,7 +26,7 @@ export default class TrackController {
     const data = {
       clientId: process.env.COLABORECA_API_CLIENT_ID,
       scopes: `user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-playback-position user-read-recently-played user-read-recently-played`,
-      redirectURI: 'https://colaboreca.vercel.app/login'
+      redirectURI: 'http://localhost:5173/login'
     }
 
     // URL para autenticação com o Spotify

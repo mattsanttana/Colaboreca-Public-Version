@@ -132,22 +132,22 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
                 }}
                 >
               <Card.Body>
-              <Row className="image-container">
-                {charactersPaths.map((character, index) => (
-                  <Col key={index} className="image-col">
-                    <Image
-                      src={character}
-                      alt={`Character ${index}`}
-                      onClick={() => handleClickCharacter(character)}
-                      onMouseEnter={() => setHoveredCharacter(character)}
-                      onMouseLeave={() => setHoveredCharacter(null)}
-                      className={`image-style ${djData.selectedCharacterPath === character ?
-                        'selected-style' : ''}`}
-                      style={{ opacity: hoveredCharacter === character ? 0.8 : 1 }}
-                    />
-                  </Col>
-                ))}
-              </Row>
+                <Row className="image-container">
+                  {charactersPaths.map((character, index) => (
+                    <Col key={index} className="image-col">
+                      <Image
+                        src={character}
+                        alt={`Character ${index}`}
+                        onClick={() => handleClickCharacter(character)}
+                        onMouseEnter={() => setHoveredCharacter(character)}
+                        onMouseLeave={() => setHoveredCharacter(null)}
+                        className={`image-style ${djData.selectedCharacterPath === character ?
+                          'selected-style' : ''}`}
+                        style={{ opacity: hoveredCharacter === character ? 0.8 : 1 }}
+                      />
+                    </Col>
+                  ))}
+                </Row>
               </Card.Body>
             </Card>
             <Button variant="primary" onClick={handleClick} className="mt-3" style={{ width: '100%'}}>Ok</Button>

@@ -102,7 +102,7 @@ const useTrack = () => {
   const updateTrack = async (trackName: string, token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/tracks`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${ token }`

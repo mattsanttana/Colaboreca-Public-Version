@@ -1,379 +1,147 @@
-import React, { useState, useEffect, useRef, useCallback, lazy } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { Container, Row, Col, Image, Spinner } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { Container, Row, Col } from 'react-bootstrap';
-import { io } from 'socket.io-client';
-import { RootState } from '../redux/store';
+import { useParams } from 'react-router-dom';
+import Header from './Header';
+import Menu from './Menu';
 import PlaybackState from './PlaybackState';
 import Podium from './Podium';
 import QueuePreview from './QueuePreview';
-import MessagePopup from './MessagePopup';
-import useDJ from '../utils/useDJ';
-import useTrack from '../utils/useTrack';
-import usePlayback from '../utils/usePlayback';
-import useVote from '../utils/useVote';
-import PlayingNow from '../types/PlayingNow';
-import { DJ, DJPlayingNow } from '../types/DJ';
-import { Music } from '../types/SpotifySearchResponse';
 import { logo } from '../assets/images/characterPath';
-import { Vote, voteValues } from '../types/Vote';
-import RankingChangePopup from './RankingChangePopup';
-import TQueue from '../types/TQueue';
-const Header = lazy(() => import('./Header'));
-const Menu = lazy(() => import('./Menu'));
+import { RootState } from '../redux/store';
+import useFetchPlaybackData from '../utils/useFetchPlaybackData';
+import useFetchTrackData from '../utils/useFetchTrackData';
+import useMenu from '../utils/useMenu';
+
+// Componentes que não precisam ser carregados inicialmente
+const MessagePopup = lazy(() => import('./MessagePopup'));
+const RankingChangePopup = lazy(() => import('./RankingChangePopup'));
 const VotePopup = lazy(() => import('./VotePopup'));
 
+// Props recebidas pelo redux
 interface Props {
-  token: string;
+  token: string; // Token do DJ
 }
 
-const socket = io('http://localhost:3001');
-
+// Componente principal da página de pista
 const Track: React.FC<Props> = ({ token }) => {
-  const { trackId } = useParams();
-  const [trackName, setTrackName] = useState('');
-  const [dj, setDJ] = useState<DJ>();
-  const [djs, setDJs] = useState<DJ[]>([]);
-  const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
-  const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
-  const [queue, setQueue] = useState<Music[]>([]);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupMessage, setPopupMessage] = useState('');
-  const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
-  const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
-  const [showRankChangePopup, setShowRankChangePopup] = useState(false);
-  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
-  const [votes, setVotes] = useState<Vote | undefined>(undefined);
-  const [touchStartX, setTouchStartX] = useState(0);
-  const [touchEndX, setTouchEndX] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { trackId } = useParams(); // Pega o ID da pista da URL
 
-  const djActions = useDJ();
-  const trackActions = useTrack();
-  const playbackActions = usePlayback();
-  const voteActions = useVote();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const interval = useRef<number | null>(null);
+  // Hook personalizado para buscar dados da pista
+  const {
+      dj, djs, trackName, showPopup, popupMessage, redirectTo, setShowPopup, showRankingChangePopup, setShowRankingChangePopup, previewRank
+    } = useFetchTrackData(trackId, token);
+  const {
+  // Hook personalizado para buscar dados de reprodução
+    playingNow, djPlayingNow, votes, queue, isLoading, showVotePopup, setShowVotePopup
+  } = useFetchPlaybackData(trackId, token)
+  const menuActions = useMenu(); // Hook personalizado para lidar com o menu
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (trackId) {
-        try {
-          const [fetchedTrack, fetchedDJData] = await Promise.all([
-            trackActions.getTrackById(trackId),
-            djActions.getDJData(token)
-          ]);
-
-          if (!fetchedDJData?.data.dj) {
-            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-          }
-
-          if (fetchedTrack?.status === 200) {
-            setTrackName(fetchedTrack?.data.trackName);
-            setDJs(fetchedDJData?.data.djs);
-            setDJ(fetchedDJData?.data.dj);
-          } else {
-            setPopupMessage('Esta pista não existe');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-          }
-
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      }
-    };
-
-    fetchData();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (trackId && playingNow) {
-
-        // Limpar os votos quando a URI da música atual mudar
-        setVotes(undefined);
-        setDJPlayingNow(null);
-
-        try {
-          const [fetchedVerifyIfDJHasAlreadVoted, fetchedVotes, fetchedDJPlayingNow] = await Promise.all([
-            voteActions.verifyIfDJHasAlreadVoted(token),
-            voteActions.getAllVotesForThisMusic(trackId, playingNow.item?.uri ?? "dispositivo não conectado"),
-            playbackActions.getDJAddedCurrentMusic(trackId)
-          ]);
-
-          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-          setVotes(fetchedVotes);
-          setDJPlayingNow(fetchedDJPlayingNow);
-          setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []);
-    
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      }
-    };
-
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playingNow?.item?.uri || '']);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (trackId) {
-        try {
-          const fetchedPlayingNow = await playbackActions.getState(trackId)
-
-          setPlayingNow(fetchedPlayingNow);
-          
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    interval.current = window.setInterval(() => {
-      fetchData();
-    }, 10000);
-
-    return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const scrollElement = scrollRef.current;
-    const containerElement = containerRef.current;
-
-    if (scrollElement && containerElement) {
-      const isPlaying = playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track';
-      const scrollWidth = scrollElement.scrollWidth;
-      const containerWidth = containerElement.clientWidth;
-
-      if (isPlaying && scrollWidth > containerWidth) {
-        // Calcula a diferença para saber quanto precisa rolar
-        const scrollAmount = scrollWidth - containerWidth + 20;
-        scrollElement.style.animation = `scroll-text ${scrollAmount / 15}s linear infinite`;
-        scrollElement.style.setProperty('--scroll-distance', `-${scrollAmount}px`);
-      } else {
-        scrollElement.style.animation = 'none'; // Remove a animação se o texto couber ou se não houver música tocando
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playingNow?.item?.uri || '']);
-
-  const closeMenu = useCallback(() => {
-    if (isMenuOpen) {
-      setIsMenuOpen(false);
-    }
-  }, [isMenuOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        closeMenu();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [closeMenu]);
-
-  useEffect(() => {   
-    if (socket.connected && dj) {
-      socket.emit('joinRoom', `track_${trackId}`);
-    }
-
-    const handleTrackUpdated = (updatedTrack: { trackName: string }) => { 
-      setTrackName(updatedTrack.trackName);
-    }
-
-    const handleTrackDeleted = (data: { trackId: number }) => {
-      if (Number(trackId) === Number(data.trackId)) {
-        setPopupMessage('Esta pista foi deletada');
-        setRedirectTo('/enter-track');
-        setShowPopup(true);
-      }
-    };
-  
-    const handleDJCreated = (data: { dj: DJ }) => {
-      setDJs((prevDJs) => [...prevDJs, data.dj]);
-    };
-
-    const handleDJUpdated = (updatedDJ: DJ) => {
-      // Atualiza a lista de DJs
-      setDJs((prevDJs) =>
-        prevDJs.map((dj) => {
-          if (Number(dj.id) === Number(updatedDJ.id)) {
-            return updatedDJ; // Substitui o DJ pelo atualizado
-          }
-          return dj; // Mantém o DJ atual
-        })
-      );
-
-      // Atualiza o DJ atual (se aplicável)
-      setDJ((currentDJ) => {
-        if (currentDJ?.id === updatedDJ.id) {
-          const updatedDJRanking = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking;
-          const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking;
-          if (updatedDJRanking < currentDJRanking) {
-            setPreviewRank(djs); // Atualiza o estado previewRank
-            setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
-          }
-          return updatedDJ; // Atualiza o DJ atual
-        }
-        return currentDJ; // Mantém o DJ atual
-      });
-    };
-    
-    const handleDJDeleted = (data: { id: number}) => {  
-      if (Number(dj?.id) === Number(data.id)) {
-        setPopupMessage('Você foi removido desta pista');
-        setRedirectTo('/enter-track');
-        setShowPopup(true);
-      } else {
-        // Atualiza a lista de DJs removendo o DJ deletado
-        setDJs((prevDJs) => prevDJs.filter((dj) => Number(dj.id) !== Number(data.id)));
-      }
-    };
-
-    const handleNewVote = (data: { vote: voteValues }) => {
-      setVotes((prevVotes) => {
-        if (!prevVotes || !prevVotes.voteValues) {
-          return { voteValues: [data.vote] };
-        }
-        return { voteValues: [...prevVotes.voteValues, data.vote] };
-      });
-    };
-
-    const handleQueueUpdated = (data: { queue: TQueue[], spotifyQueue: Music[]}) => {
-      setQueue(data.spotifyQueue);
-    };
-
-    socket.emit('joinRoom', `track_${trackId}`);
-    socket.on('track updated', handleTrackUpdated);
-    socket.on('track deleted', handleTrackDeleted);
-    socket.on('dj created', handleDJCreated);
-    socket.on('dj updated', handleDJUpdated);
-    socket.on('dj deleted', handleDJDeleted);
-    socket.on('new vote', handleNewVote);
-    socket.on('queue updated', handleQueueUpdated);
-  
-    return () => {
-      socket.off('track deleted', handleTrackDeleted);
-      socket.off('dj created', handleDJCreated);
-      socket.off('dj updated', handleDJUpdated);
-      socket.off('dj deleted', handleDJDeleted);
-      socket.off('new vote', handleNewVote);
-      socket.off('queue updated', handleQueueUpdated);
-    };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dj]);
-
-  // Funções para lidar com o toque
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEndX(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    // Calcula a distância de deslocamento horizontal
-    const distance = touchEndX - touchStartX;
-    
-    // Define o valor mínimo para considerar um swipe
-    if (distance > 20) {
-      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
-    }
-
-    if (distance < -20) {
-      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
-    }
-  };
-
-  const handleClosePopup = () => {
-    setShowRankChangePopup(false);
-  };
-
+  // Renderiza o componente
   return (
+    // Envolve o componente em um div para lidar com eventos de toque
     <div
-    onTouchStart={handleTouchStart}
-    onTouchMove={handleTouchMove}
-    onTouchEnd={handleTouchEnd}
+      onTouchStart={ menuActions.handleTouchStart } // Adiciona evento de toque inicial
+      onTouchMove={ menuActions.handleTouchMove } // Adiciona evento de movimento do toque
+      onTouchEnd={ menuActions.handleTouchEnd } // Adiciona evento de toque final
     >
-      <MessagePopup
-        show={showPopup}
-        handleClose={() => setShowPopup(false)}
-        message={popupMessage}
-        redirectTo={redirectTo}
-      />
-      {isLoading ? (
+      { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
+      <Suspense fallback={<Spinner />}>
+      {/* Componente de popup de mensagem */}
+        <MessagePopup
+          show={ showPopup } // Estado do popup
+          handleClose={ () => setShowPopup(false) } // Função para fechar o popup
+          message={ popupMessage } // Mensagem a ser exibida
+          redirectTo={ redirectTo } // URL para redirecionar
+        />
+      </Suspense>
+      { /* Verifica se está carregando */ }
+      { isLoading ? (
+        // Se sim, exibe o logo de carregamento
         <Container
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: '100vh' }}
+          className='d-flex justify-content-center align-items-center'
+          style={{ height: '100vh' }} // Define a altura do container como 100% da altura da tela
         >
-          <img src={logo} alt="Loading Logo" className="logo-spinner" />
+          <Image src={ logo } alt='Loading Logo' className='logo-spinner' /> { /* Logo de carregamento */ }
         </Container>
       ) : (
         <>
+          { /* Renderiza o conteúdo principal */ }
           <Container>
-            <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
+            { /* Renderiza o cabeçalho */ }
+            <Header
+              dj={ dj } // Envia o DJ atual como prop
+              isSlideMenuOpen={ menuActions.isMenuOpen } // Envia o estado do menu como prop
+              toggleMenu={ menuActions.setIsMenuOpen } // Função para alternar o estado do menu
+            />
+            { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
             <Row>
-              <Col md={3} className="d-none d-xxl-block">
-                <Menu dj={dj} />
+              <Col md={ 3 } className='d-none d-xxl-block'>
+                { /* Componente de menu */ }
+                <Menu dj={ dj } /> { /* Envia o DJ atual como prop */ }
               </Col>
-              <Col md={12} lg={12} xl={12} xxl={6} className="d-flex flex-column align-items-center playback-state-container">
-                <PlaybackState playingNow={playingNow} trackName={trackName} dj={dj} djPlayingNow={djPlayingNow} votes={votes} isOwner={false} trackId={trackId} />
+              { /* Container para o estado de reprodução */ }
+              <Col
+                md={ 12 } // Largura para telas médias
+                lg={ 12 } // Largura para telas grandes
+                xl={ 12 } // Largura para telas extra grandes
+                xxl={ 6 } // Largura para telas extra extra grandes
+                className='d-flex flex-column align-items-center playback-state-container'
+              >
+                { /* Componente de estado de reprodução */ }
+                <PlaybackState
+                  playingNow={ playingNow } // Envia o estado de reprodução como prop
+                  trackName={ trackName } // Envia o nom da pista como prop
+                  dj={ dj } // Envia o DJ atual como prop
+                  djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
+                  votes={ votes } // Envia os votos da música atual como prop
+                  isOwner={ false } // Envia se o usuário é o dono da pista como prop
+                  trackId={ trackId } // Envia o ID da pista como prop
+                />
               </Col>
-              <Col md={3} className="d-none d-xxl-block">
+              { /* Renderiza o componente de pódio e fila de reprodução (somente para telas não-mobiles) */ }
+              <Col
+                md={ 3 } // Largura para telas médias
+                className='d-none d-xxl-block'
+              >
+                { /* Componente de pódio */ }
                 <div>
                   <Podium
-                    dj={dj}
-                    djs={djs}
-                    isOwner={false}
-                    trackId={trackId}
+                    dj={ dj } // Envia o DJ atual como prop
+                    djs={ djs } // Envia a lista de DJs como prop
+                    isOwner={ false } // Envia se o usuário é o dono da pista como prop
+                    trackId={ trackId } // Envia o ID da pista como prop
                   />
                 </div>
-                <div className="queue-container">
-                  <QueuePreview trackId={trackId} queue={queue} />
+                { /* Componente de pré-visualização da fila */ }
+                <div className='queue-container'>
+                  <QueuePreview
+                    trackId={ trackId } // Envia o ID da pista como prop
+                    queue={ queue } // Envia a fila de músicas como prop
+                  />
                 </div>
               </Col>
             </Row>
           </Container>
-          {showVotePopup && (
+          { /* Renderiza o o componente popup de votação (somente se o popup de votação estiver aberto) */ }
+          { showVotePopup && (
+            // Componente de popup de votação
             <VotePopup
-              showVotePopup={showVotePopup}
-              setShowVotePopup={setShowVotePopup} 
-              playingNow={playingNow}
-              djPlayingNow={djPlayingNow}
+              showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+              setShowVotePopup={ setShowVotePopup }  // Função para fechar o popup
+              playingNow={ playingNow } // Envia o estado de reprodução como prop
+              djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
             />
           )}
-          {showRankChangePopup && dj && (
+          { /* Renderiza o componente popup de mudança de ranking (somente se o popup de mudança de ranking estiver aberto) */ }
+          { showRankingChangePopup && dj && (
+            // Componente de popup de mudança de ranking
             <RankingChangePopup
-              showRankingChangePopup={showRankChangePopup}
-              dj={dj}
-              previousRanking={previewRank}
-              currentRanking={djs}
-              handleClosePopup={handleClosePopup}
+              showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+              dj={ dj } // Envia o DJ atual como prop
+              previousRanking={ previewRank } // Envia o ranking anterior como prop
+              currentRanking={ djs } // Envia o ranking atual como prop
+              handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
             />
           )}
         </>
@@ -382,10 +150,11 @@ const Track: React.FC<Props> = ({ token }) => {
   );
 }
 
+// Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token
+  token: state.djReducer.token // Token do DJ
 });
 
-const TrackConnected = connect(mapStateToProps)(Track);
+const TrackConnected = connect(mapStateToProps)(Track); // Conecta o componente ao Redux
 
-export default TrackConnected;
+export default TrackConnected; // Exporta o componente conectado

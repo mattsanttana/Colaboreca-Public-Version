@@ -82,7 +82,7 @@ const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId }) => {
                   </OverlayTrigger>
                 </div>
               )}
-              {djPodium[1] && (
+              { djPodium[1] && (
                 <div>
                   <p className="text-light mt-3 name-rank-2">{djPodium[1].djName}</p>
                   <OverlayTrigger
@@ -92,11 +92,11 @@ const Podium: React.FC<Props> = ({ dj, djs, isOwner, trackId }) => {
                     rootClose
                   >
                     <Card.Img
-                    key={djPodium[1].id}
-                    src={djPodium[1].characterPath}
-                    alt={djPodium[1].djName}
-                    className="img-fluid dj-character-podium-rank-2"
-                    style={{ cursor: 'pointer' }}
+                      key={djPodium[1].id}
+                      src={djPodium[1].characterPath}
+                      alt={djPodium[1].djName}
+                      className="img-fluid dj-character-podium-rank-2"
+                      style={{ cursor: 'pointer' }}
                     />
                   </OverlayTrigger>
                 </div>

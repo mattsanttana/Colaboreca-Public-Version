@@ -201,20 +201,26 @@ const PlaybackState: React.FC<Props> = ({ playingNow, trackName, dj, djPlayingNo
               </div>
             </div>
           )}
-          <div className='bar-chart'>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical">
-                <XAxis type="number" />
-                <YAxis
-                  type="category" 
-                  dataKey="name" 
-                  width={100}
-                  tick={{ fontSize: 15 }}
-                />
-                <Bar dataKey="value" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {data.some((item) => item.value > 0) && (
+            <div className='bar-chart'>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data} layout="vertical">
+                  <XAxis 
+                    type="number" 
+                    domain={[0, 'dataMax']} // Define o intervalo de 0 até o valor máximo nos dados
+                    allowDecimals={false} // Não permite números decimais
+                  />
+                  <YAxis
+                    type="category" 
+                    dataKey="name" 
+                    width={100}
+                    tick={{ fontSize: 15 }}
+                  />
+                  <Bar dataKey="value" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </Card.Body>
       </Card>
     </Container>

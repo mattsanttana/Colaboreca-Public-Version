@@ -1,6 +1,6 @@
 import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Form, Card, Modal, Table } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Card, Modal, Table, Image } from 'react-bootstrap';
 import { io } from 'socket.io-client';
 import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
@@ -459,18 +459,20 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
             <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
               <Modal.Title>Escolha seu avatar</Modal.Title>
             </Modal.Header>
-            <Modal.Body className="text-center">
-              <div className="d-flex justify-content-center flex-wrap">
+            <Modal.Body className="text-center" style={{ overflowY: 'auto', maxHeight: '400px' }}>
+              <Row>
                 {charactersPaths.map((character, index) => (
-                  <img
-                    key={index}
-                    src={character}
-                    alt="Avatar"
-                    onClick={handleClickCharacter}
-                    style={{ cursor: 'pointer', margin: '10px', width: '50px', height: '50px' }}
-                  />
-                ))}
-              </div>
+                  <Col key={index} className="image-col">
+                    <Image
+                      src={character}
+                      alt={`Character ${index}`}
+                      onClick={handleClickCharacter}
+                      className='image-style'
+                      style={{ cursor: 'pointer', margin: '10px', width: '100px', height: '100px' }}
+                    />
+                  </Col>
+                  ))}
+              </Row>
             </Modal.Body>
           </Modal>
           <Modal className='custom-modal' show={showDeleteConfirmPopup} onHide={cancelDeleteDJ}>

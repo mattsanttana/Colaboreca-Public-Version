@@ -346,6 +346,12 @@ const Chat: React.FC<Props> = ({ token }) => {
       if (isChatOpen && isRecipient) {
         const messageId = [message.id];
         await messageActions.markMessagesAsRead(messageId, token);
+        setUnreadMessages((prevUnreadMessages) => {
+          const updatedUnreadMessages = { ...prevUnreadMessages };
+          delete updatedUnreadMessages[message.chatId];
+          return updatedUnreadMessages;
+        }
+        );
       }
       
       setChats((prevChats) => {

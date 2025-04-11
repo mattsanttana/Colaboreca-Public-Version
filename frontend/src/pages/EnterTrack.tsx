@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Form, Button } from 'react-bootstrap';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
 import CreateDJConnected from './CreateDJ'
 import MessagePopup from './MessagePopup';
 import { logo } from '../assets/images/characterPath';
@@ -16,7 +15,6 @@ const EnterTrack: React.FC = () => {
   const [popupMessage, setPopupMessage] = useState<string>('');
 
   const trackActions = useTrack();
-  const navigate = useNavigate();
 
   const inputValidation = useCallback(() => {
     setButtonDisabled(!(trackId && trackId.replace(/\s/g, '').length === 6));
@@ -68,28 +66,10 @@ const EnterTrack: React.FC = () => {
     setShowPopup(false);
   };
 
-  const handleRedirect = () => {
-    if (phase === 1) {
-      navigate('/');
-    } else {
-      
-      setPhase(1);
-    }
-  };
-
   return (
     <Container className="d-flex align-items-center justify-content-center vh-100">
       <Row className="justify-content-center">
         <div className="d-flex flex-column align-items-center">
-          <Col xs={12} md={8} lg={11} className="mb-5">
-            <Button
-              variant="link"
-              onClick={() => handleRedirect()}
-              style={{ color: 'white', fontSize: '1.5rem', position: 'fixed' }}
-            >
-              <FaArrowLeft />
-            </Button>
-          </Col>
           <Col className="text-center mb-5">
             {phase === 1 ? (
               <>

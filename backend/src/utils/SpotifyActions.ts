@@ -13,7 +13,7 @@ export default class SpotifyActions {
       const bodySettings = {
         grant_type: 'authorization_code', // Tipo de concessão
         code, // Código de autorização
-        redirect_uri: 'https://colaboreca.vercel.app/login', // URL de redirecionamento
+        redirect_uri: 'http://localhost:5173/login', // URL de redirecionamento
       };
 
       const body = new URLSearchParams(Object.entries(bodySettings)).toString(); // Transformar o corpo em uma string

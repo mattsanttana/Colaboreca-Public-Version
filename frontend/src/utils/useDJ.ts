@@ -97,7 +97,7 @@ const useDJ = () => {
   const updateDJ = async (djName: string, characterPath: string, token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/djs`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${ token }`,

@@ -64,10 +64,10 @@ export default class TrackService {
 
       const track = await this.trackModel.create(id, trackName, spotifyToken); // Criar a pista
 
-      
+
       const token = JWT.sign({ id: track.id }); // Gerar um token para a pista
-      
-      
+
+
       if (!track) {
         return { status: 'ERROR', data: { message: 'An error occurred' } }; // Se a pista não for criada, retorne uma mensagem de erro
       }
@@ -204,7 +204,7 @@ export default class TrackService {
       }
 
       const trackUpdated = await this.trackModel.findOne({ id: decoded.id }); // Buscar a pista atualizada
-      
+
       io.to(`track_${decoded.id}`).emit('track updated', { trackName: trackUpdated?.trackName }); // Emitir um evento de pista atualizada
 
       return { status: 'OK', data: { message: 'Track updated' } }; // Retornar uma mensagem de sucesso com o status correspondente
@@ -252,9 +252,9 @@ export default class TrackService {
         this.trackModel.delete({ id: trackId }, { transaction })
       ]);
 
-      
+
       io.to(`track_${decoded.id}`).emit('track deleted', { trackId: decoded.id }); // Emitir um evento de pista deletada
-      
+
       await transaction.commit(); // Commitar a transação
 
       return { status: 'OK', data: { message: 'Track deleted' } }; // Retornar uma mensagem de sucesso com o status correspondente
@@ -333,9 +333,9 @@ export default class TrackService {
       if (response === 0) {
         return { status: 'ERROR', data: { message: 'An error occurred' } };
       }
-      
+
       io.to(`track_${decoded.id}`).emit('dj deleted', { id }); // Emitir um evento de DJ deletado
-      
+
       return { status: 'OK', data: { message: 'DJ deleted' } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {
       // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
