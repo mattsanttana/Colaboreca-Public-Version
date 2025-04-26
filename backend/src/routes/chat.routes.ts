@@ -2,7 +2,7 @@ import { Router } from 'express';
 import ChatController from '../controllers/ChatController';
 import Validations from '../middlewares/Validations';
 
-// Classe responsável por controlar as rotas do chat
+// Esse arquivo define as rotas para as operações relacionadas ao chat na aplicação
 
 const chatController = new ChatController(); // Instancia o controlador do chat
 const router = Router(); // Instancia o roteador

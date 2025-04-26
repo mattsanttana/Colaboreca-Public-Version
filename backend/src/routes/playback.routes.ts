@@ -2,7 +2,7 @@ import { Router } from 'express';
 import PlaybackController from '../controllers/PlaybackController';
 import Validations from '../middlewares/Validations';
 
-// Classe responsável por controlar as rotas de reprodução
+// Esse arquivo define as rotas para as operações relacionadas à reprodução de músicas na aplicação
 
 const playbackController = new PlaybackController(); // Instancia o controlador de reprodução
 const router = Router(); // Instancia o roteador

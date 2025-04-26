@@ -1,49 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
+import { Button, Col, Container, Form, Image, Row, Spinner } from 'react-bootstrap';
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Container, Form, Button, Row, Col } from 'react-bootstrap';
-import { FaArrowLeft } from 'react-icons/fa';
-import { saveTrack } from '../redux/actions';
-import { RootState } from '../redux/store';
-import MessagePopup from './MessagePopup';
-import useTrack from '../utils/useTrack';
 import { logo } from '../assets/images/characterPath';
+import { RootState } from '../redux/store';
+import { saveTrack } from '../redux/actions';
+import useTrack from '../utils/useTrack'
 
+// Componentes que não precisam ser carregados inicialmente
+const MessagePopup = lazy(() => import('./MessagePopup'));
+
+// Props recebidas pelo redux
 interface Props {
-  code: string;
-  token: string;
+  code: string; // Código do Spotify
+  token: string; // Token da pista
 }
 
 const CreateTrack: React.FC<Props> = ({ code, token }) => {
-  const [trackName, setTrackName] = useState('');
-  const [buttonDisabled, setButtonDisabled] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
+  const [buttonDisabled, setButtonDisabled] = useState(true); // Estado responsável por habilitar/desabilitar o botão
+  const [isLoading, setIsLoading] = useState(true); // Estado responsável por controlar o carregamento da página
+  const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false }); // Estado responsável por armazenar os dados do popup de mensagem
+  const [trackName, setTrackName] = useState(''); // Estado responsável por armazenar o nome da pista
 
-  const navigate = useNavigate();
-  const trackActions = useTrack();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); // Hook para despachar ações do Redux
+  const navigate = useNavigate(); // Hook para navegar entre páginas
+  const trackActions = useTrack(); // Hook personalizado pra lidar com as ações relacionadas à pista
 
+  // UseEffect responsável por monitorar a entrada de nome da pista e verificar se o comprimento é valido
   useEffect(() => {
+    // Se o comprimento for maior que 3 e menor que 32 o botão é habilitado
     if (trackName.length >= 3 && trackName.length <= 32) {
       setButtonDisabled(false);
+      // Caso contrário o botão é desabilitado
     } else {
       setButtonDisabled(true);
     }
   }
   , [trackName]);
 
+  // UseEffect responsável por verificar se uma pista já foi criada neste dispositivo
   useEffect(() => {
     const fetchData = async () => {
-      if (!code) {
-        setModalMessage('Erro ao tentar conectar a sua conta do Spotify, faça login novamente');
-        setShowModal(true);
-        return;
-      }
-      const response = await trackActions.verifyIfTrackAlreadyBeenCreated(token);
+      const response = await trackActions.verifyIfTrackAlreadyBeenCreated(token); // Função que verifica se a uma pista já foi criada neste dispositivo
+      // Se a verificação retornar um status igual a 200 redireciona o usuário para pista criada
       if (response?.status === 200) {
         navigate(`/track-info/${response.data}`);
+        // Caso contrário continua com a criação da pista
       } else {
         setIsLoading(false);
       }
@@ -53,112 +55,138 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Funçao responsável por capturar a mudança na entrada
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setTrackName(value);
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  // Função responsável por criar a pista
+  const handleClick = async () => {
+    // Caso os estados de trackName e code sejam diferente de null/undefined
+    if (trackName && code) {
+      const track = await trackActions.createTrack({ trackName, code }); // Chama a função de criar a pista
+      // Caso retorne o status 201
+      if (track?.status === 201) {
+        dispatch(saveTrack(track.data.token)); // Dispacha a ação de salvar o token da pista no redux
+        navigate(`/track-info/${track.data.id}`); // Redireciona o usuário pra pista
+        // Caso o status seja igual a 401
+      } else if (track?.status === 401) {
+        // Renderiza o popup de mensagem informando que a conta do Spotify do usuário precisa ser premium para criar uma pista
+        setPopupMessageData({
+          message: 'Sua conta do Spotify precisa ser premium para criar uma pista.',
+          redirectTo: '/',
+          show: true
+        });
+        // Caso o status seja igual a 400
+      } else if (track?.status === 400) {
+        // Renderiza o popup de mensagem informando que o nome da pista é muito curto ou muito longo
+        setPopupMessageData({
+          message: 'O nome da sua pista é muito curto ou muito longo, por favor tente outro.',
+          redirectTo: '',
+          show: true
+        });
+      } else {
+        // Caso contrário renderiza o popup de mensagem informando um erro
+        setPopupMessageData({
+          message: 'Algo deu errado ao tentar criar a pista, tente novamente.',
+          redirectTo: '/',
+          show: true
+        });
+      }
+    }
+  };
+
+  // Função responsável por chamar a função de criação ao apertar o botão "enter"
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !buttonDisabled) {
       handleClick();
     }
   };
 
-  const handleClick = async () => {
-    if (trackName && code) {
-      const track = await trackActions.createTrack({ trackName, code });
-      if (track?.status === 201) {
-        dispatch(saveTrack(track.data.token));
-        navigate(`/track-info/${track.data.id}`);
-      } else if (track?.status === 401) {
-        setModalMessage('Sua conta do Spotify precisa ser premium para criar uma pista.');
-        setShowModal(true);
-      } else if (track?.status === 400) {
-        setModalMessage('O nome da sua pista é muito curto ou muito longo, por favor tente outro.');
-        setShowModal(true);
-      } else {
-        setModalMessage('Algo deu errado ao tentar criar a pista, tente novamente.');
-        setShowModal(true);
-        navigate('/');
-      }
-    }
-  };
-
-  const handleClose = () => {
-    setShowModal(false);
-    navigate('/');
-  };
-
   return (
-    isLoading ? (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: '100vh' }}
-      >
-        <img src={logo} alt="Loading Logo" className="logo-spinner" />
-      </Container>
-    ) : (
-      <Container className="d-flex align-items-center justify-content-center vh-100">
-        <Row className="justify-content-center d-flex flex-column">
-          <Col xs={12} md={8} lg={11} className="mb-5">
-            <Button
-              variant="link"
-              onClick={() => navigate('/')}
-              style={{ color: 'white', fontSize: '1.5rem' }}
-            >
-              <FaArrowLeft />
-            </Button>
-          </Col>
-          <Col className="text-center mb-5">
-            <img 
-              src={logo} 
-              alt='logo' 
-              className='img-fluid shadow-lg mb-5' 
-              style={{ maxWidth: '300px' }} 
-            />
-            <Form.Group className="mb-3" style={{ maxWidth: '500px' }}>
-              <div style={{ marginBottom: '10px', textAlign: 'center' }}>
-                <span style={{ color: trackName.length < 3 ? 'red' : 'white' }}>
-                  {trackName.length}/32
-                </span>
-              </div>
-              <Form.Control
-                type="text"
-                placeholder="Nome da Pista"
-                value={trackName}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
-                className="text-center custom-input"
-                autoComplete="off"
-                maxLength={32}
-              />
-              <Button
-                variant="primary"
-                disabled={ buttonDisabled }
-                onClick={ handleClick } 
-                style={{ height: '50px', fontSize: '1.2rem', marginTop: '10px', width: '100%' }}
-              >
-                Criar
-              </Button>
-            </Form.Group>
-          </Col>
-        </Row>
+    <>
+      { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
+      <Suspense fallback={<Spinner />}>
+        {/* Componente de popup de mensagem */}
         <MessagePopup
-          show={showModal}
-          handleClose={handleClose}
-          message={modalMessage}
-          redirectTo="/login"
+          data={ popupMessageData } // Dados da mensagem
+          handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
-      </Container>
-    )
+      </Suspense>
+      { /* Componente de carregamento */ }
+      { isLoading ? (
+        <Container
+          className='d-flex justify-content-center align-items-center'
+          style={{ height: '100vh' }}
+        >
+          <Image src={ logo } alt='Loading Logo' className='logo-spinner' /> { /* Logo de carregamento */ }
+        </Container>
+      ) : (
+        <Container className='d-flex align-items-center justify-content-center vh-100'>
+          <Row className='justify-content-center d-flex flex-column'>
+            <Col className='text-center mb-5'>
+              { /* Logo do alicaivo */ }
+              <Image
+                alt='logo' // Texto alternativo
+                className='img-fluid shadow-lg mb-5' // Classe CSS para estilização
+                src={ logo } // Caminho da imagem
+                style={{ maxWidth: '300px' }} // Estilo CSS para definir a largura máxima
+              />
+              <Form.Group className='mb-3' style={{ maxWidth: '500px' }}>
+                { /* Contador de caracteres */ }
+                <Container style={{ marginBottom: '10px', textAlign: 'center' }}>
+                  <span style={{ color: trackName.length < 3 ? 'red' : 'white' }}>
+                    {trackName.length}/32
+                  </span>
+                </Container>
+                { /* Campo de entrada para o nome da pista */ }
+                <Form.Control
+                  autoComplete='off' // Desabilita o preenchimento automático
+                  className='text-center custom-input' // Classe CSS personalizada
+                  maxLength={ 32 } // Limite de caracteres
+                  onChange={ handleChange } // Função de mudança
+                  onKeyDown={ handleKeyDown}  // Função de tecla pressionada
+                  placeholder='Nome da Pista' // Placeholder
+                  // Estilos do campo
+                  style={{
+                    height: '50px',
+                    fontSize: '1.2rem',
+                    marginBottom: '20px',
+                    textAlign: 'center',
+                  }}
+                  type='text' // Tipo de entrada
+                  value={trackName} // Valor do campo
+                />
+                { /* Botão para criar a pista */ }
+                <Button
+                  variant='primary' // Cor do botão
+                  disabled={ buttonDisabled } // Desabilita o botão se o estado for verdadeiro
+                  onClick={ handleClick } // Função de clique
+                  // Estilos do botão
+                  style={{
+                    fontSize: '1.2rem', // Tamanho da fonte
+                    height: '50px', // Altura do botão
+                    marginTop: '10px', // Margem superior
+                    width: '100%', // Largura do botão
+                  }}
+                >
+                  Criar
+                </Button>
+              </Form.Group>
+            </Col>
+          </Row>
+        </Container>
+      )}
+    </>
   );
-};
+}
 
+// Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
   token: state.trackReducer.token
 });
 
-const CreateTrackConnected = connect(mapStateToProps)(CreateTrack);
+const CreateTrackConnected = connect(mapStateToProps)(CreateTrack); // Conecta o componente ao Redux
 
-export default CreateTrackConnected;
+export default CreateTrackConnected; // Exporta o componente conectado

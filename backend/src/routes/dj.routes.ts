@@ -2,7 +2,7 @@ import { Router } from 'express';
 import DJController from '../controllers/DJController';
 import Validations from '../middlewares/Validations';
 
-// Classe responsável por controlar as rotas do DJ
+// Esse arquivo define as rotas para as operações relacionadas a DJs na aplicação
 
 const djController = new DJController(); // Instancia o controlador do DJ
 const router = Router(); // Instancia o roteador

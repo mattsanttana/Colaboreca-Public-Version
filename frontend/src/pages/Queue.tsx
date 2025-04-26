@@ -1,26 +1,24 @@
-import React, { lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Button, Card, Col, Container, Image, ListGroupItem, OverlayTrigger, Popover, Row, Spinner } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Col, Container, ListGroupItem, OverlayTrigger, Popover, Row } from 'react-bootstrap';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { RootState } from '../redux/store';
-import MessagePopup from './MessagePopup';
-import useDJ from '../utils/useDJ';
-import usePlayback from '../utils/usePlayback';
-import useTrack from '../utils/useTrack';
-import useVote from '../utils/useVote';
-import { DJ, DJPlayingNow } from '../types/DJ';
-import TQueue from '../types/TQueue';
-import PlayingNow from '../types/PlayingNow';
+import Header from './Header';
+import Menu from './Menu';
+import TrackInfoPopup from './TrackInfoPopup';
 import { logo } from '../assets/images/characterPath';
-import { io } from 'socket.io-client';
-import { Music } from '../types/SpotifySearchResponse';
-import RankingChangePopup from './RankingChangePopup';
-const Header = lazy(() => import('./Header'));
-const Menu = lazy(() => import('./Menu'));
-const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
+import { RootState } from '../redux/store'
+import useFetchPlaybackData from '../utils/useFetchPlaybackData';
+import useFetchTrackData from '../utils/useFetchTrackData';
+import useMenu from '../utils/useMenu';
+import usePlayback from '../utils/usePlayback';
+import TQueue from '../types/TQueue';
+
+// Componentes que não precisam ser carregados inicialmente
+const MessagePopup = lazy(() => import('./MessagePopup'));
+const RankingChangePopup = lazy(() => import('./RankingChangePopup'));
 const VotePopup = lazy(() => import('./VotePopup'));
 
 type Props = {
@@ -28,267 +26,49 @@ type Props = {
   trackToken: string;
 };
 
-const socket = io('http://localhost:3001');
-
 const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   const { trackId } = useParams();
-  const navigate = useNavigate();
-  const [isOwner, setIsOwner] = useState<boolean>(true);
-  const [dj, setDJ] = useState<DJ | undefined>(undefined);
-  const [djs, setDJs] = useState<DJ[]>([]);
-  const [previewRank, setPreviewRank] = useState<DJ[]>([]);
-  const [showRankChangePopup, setShowRankChangePopup] = useState<boolean>(false);
-  const [queue, setQueue] = useState<TQueue[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [popupMessage, setPopupMessage] = useState<string>('');
-  const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0); // Para controlar o índice da música atual
-  const [touchStartX, setTouchStartX] = useState(0);
-  const [touchEndX, setTouchEndX] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null);
-  const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null);
-  const [showVotePopup, setShowVotePopup] = useState<boolean | undefined>(false);
+  const [ queue, setQueue ] = useState<TQueue[]>([]);
+  const [ showTrackInfoPopup, setShowTrackInfoPopup ] = useState(false) // Estado para controlar o popup de informações da pista
+  const [ currentTrackIndex, setCurrentTrackIndex ] = useState<number>(0); // Para controlar o índice da música atual
   
-  const sliderRef = useRef<Slider | null>(null); // Referência para o slider
-  const menuRef = useRef<HTMLDivElement>(null);
-  const trackRefs = useRef<(HTMLDivElement | null)[]>([]); // Referências para os itens da fila
-  const trackActions = useTrack();
-  const djActions = useDJ();
+  const navigate = useNavigate();
   const playbackActions = usePlayback();
-  const voteActions = useVote();
-  const interval = useRef<number | null>(null);
+  const sliderRef = useRef<Slider | null>(null); // Referência para o slider
+  const trackRefs = useRef<(HTMLDivElement | null)[]>([]); // Referências para os itens da fila
+
+  // Hook personalizado para buscar dados da pista
+  const {
+    dj, djs, isTrackOwner, popupMessageData, previewRanking, setPopupMessageData, setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
+  } = useFetchTrackData(trackId, djToken, trackToken);
+
+  // Hook personalizado para buscar dados de reprodução
+  const {
+    djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
+  } = useFetchPlaybackData(trackId, djToken)
+  
+  const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu() // Hook personalizado para lidar com o menu
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchQueueData = async () => {
       if (trackId) {
-        const pageType = window.location.pathname.split('/')[1];
-    
-        if (pageType !== 'track-info') {
-          setIsOwner(false);
+        const queue = await playbackActions.getQueue(trackId);
 
-          const [ fetchedTrack, fetchedDJData, fetchedQueue ] = await Promise.all([
-            trackActions.getTrackById(trackId),
-            djActions.getDJData(djToken),
-            playbackActions.getQueue(trackId)
-          ]);
-
-          if (!fetchedDJData?.data.dj) {
-            setPopupMessage('Você não é um DJ desta pista, por favor faça login');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-          }
-
-          if (fetchedTrack?.status === 200) {
-            setDJ(fetchedDJData?.data.dj);
-            setQueue(fetchedQueue);
-            setIsLoading(false); 
-          } else {
-            setPopupMessage('Esta pista não existe');
-            setRedirectTo('/enter-track');
-            setShowPopup(true);
-          }
-        } else {
-          setIsOwner(true);
-
-          if (trackId) {
-            const [ fetchedVerifyTrackAcess, fetchedQueue ] = await Promise.all([
-              trackActions.verifyTrackAcess(trackToken, trackId),
-              playbackActions.getQueue(trackId)
-            ])
-
-            if (fetchedVerifyTrackAcess?.status !== 200) {
-              setPopupMessage('Você não tem permissão para acessar essa pista');
-              setRedirectTo('/login');
-              setShowPopup(true);
-            } else {
-              setQueue(fetchedQueue);
-              setIsLoading(false);
-            }
-          }
-        }
+        setQueue(queue);
       }
-    };
+    }
 
-    fetchInitialData();
+    fetchQueueData();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (trackId && playingNow) {
-
-        // Limpar os votos quando a URI da música atual mudar
-        setDJPlayingNow(null);
-
-        try {
-          const [fetchedVerifyIfDJHasAlreadVoted, fetchedDJPlayingNow, fetchedQueue ] = await Promise.all([
-            voteActions.verifyIfDJHasAlreadVoted(djToken),
-            playbackActions.getDJAddedCurrentMusic(trackId),
-            playbackActions.getQueue(trackId)
-          ]);
-
-          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted);
-          setDJPlayingNow(fetchedDJPlayingNow);
-          setQueue(fetchedQueue);
-    
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      }
-    };
-
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playingNow?.item?.uri || '']);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (trackId) {
-        try {
-          const fetchedPlayingNow = await playbackActions.getState(trackId)
-
-          setPlayingNow(fetchedPlayingNow);
-          
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      }
-    };
-
-    fetchData();
-
-    interval.current = window.setInterval(() => {
-      fetchData();
-    }, 10000);
-
-    return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  
   useEffect(() => {
     // Rolar para o item selecionado sempre que currentTrackIndex mudar
     if (trackRefs.current[currentTrackIndex]) {
       trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [currentTrackIndex]);
-
-  const closeMenu = useCallback(() => {
-    if (isMenuOpen) {
-      setIsMenuOpen(false);
-    }
-  }, [isMenuOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        closeMenu();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [closeMenu]);
-
-  useEffect(() => {
-    if (socket.connected && dj) {
-      socket.emit('joinRoom', `track_${trackId}`);
-    }
-
-    const handleTrackDeleted = (data: { trackId: number }) => {
-      if (Number(trackId) === Number(data.trackId)) {
-        setPopupMessage('Esta pista foi deletada');
-        setRedirectTo('/enter-track');
-        setShowPopup(true);
-      }
-    }
-  
-    const handleDJUpdated = (updatedDJ: DJ) => {
-      // Atualiza a lista de DJs
-      setDJs((prevDJs) =>
-        prevDJs.map((dj) => {
-          if (Number(dj.id) === Number(updatedDJ.id)) {
-            return updatedDJ; // Substitui o DJ pelo atualizado
-          }
-          return dj; // Mantém o DJ atual
-        })
-      );
-
-      // Atualiza o DJ atual (se aplicável)
-      setDJ((currentDJ) => {
-        if (currentDJ?.id === updatedDJ.id) {
-          const updatedDJRanking = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking;
-          const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking;
-          if (updatedDJRanking < currentDJRanking) {
-            setPreviewRank(djs); // Atualiza o estado previewRank
-            setShowRankChangePopup(true); // Exibe o popup de mudança de ranking
-          }
-          return updatedDJ; // Atualiza o DJ atual
-        }
-        return currentDJ; // Mantém o DJ atual
-      });
-    };
-
-    const handleDJDeleted = (data: { djId: number }) => {
-      if (Number(dj) === Number(data.djId)) {
-        setPopupMessage('Você foi removido desta pista');
-        setRedirectTo('/enter-track');
-        setShowPopup(true);
-      }
-    };
-
-    const handleQueueUpdated = (data: { queue: TQueue[], spotifyQueue: Music[]}) => {
-      setQueue(data.queue);
-    };
-
-
-    socket.emit('joinRoom', `track_${trackId}`);
-    socket.on('track deleted', handleTrackDeleted);
-    socket.on('dj updated', handleDJUpdated);
-    socket.on('dj deleted', handleDJDeleted);
-    socket.on('queue updated', handleQueueUpdated);
-  
-    return () => {
-      socket.off('track deleted', handleTrackDeleted);
-      socket.off('dj updated', handleDJUpdated);
-      socket.off('dj deleted', handleDJDeleted);
-      socket.off('queue updated', handleQueueUpdated);
-    };
-    
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dj]);
-
-  // Funções para lidar com o toque
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEndX(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    // Calcula a distância de deslocamento horizontal
-    const distance = touchEndX - touchStartX;
-    
-    // Define o valor mínimo para considerar um swipe
-    if (distance > 20) {
-      setIsMenuOpen(true); // Abre o menu se o deslize for da esquerda para a direita
-    }
-
-    if (distance < -20) {
-      setIsMenuOpen(false); // Fecha o menu se o deslize for da direita para a esquerda
-    }
-  };
 
   // Função para pular para o item clicado no carrossel
   const handleTrackClick = (index: number) => {
@@ -297,7 +77,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   };
 
   const handleViewProfile = (djId: string) => {
-    const profileUrl = isOwner
+    const profileUrl = isTrackOwner
       ? `/track-info/profile/${trackId}/${djId}`
       : `/track/profile/${trackId}/${djId}`;
     navigate(profileUrl);
@@ -308,15 +88,11 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
     navigate(chatUrl);
   }
 
-  const handleClosePopup = () => {
-    setShowRankChangePopup(false);
-  };
-
   const renderPopover = (djId: number) => (
     <Popover id={`popover-${djId}`}>
       <Popover.Body>
         <Button variant="link" onClick={() => handleViewProfile(String(djId))}>Perfil</Button>
-        {(!isOwner && djId !== Number(dj?.id)) && (
+        {(!isTrackOwner && djId !== Number(dj?.id)) && (
           <Button variant="link" onClick={() => handleStartChat(djId)}>Chat</Button>
         )}
       </Popover.Body>
@@ -333,33 +109,68 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
   };
 
   return (
-    <div>
-      <MessagePopup
-        show={showPopup}
-        handleClose={() => setShowPopup(false)}
-        message={popupMessage}
-        redirectTo={redirectTo}
-      />
-      {isLoading ? (
+    // Envolve o componente em um div para lidar com eventos de toque
+    <div
+      onTouchStart={ handleTouchStart } // Adiciona evento de toque inicial
+      onTouchMove={ handleTouchMove } // Adiciona evento de movimento do toque
+      onTouchEnd={ handleTouchEnd } // Adiciona evento de toque final
+    >
+      
+      { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
+      <Suspense fallback={<Spinner />}>
+        {/* Componentes de popups de mensagem */}
+        <MessagePopup
+          data={ popupMessageData } // Dados da mensagem
+          handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
+        />
+        { /* Popup de alteração de ranking */ }
+        <RankingChangePopup
+          showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+          dj={ dj } // Envia o DJ atual como prop
+          previousRanking={ previewRanking } // Envia o ranking anterior como prop
+          currentRanking={ djs } // Envia o ranking atual como prop
+          handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+        />
+        { /* Popup de informações da pista */ }
+        <TrackInfoPopup
+          trackToken={ trackToken } // Token da pista
+          trackName={ trackName } // Nome da pista
+          setTrackName={ setTrackName } // Função para definir o nome da pista
+          show={ showTrackInfoPopup } // Estado do popup de informações da pista
+          setShow={ setShowTrackInfoPopup } // Função para definir o estado do popup
+        />
+        { /* popup de votação */ }
+        <VotePopup
+          showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+          setShowVotePopup={ setShowVotePopup }  // Função para fechar o popup
+          playingNow={ playingNow } // Envia o estado de reprodução como prop
+          djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
+        />
+      </Suspense>
+      { /* Verifica se está carregando */ }
+      { isLoading ? (
+        // Se sim, exibe o logo de carregamento
         <Container
           className="d-flex justify-content-center align-items-center"
           style={{ height: '100vh' }}
         >
-          <img src={logo} alt="Loading Logo" className="logo-spinner" />
+          <Image src={ logo } alt='Loading Logo' className="logo-spinner" />
         </Container>
       ) : (
+        // renderiza o conteúdo principal
         <Container>
-          <Header dj={dj} isSlideMenuOpen={isMenuOpen} toggleMenu={setIsMenuOpen}/>
+          <Header
+            dj={ dj } // Envia o DJ atual como prop
+            isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop
+            isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+            showTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
+          />
           <Row>
-          {isOwner ? (
-            <Col md={3} className="d-none d-xxl-block">
-              <TrackInfoMenu trackId={trackId} />
+            <Col md={ 3 } className='d-none d-xxl-block'>
+              { /* Componente de menu */ }
+              <Menu dj={ dj } isTrackOwner={ isTrackOwner } /> { /* Envia o DJ atual como prop */ }
             </Col>
-          ) : (
-            <Col md={3} className="d-none d-xxl-block">
-              <Menu dj={dj} />
-            </Col>
-          )}
             <Col
               md={12}
               xl={12}
@@ -448,23 +259,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                         </Col>
                       ))}
                     </Row>
-                    {showVotePopup && !isOwner && (
-                      <VotePopup
-                        showVotePopup={showVotePopup}
-                        setShowVotePopup={setShowVotePopup} 
-                        playingNow={playingNow}
-                        djPlayingNow={djPlayingNow}
-                      />
-                    )}
-                    {showRankChangePopup && dj && (
-                      <RankingChangePopup
-                        showRankingChangePopup={showRankChangePopup}
-                        dj={dj}
-                        previousRanking={previewRank}
-                        currentRanking={djs}
-                        handleClosePopup={handleClosePopup}
-                      />
-                    )}
                   </div>
                   ) : (
                     <h3 className="text-light" style={{marginTop: '40%'}}>Dispositivo desconectado</h3>

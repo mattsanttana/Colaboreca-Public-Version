@@ -21,7 +21,6 @@ import { io } from 'socket.io-client';
 import RankingChangePopup from './RankingChangePopup';
 const Header = lazy(() => import('./Header'));
 const Menu = lazy(() => import('./Menu'));
-const TrackInfoMenu = lazy(() => import('./TrackInfoMenu'));
 const VotePopup = lazy(() => import('./VotePopup'));
 
 interface Props {

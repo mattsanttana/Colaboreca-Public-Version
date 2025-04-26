@@ -2,7 +2,7 @@ import { Router } from 'express';
 import VoteController from '../controllers/VoteController';
 import Validations from '../middlewares/Validations';
 
-// Classe responsável por controlar as rotas dos votos
+// Esse arquivo define as rotas para as operações relacionadas a votos na aplicação
 
 const voteController = new VoteController(); // Instancia o controlador de votos
 const router = Router(); // Instancia o roteador

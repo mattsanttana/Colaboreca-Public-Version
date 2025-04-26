@@ -3,20 +3,19 @@ import { useParams } from 'react-router-dom';
 import { Navbar, Nav, Button, Modal } from 'react-bootstrap';
 import { FaBars, FaInfoCircle, FaShareAlt } from 'react-icons/fa';
 import Menu from './Menu';
-import TrackInfoMenu from './TrackInfoMenu';
 import ShareTrack from './ShareTrack';
-import ShareTrackInfo from './ShareTrackInfo';
 import { DJ } from '../types/DJ';
 import { horizontalLogo } from '../assets/images/characterPath';
 
 interface Props {
-  trackInfoShowPopup?: (isOpen: boolean) => void;
   dj?: DJ | undefined;
   isSlideMenuOpen?: boolean;
+  isTrackOwner: boolean;
+  showTrackInfoPopup: (isOpen: boolean) => void;
   toggleMenu?: (isOpen: boolean) => void;
 }
 
-const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, toggleMenu }) => {
+const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, showTrackInfoPopup, toggleMenu }) => {
   const { trackId } = useParams<{ trackId: string }>();
   const [showPopup, setShowPopup] = useState(false);
   const [pageType, setPageType] = useState('');
@@ -96,11 +95,7 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
           transition: 'transform 0.3s ease',
         }}
       >
-        {pageType === 'track' ? (
-          <Menu dj={dj} />
-        ) : (
-          <TrackInfoMenu trackId={trackId} />
-        )}
+        <Menu dj={ dj } isTrackOwner={ isTrackOwner } />
       </div>
       <Navbar
         className="justify-content-between"
@@ -127,11 +122,7 @@ const Header: React.FC<Props> = ({ trackInfoShowPopup, dj, isSlideMenuOpen, togg
           <Modal.Title>{pageType === 'track' ? 'Compartilhar Pista' : 'Detalhes da Pista'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {pageType === 'track' ? (
-            <ShareTrack trackId={trackId} />
-          ) : (
-            <ShareTrackInfo trackId={trackId} setShowPopup={trackInfoShowPopup || (() => {})} />
-          )}
+          <ShareTrack trackId={trackId} pageType={pageType} setShowPopup={ showTrackInfoPopup } />
         </Modal.Body>
       </Modal>
     </div>

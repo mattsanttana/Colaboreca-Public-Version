@@ -5,7 +5,7 @@ import { podium } from "../assets/images/characterPath";
 import { DJ } from "../types/DJ";
 
 interface Props {
-  dj: DJ;
+  dj: DJ | undefined;
   previousRanking: DJ[];
   currentRanking: DJ[];
   showRankingChangePopup: boolean;
@@ -31,11 +31,11 @@ const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanki
     config: { duration: 800 },
     onRest: () => {
       // Quando terminar o flip, se o usuário subiu pro top3, fecha ranking e abre pódio
-      if (currentRanking.some((it) => it.id === dj.id && it.ranking <= 3)) {
+      if (currentRanking.some((it) => it.id === dj?.id && it.ranking <= 3)) {
         setTimeout(() => {
           setShowRanking(false);
           setShowPodium(true);
-        }, 5000);
+        }, 4000);
       }
     },
   });
@@ -58,7 +58,7 @@ const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanki
       return { opacity: 0, transform: `translateY(${(prevIdx - curIdx) * h}px)` };
     },
     enter: { opacity: 1, transform: "translateY(0px)" },
-    config: { duration: 800 },
+    config: { duration: 2000 },
   });
 
   // 4) Quando abrir popup: primeiro ranking antigo, depois flip pro novo, depois highlight
@@ -72,10 +72,10 @@ const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanki
     const t1 = setTimeout(() => {
       setDisplayedRanking([...currentRanking].sort((a, b) => b.score - a.score));
 
-      // 4.3 só após a animação de 800ms, acende o highlight
+      // 4.3 só após a animação de 200ms, acende o highlight
       const t2 = setTimeout(() => {
-        setUpdatedDJId(Number(dj.id));
-      }, 800);
+        setUpdatedDJId(Number(dj?.id));
+      }, 200);
 
       return () => clearTimeout(t2);
     }, 2500);
@@ -245,7 +245,7 @@ const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanki
                 <div>
                   <animated.div
                     key={djPodium[0].id}
-                    style={djPodium[0].id === dj.id ? jumpAnimation : {}}
+                    style={djPodium[0].id === dj?.id ? jumpAnimation : {}}
                   >
                     <p className="text-light mt-3" style={{
                       marginLeft: '-170px',
@@ -270,7 +270,7 @@ const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanki
                 <div>
                   <animated.div
                     key={djPodium[1].id}
-                    style={djPodium[1].id === dj.id ? jumpAnimation : {}}
+                    style={djPodium[1].id === dj?.id ? jumpAnimation : {}}
                   >
                     <p className="text-light mt-3" style={{
                       marginLeft: '-290px',
@@ -295,7 +295,7 @@ const RankingChangePopup: React.FC<Props> = ({ dj, previousRanking, currentRanki
                 <div>
                   <animated.div
                     key={djPodium[2].id}
-                    style={djPodium[2].id === dj.id ? jumpAnimation : {}}
+                    style={djPodium[2].id === dj?.id ? jumpAnimation : {}}
                   >
                     <p className="text-light mt-3" style={{
                       marginLeft: '-80px',

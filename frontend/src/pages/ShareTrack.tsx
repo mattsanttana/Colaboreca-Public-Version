@@ -4,12 +4,14 @@ import QRCode from 'qrcode-generator';
 
 interface Props {
   trackId: string | undefined;
+  pageType: string;
+  setShowPopup: (isOpen: boolean) => void;
 }
 
-const ShareTrack: React.FC<Props> = ({ trackId }) => {
+const ShareTrack: React.FC<Props> = ({ trackId, pageType, setShowPopup, }) => {
   const generateQRCode = useCallback(() => {
     const qr = QRCode(0, 'M');
-    qr.addData(`http://localhost:5173/create-track/${trackId}`);
+    qr.addData(`http://localhost:5173/enter-track/${trackId}`);
     qr.make();
 
     const canvas = document.createElement('canvas');
@@ -38,9 +40,9 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'Essa é a minha pista no Colaboreca!',
+          title: 'Esta é uma pista de discoteca no Colaboreca!',
           text: 'Clique no link e venha discotecar comigo!',
-          url: `http://localhost:5173/create-track/${trackId}`,
+          url: `http://localhost:5173/enter-track/${trackId}`,
         });
         console.log('Link compartilhado com sucesso!');
       } else {
@@ -51,9 +53,6 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
     }
   }, [trackId]);
 
-  const trackIdHead = trackId?.slice(0, 3);
-  const trackIdTail = trackId?.slice(-3);
-
   return (
     <Container>
        <Card
@@ -62,28 +61,43 @@ const ShareTrack: React.FC<Props> = ({ trackId }) => {
       >
         <Card.Body>
           <Row className='w-100'>
-            <Col md={12} className='d-flex justify-content-center align-items-center'>
+            <Col md={12} className='d-flex justify-content-center align-items-center' style={{ marginLeft: '10px' }}>
               <h3 className="mb-4">O ID da sua pista é:</h3>
             </Col>
-            <Col md={12} className='d-flex justify-content-center align-items-center'>
-              <Col md={1} className='d-flex justify-content-center align-items-center'>
-                <h1 className='track-id'> { trackIdHead } </h1>
+            <Row md={12} className='d-flex justify-content-center align-items-center'>
+              <Col
+                md={4} // Ajuste o tamanho conforme necessário
+                className="d-flex flex-column justify-content-center align-items-center"
+                style={{ marginLeft: '50px' }}
+              >
+                <div className="d-flex justify-content-center align-items-center gap-2">
+                <h1 className="track-id">
+                  {trackId?.slice(0, Math.ceil(trackId.length / 2))} {/* Primeira metade */}
+                  <span style={{ margin: '0 8px' }}></span> {/* Espaço no meio */}
+                  {trackId?.slice(Math.ceil(trackId?.length / 2))} {/* Segunda metade */}
+                </h1>
+                </div>
               </Col>
-              <Col md={1} className='d-flex justify-content-center align-items-center'></Col>
-                <h1 className='track-id'> { trackIdTail } </h1>
+              <Col
+                md={12}
+                className='d-flex flex-column justify-content-center align-items-center text-center'
+              >
+              <div style={{ backgroundColor: 'white', height: '200px', width: '200px', marginLeft: '50px' }}>
+                  <div className="mb-3" style={{ marginTop: '13px' }}>{generateQRCode()}</div>
+                </div>
               </Col>
-            <Col
-              md={12}
-              className='d-flex flex-column justify-content-center align-items-center text-center'
-            >
-             <div style={{ backgroundColor: 'white', height: '200px', width: '200px' }}>
-                <div className="mb-3" style={{ marginTop: '13px' }}>{generateQRCode()}</div>
-              </div>
-            </Col>
+            </Row>
           </Row>
-          <Button variant="primary" onClick={ handleShare } style={{margin: '20px', marginRight: '42px'}}>
-            Compartilhar
-          </Button>
+          <div className="d-flex justify-content-center align-items-center gap-2 mt-3">
+            <Button variant="primary" onClick={handleShare}>
+              Compartilhar
+            </Button>
+            {pageType === 'track-info' && (
+              <Button variant="secondary" onClick={() => setShowPopup(true)}>
+                Editar/Excluir
+              </Button>
+            )}
+          </div>
         </Card.Body>
       </Card>
     </Container>

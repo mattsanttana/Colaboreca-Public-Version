@@ -1,34 +1,38 @@
 import { useNavigate } from 'react-router-dom';
-import { Container, Button, Row, Col } from 'react-bootstrap';
+import { Button, Col, Container, Image, Row } from 'react-bootstrap';
 import { logo } from '../assets/images/characterPath';
 
-const HomePage = () => {
-  const navigate = useNavigate();
+// Página inicial
+const Home = () => {
+  const navigate = useNavigate(); // Hook para navegação entre páginas
 
   return (
     <Container className='d-flex align-items-center justify-content-center vh-100 text-light'>
       <Row className='w-100'>
-        <Col md={6} className='d-flex justify-content-center align-items-center'>
-          <img 
-            src={logo} 
+        <Col md={ 6 } className='d-flex justify-content-center align-items-center'>
+          {/* Logo do aplicativo */}
+          <Image 
             alt='logo' 
             className='img-fluid shadow-lg logo' 
+            src={ logo } 
             style={{ maxWidth: '350px' }} 
           />
         </Col>
-        <Col md={6} className='d-flex flex-column justify-content-center align-items-center'>
+        <Col className='d-flex flex-column justify-content-center align-items-center' md={ 6 }>
+            {/* Título da página */}
             <h1 className='login-title'>Crie ou entre numa pista para começar</h1>
+            {/* Botões de navegação */}
             <Button 
-              variant='primary' 
               className='menu-button' 
               onClick={() => navigate('/login')}
+              variant='primary' 
             >
               Criar Uma Pista
             </Button>
             <Button 
-              variant='secondary' 
               className='menu-button' 
               onClick={() => navigate('/enter-track')}
+              variant='secondary' 
             >
               Entrar Numa Pista
             </Button>
@@ -38,4 +42,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default Home;

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import TrackController from '../controllers/TrackController';
 import Validations from '../middlewares/Validations';
 
-// Classe responsável por controlar as rotas das pistas
+// Esse arquivo define as rotas para as operações relacionadas a pistas (tracks) na aplicação
 
 const trackController = new TrackController(); // Instancia o controlador de pistas
 const router = Router(); // Instancia o roteador

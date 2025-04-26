@@ -6,37 +6,49 @@ import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
 
-const useFetchTrackData = (trackId: string | undefined, token: string) => {
+const useFetchTrackData = (trackId: string | undefined, djToken: string, trackToken: string) => {
   const [trackName, setTrackName] = useState(''); // Nome da pista
   const [dj, setDJ] = useState<DJ>(); // DJ atual
   const [djs, setDJs] = useState<DJ[]>([]); // Lista de DJs
-  const [showPopup, setShowPopup] = useState(false); // Estado do popup
-  const [popupMessage, setPopupMessage] = useState(''); // Mensagem do popup
-  const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined); // URL para redirecionar
-  const [previewRank, setPreviewRank] = useState<DJ[]>([]); // Ranking anterior
+  const [popupMessageData, setPopupMessageData] = useState<{message: string, redirectTo: string, show: boolean}>({
+    message: '',
+    redirectTo: '',
+    show: false
+  }); // Mensagem do popup
+  const [previewRanking, setPreviewRanking] = useState<DJ[]>([]); // Ranking anterior
   const [showRankingChangePopup, setShowRankingChangePopup] = useState(false); // Estado do popup de mudança de ranking
+  const [isTrackOwner, setIsTrackOwner] = useState(true); // Estado para verificar se o usuário é o dono da pista
 
   const djActions = useDJ(); // Ações do DJ
   const trackActions = useTrack(); // Ações da pista
 
   // UseEffect para buscar dados iniciais
-    useEffect(() => {
-      // Função para buscar dados iniciais
-      const fetchData = async () => {
-        // Verifica se o ID da pista existe
-        if (trackId) {
+  useEffect(() => {
+    // Função para buscar dados iniciais
+    const fetchData = async () => {
+      // Verifica se o ID da pista existe
+      if (trackId) {
+
+        const pageType = window.location.pathname.split('/')[1]; // Obtém o tipo de página a partir da URL
+
+        // Verifica se o tipo de página é diferente de 'track-info'
+        if (pageType !== 'track-info') {
+          setIsTrackOwner(false); // Define que o usuário não é o dono da pista
+
           // Busca os dados da pista e do DJ
           try {
             const [fetchedTrack, fetchedDJData] = await Promise.all([
               trackActions.getTrackById(trackId), // Busca os dados da pista
-              djActions.getDJData(token) // Busca os dados do DJ
+              djActions.getDJData(djToken) // Busca os dados do DJ
             ]);
   
             // Verifica se o DJ está na pista e caso não esteja, exibe um popup de erro
             if (!fetchedDJData?.data.dj) {
-              setPopupMessage('Você não é um DJ desta pista, por favor faça login'); // Mensagem de erro
-              setRedirectTo('/enter-track'); // Redireciona para a página de login
-              setShowPopup(true); // Exibe o popup
+              setPopupMessageData({
+                message: 'Você não está nesta pista',
+                redirectTo: '/enter-track',
+                show: true
+              });
             }
   
             // Verifica se a pista existe
@@ -46,20 +58,47 @@ const useFetchTrackData = (trackId: string | undefined, token: string) => {
               setDJ(fetchedDJData?.data.dj); // Define o DJ atual
             } else {
               // Caso a pista não exista, exibe um popup de erro
-              setPopupMessage('Esta pista não existe'); // Mensagem de erro
-              setRedirectTo('/enter-track'); // Redireciona para a página de login
-              setShowPopup(true); // Exibe o popup
+              setPopupMessageData({
+                message: 'Esta pista não existe',
+                redirectTo: '/enter-track',
+                show: true
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching data:', error); // Em caso de erro exibe no console
+          }
+          // Caso o tipo de página seja 'track-info', busca os dados da pista e do DJ
+        } else {
+          try {
+            const [ fetchedTrack, fetchedVerifyTrackAcess, fetchedDJData ] = await Promise.all([
+              trackActions.getTrackById(trackId), // Busca os dados da pista
+              trackActions.verifyTrackAcess(trackToken, trackId), // Verifica o acesso à pista
+              djActions.getAllDJs(trackId) // Busca todos os DJs da pista
+            ])
+    
+            // Verifica se o DJ tem acesso à pista se não tiver, exibe um popup de erro
+            if (fetchedVerifyTrackAcess?.status !== 200) {
+              setPopupMessageData({
+                message: 'Você não tem acesso a esta pista',
+                redirectTo: '/enter-track',
+                show: true
+              });
+              // Caso o DJ tenha acesso à pista, define o nome da pista e a lista de DJs
+            } else {
+              setTrackName(fetchedTrack?.data.trackName); // Define o nome da pista
+              setDJs(fetchedDJData); // Define a lista de DJs
             }
           } catch (error) {
             console.error('Error fetching data:', error); // Em caso de erro exibe no console
           }
         }
-      };
-  
-      fetchData(); // Chama a função para buscar os dados iniciais
-  
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+      }
+    }
+
+    fetchData(); // Chama a função para buscar os dados iniciais
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
     // UseEffect para lidar com eventos do socket
     useEffect(() => {
@@ -77,9 +116,11 @@ const useFetchTrackData = (trackId: string | undefined, token: string) => {
       const handleTrackDeleted = (data: { trackId: number }) => {
         // Verifica se o ID da pista recebida é igual ao ID da pista atual
         if (Number(trackId) === Number(data.trackId)) {
-          setPopupMessage('Esta pista foi deletada'); // Mensagem de que a pista foi deletada
-          setRedirectTo('/enter-track'); // Redireciona para a página de login
-          setShowPopup(true); // Exibe o popup
+          setPopupMessageData({
+            message: 'Esta pista foi deletada',
+            redirectTo: '/enter-track',
+            show: true
+          }); // Exibe o popup de erro
         }
       };
 
@@ -109,7 +150,7 @@ const useFetchTrackData = (trackId: string | undefined, token: string) => {
             const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking; // Define o ranking atual tratando o 0 como infinito ( não ranquado )
             // Verifica se o ranking atualizado é menor que o ranking atual
             if (updatedDJRanking < currentDJRanking) {
-              setPreviewRank(djs); // Atualiza o estado previewRank
+              setPreviewRanking(djs); // Atualiza o estado previewRank
               setShowRankingChangePopup(true); // Exibe o popup de mudança de ranque
             }
             return updatedDJ; // Atualiza o DJ atual
@@ -122,9 +163,11 @@ const useFetchTrackData = (trackId: string | undefined, token: string) => {
       const handleDJDeleted = (data: { id: number}) => {
         // Verifica se o ID do DJ deletado é igual ao ID do DJ atual
         if (Number(dj?.id) === Number(data.id)) {
-          setPopupMessage('Você foi removido desta pista'); // Mensagem de que o DJ foi removido
-          setRedirectTo('/enter-track'); // Redireciona para a página de login
-          setShowPopup(true); // Exibe o popup
+          setPopupMessageData({
+            message: 'Você foi deletado desta pista',
+            redirectTo: '/enter-track',
+            show: true
+          }); // Exibe o popup de erro
         } else {
           setDJs((prevDJs) => prevDJs.filter((dj) => Number(dj.id) !== Number(data.id))); // Atualiza a lista de DJs removendo o DJ deletado
         }
@@ -152,22 +195,16 @@ const useFetchTrackData = (trackId: string | undefined, token: string) => {
     }, [dj]);
 
   return {
-    trackName, // Nome da pista
-    setTrackName, // Função para definir o nome da pista
     dj, // DJ atual
     djs, // Lista de DJs
-    showPopup, // Estado do popup
-    setShowPopup, // Função para definir o estado do popup
-    popupMessage, // Mensagem do popup
-    setPopupMessage, // Função para definir a mensagem do popup
-    redirectTo, // URL para redirecionar
-    setRedirectTo, // Função para definir a URL para redirecionar
-    trackActions, // Ações da pista
-    djActions, // Ações do DJ
-    showRankingChangePopup, // Estado do popup de mudança de ranking
+    isTrackOwner, // Estado para verificar se o usuário é o dono da pista
+    popupMessageData, // Dados do popup de mensagem
+    previewRanking, // Ranking anterior
+    setPopupMessageData, // Função para definir os dados do popup de mensagem
     setShowRankingChangePopup, // Função para definir o estado do popup de mudança de ranking
-    previewRank, // Ranking anterior
-    
+    setTrackName, // Função para definir o nome da pista
+    showRankingChangePopup, // Estado do popup de mudança de ranking
+    trackName, // Nome da pista
    };
 }
 
