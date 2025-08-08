@@ -7,10 +7,12 @@ import usePlayback from "./usePlayback";
 import useVote from "./useVote";
 import { Music } from "../types/SpotifySearchResponse";
 import TQueue from "../types/TQueue";
+import { useParams } from "react-router-dom";
 
 const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
 
-const useFetchPlaybackData = (trackId: string | undefined, djToken: string) => {
+const useFetchPlaybackData = (djToken: string) => {
+  const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [playingNow, setPlayingNow] = useState<PlayingNow | null>(null); // Estado da música que está tocando
   const [votes, setVotes] = useState<Vote | undefined>(undefined); // Votos da música
   const [djPlayingNow, setDJPlayingNow] = useState<DJPlayingNow | null>(null); // DJ que está tocando
@@ -36,11 +38,11 @@ const useFetchPlaybackData = (trackId: string | undefined, djToken: string) => {
         try {
           const [fetchedVerifyIfDJHasAlreadVoted, fetchedVotes, fetchedDJPlayingNow] = await Promise.all([
             voteActions.verifyIfDJHasAlreadVoted(djToken), // Verifica se o DJ já votou
-            voteActions.getAllVotesForThisMusic(trackId, playingNow.item?.uri ?? 'dispositivo não conectado'), // Busca todos os votos para a música atual
-            playbackActions.getDJAddedCurrentMusic(trackId) // Busca o DJ que adicionou a música atual
+            voteActions.getAllVotesForThisMusic(Number(trackId), playingNow.item?.uri ?? 'dispositivo não conectado'), // Busca todos os votos para a música atual
+            playbackActions.getDJAddedCurrentMusic(Number(trackId)) // Busca o DJ que adicionou a música atual
           ]);
 
-          setShowVotePopup(fetchedVerifyIfDJHasAlreadVoted ?? false); // Define se o popup de votação deve ser exibido com base na verificação se o DJ já votou
+          setShowVotePopup(playingNow.is_playing ? fetchedVerifyIfDJHasAlreadVoted ?? false : false); // Define se o popup de votação deve ser exibido com base na verificação se o DJ já votou
           setVotes(fetchedVotes); // Define os votos da música atual
           setDJPlayingNow(fetchedDJPlayingNow); // Define o DJ que está tocando a música atual
           setQueue(fetchedDJPlayingNow?.spotifyQueue?.queue ?? []); // Define a fila de músicas
@@ -62,7 +64,7 @@ const useFetchPlaybackData = (trackId: string | undefined, djToken: string) => {
       // Verifica se o ID da pista existe
       if (trackId) {
         try {
-          const fetchedPlayingNow = await playbackActions.getState(trackId) // Busca o estado do player
+          const fetchedPlayingNow = await playbackActions.getState(Number(trackId)) // Busca o estado do player
 
           setPlayingNow(fetchedPlayingNow); // Define o estado do player
           
@@ -94,7 +96,7 @@ const useFetchPlaybackData = (trackId: string | undefined, djToken: string) => {
   useEffect(() => {
     // Verifica se o socket está conectado e se o DJ existe
     if (socket.connected) {
-      socket.emit('joinRoom', `track_${trackId}`); // Entra na sala da pista
+      socket.emit('joinRoom', `track_${ trackId }`); // Entra na sala da pista
     }
 
     // Socket que recebe a informação de que um novo voto foi adicionado
@@ -109,7 +111,7 @@ const useFetchPlaybackData = (trackId: string | undefined, djToken: string) => {
     };
 
     // Socket que recebe a informação de que a fila foi atualizada
-    const handleQueueUpdated = (data: { queue: TQueue[], spotifyQueue: Music[]}) => {
+    const handleQueueUpdated = (data: { queue: TQueue[], spotifyQueue: Music[] }) => {
       setQueue(data.spotifyQueue); // Atualiza a fila de músicas
     };
 

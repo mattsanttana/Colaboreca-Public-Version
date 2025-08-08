@@ -43,7 +43,7 @@ const useVote = () => {
     }
   }
 
-  const getAllVotesForThisMusic = async (trackId: string, musicURI: string | undefined) => {
+  const getAllVotesForThisMusic = async (trackId: number, musicURI: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/votes/get-all-votes-for-this-music/${ trackId }/${ musicURI }`, {
         method: 'GET',

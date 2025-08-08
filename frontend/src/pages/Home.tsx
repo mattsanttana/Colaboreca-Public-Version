@@ -7,32 +7,42 @@ const Home = () => {
   const navigate = useNavigate(); // Hook para navegação entre páginas
 
   return (
-    <Container className='d-flex align-items-center justify-content-center vh-100 text-light'>
-      <Row className='w-100'>
-        <Col md={ 6 } className='d-flex justify-content-center align-items-center'>
+    <Container
+      className='d-flex align-items-center justify-content-center vh-100 text-light' // Classes para centralizar o conteúdo
+    >
+      <Row
+        className='w-100' // Largura da linha
+      >
+        <Col
+          className='d-flex justify-content-center align-items-center' // Classes para centralizar o conteúdo
+          md={ 6 } // Largura da coluna
+        >
           {/* Logo do aplicativo */}
           <Image 
-            alt='logo' 
-            className='img-fluid shadow-lg logo' 
-            src={ logo } 
-            style={{ maxWidth: '350px' }} 
+            alt='Logo do aplicativo' // Texto alternativo
+            className='img-fluid shadow-lg logo'  // Class para estilização
+            src={ logo } // Caminho da imagem
+            style={{ maxWidth: '350px' }} // Estilo para definir a largura máxima
           />
         </Col>
-        <Col className='d-flex flex-column justify-content-center align-items-center' md={ 6 }>
+        <Col
+          className='d-flex flex-column justify-content-center align-items-center' // Classes para centralizar o conteúdo
+          md={ 6 } // Largura da coluna
+        >
             {/* Título da página */}
             <h1 className='login-title'>Crie ou entre numa pista para começar</h1>
             {/* Botões de navegação */}
             <Button 
-              className='menu-button' 
-              onClick={() => navigate('/login')}
-              variant='primary' 
+              className='menu-button'  // Classe para estilização
+              onClick={() => navigate('/login')} // Navegação para a página de login
+              variant='primary' // Cor do botão
             >
               Criar Uma Pista
             </Button>
             <Button 
-              className='menu-button' 
-              onClick={() => navigate('/enter-track')}
-              variant='secondary' 
+              className='menu-button' // Classe para estilização
+              onClick={() => navigate('/enter-track')} // Navegação para a página de entrar numa pista
+              variant='secondary' // Cor do botão
             >
               Entrar Numa Pista
             </Button>

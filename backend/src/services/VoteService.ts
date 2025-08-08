@@ -22,53 +22,63 @@ export default class VoteService {
     private djModel: DJModel = new DJModel(),
     private musicModel: MusicModel = new MusicModel(),
     private trackModel: TrackModel = new TrackModel(),
-    private playbackService: PlaybackService = new PlaybackService()
+    private playbackService: PlaybackService = new PlaybackService(),
+    private isRunning: boolean = false // Flag para verificar se o serviço já está rodando
   ) {
-    // Começa o processo de verificação
-    setInterval(this.checkPlaybackState.bind(this), 30000);
+    this.startLoop(); // Inicia o loop para verificar o estado de reprodução
   }
 
+  // Método que inicia o loop
+  private startLoop() {
+    // Função que verifica o estado de reprodução a cada 30 segundos
+    const loop = async () => {
+      // Se o serviço já está rodando, não faz nada
+      if (!this.isRunning) {
+        await this.checkPlaybackState(); // Chama o método para verificar o estado de reprodução
+      }
+      setTimeout(loop, 30000); // Chama a função novamente após 30 segundos
+    };
+
+    loop(); // Inicia o loop
+  }
 
   // Método para verificar se a música que não teve seus pontos aplicados foi tocada e aplicar os pontos ao DJ
   async checkPlaybackState() {
-    try {
-      const tracksData = await this.trackModel.findAll(); // Busca todas as tracks
+  try {
+    if (this.isRunning) return; // Se o serviço já está rodando, não faz nada
+    this.isRunning = true; // Marca o serviço como rodando
 
-      // Para cada track, verifica o estado de reprodução
-      for (const track of tracksData) {
-        const token = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualiza o token de acesso
+    const tracksData = await this.trackModel.findAll(); // Busca todas as tracks
+    // Faz uma verificação para cada track
+    await Promise.allSettled(tracksData.map(async (track) => {
+      const token = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Pega o token de acesso do Spotify
+      
+      if (!token) return; // Se o token não for encontrado, não faz nada
 
-        // Se não houver token, pula para a próxima track
-        if (!token) {
-          continue;
-        }
+      const music = track.colaborecaQueue.find((music) => !music.pointsApllied); // Busca a música que não teve seus pontos aplicados
+      if (!music || !music.id) return; // Se a música não for encontrada, não faz nada
 
-        const music = track.colaborecaQueue.find((music) => !music.pointsApllied); // Busca a música que não teve seus pontos aplicados
+      const queue = await SpotifyActions.getQueue(token); // Pega a fila de reprodução do Spotify
+      const musicInQueue = queue.queue.find((track: Music) => track.uri === music?.musicURI); // Verifica se a música está na fila de reprodução
+      const currentMusicURI = queue.currently_playing?.uri; // Pega a URI da música que está sendo reproduzida atualmente
 
-        // Se não houver música, pula para a próxima track
-        if (!music || !music.id) {
-          continue;
-        }
-
-        const queue = await SpotifyActions.getQueue(token); // Busca a fila de reprodução
-        const musicInQueue = queue.queue.find((track: Music) => track.uri === music?.musicURI); // Verifica se a música está na fila
-        const currentMusicURI = queue.currently_playing?.uri; // Pega a URI da música atual
-
-        // Se a música não estiver na fila e a música atual for diferente da música que não teve seus pontos aplicados
-        if (currentMusicURI && music?.musicURI !== currentMusicURI && musicInQueue === undefined) {
-          await this.applyPointsToDJ(track.id, music.id); // Aplica os pontos ao DJ
-        }
+      // Se a música não está na fila de reprodução e não é a música que está sendo reproduzida atualmente, aplica os pontos ao DJ
+      if (currentMusicURI && music?.musicURI !== currentMusicURI && musicInQueue === undefined) {
+        await this.applyPointsToDJ(track.id, music.id); // Aplica os pontos ao DJ
       }
-    } catch (error) {
-      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
-      console.error(error);
-      if (error instanceof Error) {
-        return { status: 'ERROR', data: { message: error.message } };
-      } else {
-        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
-      }
+    }));
+  // Se acontecer um erro, exibe no console e retorna uma mensagem de erro
+  } catch (error) {
+    console.error(error);
+    if (error instanceof Error) {
+      return { status: 'ERROR', data: { message: error.message } };
+    } else {
+      return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
     }
+  } finally {
+    this.isRunning = false; // Marca o serviço como não rodando
   }
+}
 
   // Método para verificar se o DJ já votou na música atual
   async verifyIfDJHasAlreadVoted(authorization: string) {
@@ -205,8 +215,9 @@ export default class VoteService {
 
       const music = musics.find(music => music.id === musicId); // Busca a música pelo id
 
+      // Se a música não for encontrada, desfaz a transação e retorna uma mensagem de erro
       if (!music || !music.id) {
-        return { status: 'OK', data: { message: 'Music not found' } };
+        return { status: 'OK', data: { message: 'Music not found' } }; // Retorna uma mensagem de erro
       }
 
       const score = getDJScore(music); // Calcula o score do DJ
@@ -214,9 +225,10 @@ export default class VoteService {
       if (score.newScore !== 0) {
         const updateDJSCORE = await this.djModel.update({ score: score.newScore }, { id: music.djId }, { transaction }); // Atualiza o score do DJ
 
+        // Se a atualização do score do DJ não for bem-sucedida, desfaz a transação e retorna uma mensagem de erro
         if (!updateDJSCORE || !updateDJSCORE[0]) {
-          transaction.rollback();
-          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ score' } };
+          transaction.rollback(); // Rollback da transação
+          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ score' } }; // Retorna uma mensagem de erro
         }
       }
 
@@ -233,9 +245,10 @@ export default class VoteService {
 
         const updateDJSCORE = await this.djModel.update({ score: newScore }, { id: dj.id }, { transaction }); // Atualiza o score do DJ
 
+        // Se a atualização do score do DJ não for bem-sucedida, desfaz a transação e retorna uma mensagem de erro
         if (!updateDJSCORE || !updateDJSCORE[0]) {
-          transaction.rollback();
-          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ score' } };
+          transaction.rollback(); // Rollback da transação
+          return { status: 'ERROR', data: { message: 'An error occurred while updating DJ score' } }; // Retorna uma mensagem de erro
         }
       }
 
@@ -250,10 +263,10 @@ export default class VoteService {
         if (sortedDJs[i].ranking !== newRanking) {
           const updateDJRank = await this.djModel.update({ ranking: newRanking }, { id: sortedDJs[i].id }, { transaction });
     
+          // Se a atualização do ranking do DJ não for bem-sucedida, desfaz a transação e retorna uma mensagem de erro
           if (!updateDJRank || !updateDJRank[0]) {
-            console.log('Erro ao atualizar ranking do DJ');
-            await transaction.rollback();
-            return { status: 'ERROR', data: { message: 'An error occurred while updating DJ ranking' } };
+            await transaction.rollback(); // Rollback da transação
+            return { status: 'ERROR', data: { message: 'An error occurred while updating DJ ranking' } }; // Retorna uma mensagem de erro
           }
         }
 
@@ -269,9 +282,10 @@ export default class VoteService {
 
       const updateMusicPointApplied = await this.musicModel.update({ pointsApllied: true }, { id: music.id }, { transaction }); // Atualiza a música para que os pontos sejam aplicados
 
+      // Se a atualização da música não for bem-sucedida, desfaz a transação e retorna uma mensagem de erro
       if (!updateMusicPointApplied || !updateMusicPointApplied[0]) {
-        transaction.rollback();
-        return { status: 'ERROR', data: { message: 'An error occurred while updating music points applied' } };
+        transaction.rollback(); // Desfaz a transação
+        return { status: 'ERROR', data: { message: 'An error occurred while updating music points applied' } }; // Retorna uma mensagem de erro
       }
 
       transaction.commit(); // Comita a transação

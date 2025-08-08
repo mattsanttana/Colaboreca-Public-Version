@@ -1,188 +1,150 @@
-import { Button, Card, Modal, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
-import { djTablePlaying } from "../assets/images/characterPath";
-import React, { useEffect, useRef, useState } from "react";
-import { DJPlayingNow } from "../types/DJ";
-import PlayingNow from "../types/PlayingNow";
-import { RootState } from "../redux/store";
-import { connect } from "react-redux";
-import useVote from "../utils/useVote";
-import { FaQuestionCircle } from "react-icons/fa";
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Button, Container, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
+import { connect } from 'react-redux';
+import { FaQuestionCircle } from 'react-icons/fa';
+import { RootState } from '../redux/store';
+import { DJPlayingNow } from '../types/DJ';
+import PlayingNow from '../types/PlayingNow';
+import useVote from '../utils/useVote';
+import DJTable from './DJTable';
+import VoteThermometer from './VoteThermometer';
 
+// Componentes que não precisam ser carregados inicialmente
+const MessagePopup = lazy(() => import('./MessagePopup'));
+
+// Props recebidas
 interface Props {
-  showVotePopup: boolean;
-  setShowVotePopup: (show: boolean) => void;
-  djPlayingNow: DJPlayingNow | null;
-  playingNow: PlayingNow | null;
-  token: string;
+  djPlayingNow: DJPlayingNow | null; // DJ que está tocando
+  handleClose: () => void; // Função para abrir/fechar o popup de votação
+  playingNow: PlayingNow | null; // Música que está tocando
+  showVotePopup: boolean; // Estado que controla se o popup de votação está aberto
+  token: string; // Token do DJ
 }
 
-const Vote: React.FC<Props> = ({ showVotePopup, setShowVotePopup, playingNow, djPlayingNow, token }) => {
-  const [vote, setVote] = useState(2);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// Componente principal do popup de votação
+const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playingNow, token }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false); // Estado que controla se o voto está sendo enviado
+  const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false }); // Mensagem do popup
+  const [vote, setVote] = useState(2); // Estado que controla o voto selecionado (0 a 4)
   
-  const voteActions = useVote();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const voteActions = useVote(); // Hook personalizado para lidar com ações de voto
 
   useEffect(() => {
-    const scrollElement = scrollRef.current;
-    const containerElement = containerRef.current;
-
-    if (scrollElement && containerElement) {
-      const isPlaying = playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track';
-      const scrollWidth = scrollElement.scrollWidth;
-      const containerWidth = containerElement.clientWidth;
-
-      if (isPlaying && scrollWidth > containerWidth) {
-        // Calcula a diferença para saber quanto precisa rolar
-        const scrollAmount = scrollWidth - containerWidth + 20;
-        scrollElement.style.animation = `scroll-text ${scrollAmount / 15}s linear infinite`;
-        scrollElement.style.setProperty('--scroll-distance', `-${scrollAmount}px`);
-      } else {
-        scrollElement.style.animation = 'none'; // Remove a animação se o texto couber ou se não houver música tocando
-      }
+    if (!playingNow || !playingNow?.is_playing) {
+      handleClose();
     }
-  }, [playingNow]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingNow]); // Fecha o popup se a música parar de tocar
 
-  const handleVoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setVote(Number(event.target.value));
-  };
-
-  const getLabelClass = (index: number) => {
-    return index === vote ? 'highlight' : '';
-  };
-
+  // Função para enviar o voto
   const handleVoteSubmit = async () => {
-    const voteOptions = ['very_bad', 'bad', 'normal', 'good', 'very_good'];
+    const voteOptions = ['very_bad', 'bad', 'normal', 'good', 'very_good']; // Opções de voto
     
-    setIsSubmitting(true);
+    setIsSubmitting(true); // Define o estado de envio como verdadeiro para que o botão se torne um spinner
+
     try {
-      await voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]);
-      setShowVotePopup(false);
+      await voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]); // Envia o voto usando o hook personalizado
+      handleClose(); // Fecha o popup após enviar o voto
     } catch (error) {
-      console.error('Erro ao enviar voto:', error);
+      setPopupMessageData({
+        message: 'Erro ao enviar o voto. Tente novamente mais tarde.', // Mensagem de erro
+        redirectTo: '', // Redireciona para a página de entrada na pista
+        show: true // Exibe o popup de mensagem
+      });
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Define o estado de envio como falso para que o botão volte ao normal
     }
   };
   
+  // Renderiza o componente
   return (
-    <Modal className='custom-modal' show={showVotePopup}>
-      <Modal.Header style={{ borderBottom: 'none' }}>
-        <OverlayTrigger
-          placement="bottom-start"
-          overlay={
-            <Tooltip>
-              Como funcionam os votos?
+    <Container>
+      { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
+      <Suspense fallback={ <Spinner /> }>
+        <MessagePopup
+          data={ popupMessageData } // Dados da mensagem
+          handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
+        />
+      </Suspense>
+      <Modal
+        className='custom-modal' // Classe personalizada para o modal
+        show={ showVotePopup } // Estado do popup de votação
+      >
+        { /* Cabeçalho do modal */ }
+        <Modal.Header style={{ borderBottom: 'none', position: 'relative' }}>
+          { /* Ícone de ajuda com informações sobre os votos */ }
+          <OverlayTrigger
+            overlay={
+              // Tooltip com informações sobre os votos
+              <Tooltip>
+                Como funcionam os votos?
 
-              Hino: +3 pontos
-              Boa: +1 ponto
-              Tanto faz: 0 pontos
-              Ruim: -1 ponto
-              Ninguém merece: -3 pontos
-              Os votos não são acumulativos! A maioria dos votos decide a pontuação que será atribuída à música ou a média entre eles em caso de empate.
+                Hino: +3 pontos
+                Boa: +1 ponto
+                Tanto faz: 0 pontos
+                Ruim: -1 ponto
+                Ninguém merece: -3 pontos
+                Os votos não são acumulativos! A maioria dos votos decide a pontuação que será atribuída à música ou a média entre eles em caso de empate.
 
-              Vote e faça a diferença no ranking! 🎶
+                Vote e faça a diferença no ranking! 🎶
 
-              OBS: Votar também é uma forma de ganhar pontos, o voto vale 0,25 pontos e caso o seu voto for o que a maioria votou, você ganha 0,50 pontos.
-            </Tooltip>
-          }
-        >
-          <span className='ms-2' style={{position: 'absolute', marginTop: '5%', right: 40}}>
-            <FaQuestionCircle style={{ cursor: 'pointer', color: '#ffffff' }} />
-          </span>
-        </OverlayTrigger>
-        <Modal.Title>O que você acha da música que {djPlayingNow?.addedBy} está tocando?</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <div style={{color: '000000'}}>
-          <div className="d-flex justify-content-center align-items-center squeres-container">
-          <div className="music-square mx-2 hide-scrollbar" ref={containerRef} style={{ textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold' }}>Tocando:</div>
-            <div className="music-scroll" ref={scrollRef} style={{ textAlign: 'center' }}>
-              {playingNow?.item.name} - {playingNow?.item.artists.map((artist) => artist.name).join(', ')}
-            </div>
-          </div>
-          </div>
-          <div className='dj-table-container-vote-popup'>
-            <Card.Img
-              src={djPlayingNow?.characterPath}
-              alt="DJ character"
-              className="img-fluid dj-character-inside-table dj-dancing"
-            />
-            <Card.Img
-              src={djTablePlaying}
-              alt="DJ table"
-              className="img-fluid dj-table"
-            />
-            {playingNow && playingNow.item && playingNow.item.album && playingNow.item.album.images.length > 0 ? (
-              <div>
-                <Card.Img 
-                  src={playingNow.item.album.images[0].url} 
-                  alt={playingNow.item.album.name} 
-                  className="img-fluid music-inside-table"
-                />
-                <div className="music-notes-animation-top-left-vote-popup">
-                  <span className="music-note">♪</span>
-                  <span className="music-note">♫</span>
-                  <span className="music-note">♬</span>
-                </div>
-                <div className="music-notes-animation-top-right-vote-popup">
-                  <span className="music-note">♪</span>
-                  <span className="music-note">♫</span>
-                  <span className="music-note">♬</span>
-                </div>
-                <div className="music-notes-animation-bottom-left-vote-popup">
-                  <span className="music-note">♪</span>
-                  <span className="music-note">♫</span>
-                  <span className="music-note">♬</span>
-                </div>
-                <div className="music-notes-animation-bottom-right-vote-popup">
-                  <span className="music-note">♪</span>
-                  <span className="music-note">♫</span>
-                  <span className="music-note">♬</span>
-                </div>
-              </div>
-            ) : (
-              <Card.Img 
-                src='url_de_backup' 
-                alt='Backup Image' 
-                className="img-fluid music-inside-table"
+                OBS: Votar também é uma forma de ganhar pontos, o voto vale 0,25 pontos e caso o seu voto for o que a maioria votou, você ganha 0,50 pontos.
+              </Tooltip>
+            }
+            placement='bottom-start' // Posição do tooltip
+          >
+            <div
+              className='ms-2' // Classe para adicionar margem
+              // Estilo para posicionar o ícone de ajuda
+              style={{
+                marginTop: '5%', // Margem superior
+                position: 'absolute', // Posição absoluta
+                right: 40 // Distância da direita
+              }}
+            >
+              { /* Ícone de ajuda */ }
+              <FaQuestionCircle
+                style={{
+                  cursor: 'pointer', // Cursor de ponteiro
+                  color: '#ffffff' // Cor do ícone
+                }}
               />
-            )}
-      </div>
-        </div>
-        <div className="thermometer-container">
-          <input
-            type="range"
-            min="0"
-            max="4"
-            value={vote}
-            onChange={handleVoteChange}
-            className="thermometer"
+            </div>
+          </OverlayTrigger>
+          <Modal.Title>O que você acha da música que <strong>{ djPlayingNow?.addedBy }</strong> está tocando?</Modal.Title> {/* Título do modal */}
+        </Modal.Header>
+        { /* Corpo do modal */ }
+        <Modal.Body>
+          { /* Renderiza a mesa de discotecagem com informações do DJ e da música */ }
+          <DJTable
+            djPlayingNow={ djPlayingNow } // DJ que está tocando
+            playingNow={ playingNow } // Música que está tocando
           />
-          <div className="labels">
-            <span className={getLabelClass(0)}>Ninguém merece</span>
-            <span className={getLabelClass(1)} style={{marginLeft: '20px'}}>Ruim</span>
-            <span className={getLabelClass(2)} style={{marginLeft: '20px'}}>Tanto faz</span>
-            <span className={getLabelClass(3)} style={{marginLeft: '50px'}}>Boa</span>
-            <span className={getLabelClass(4)} style={{marginRight: '-40px'}}>Hino</span>
-          </div>
-        </div>
-      </Modal.Body>
-      <Modal.Footer style={{ borderTop: 'none' }}>
-        <Button onClick={handleVoteSubmit} disabled={isSubmitting}>
-          {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Enviar Voto'}
-        </Button>
-      </Modal.Footer>
-    </Modal>
+          { /* Container para o texto rolante do nome da música */ }
+          <VoteThermometer
+            vote={ vote } // Voto selecionado
+            setVote={ setVote } // Função para atualizar o voto
+          />
+        </Modal.Body>
+        { /* Rodapé do modal */ }
+        <Modal.Footer style={{ borderTop: 'none' }}>
+          <Button
+            disabled={ isSubmitting } // Desabilita o botão se o estado de envio for verdadeiro
+            onClick={ handleVoteSubmit } // Função para enviar o voto
+          >
+            { isSubmitting ? <Spinner animation='border' size='sm' /> : 'Enviar Voto' } { /* Caso o voto esteja sendo enviado renderiza um spinner no botão */ }
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   )
 }
 
+// Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token,
+  token: state.djReducer.token, // Token do DJ
 });
 
-const VotePopup = connect(mapStateToProps)(Vote);
+const VotePopup = connect(mapStateToProps)(Vote); // Conecta o componente ao Redux
 
-export default VotePopup;
+export default VotePopup; // Exporta o componente conectado

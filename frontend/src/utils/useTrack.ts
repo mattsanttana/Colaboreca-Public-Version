@@ -1,12 +1,6 @@
-interface CreateTrack {
-  trackName: string;
-  code: string;
-}
-
 const useTrack = () => {
-  const createTrack = async (trackData: CreateTrack) => {
+  const createTrack = async (trackName: string, code: string) => {
     try {
-      const { trackName, code } = trackData;
       const response = await fetch('http://localhost:3001/tracks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -24,7 +18,7 @@ const useTrack = () => {
     }
   }
   
-  const getTrackById = async (id: string) => {
+  const getTrackById = async (id: number) => {
     try {
       const response = await fetch(`http://localhost:3001/tracks/${ id }`, {
         method: 'GET',
@@ -42,7 +36,7 @@ const useTrack = () => {
     }
   }
 
-  const enterTrack = async (id: string) => {
+  const enterTrack = async (id: number) => {
     try {
       const response = await fetch(`http://localhost:3001/tracks/enter-track/${ id }`, {
         method: 'GET',
@@ -81,7 +75,7 @@ const useTrack = () => {
     }
   }
 
-  const verifyTrackAcess = async (token: string, trckId: string) => {
+  const verifyTrackAcess = async (token: string, trckId: number) => {
     try {
       const response = await fetch(`http://localhost:3001/tracks/verify-track-access/${ trckId }`, {
         method: 'GET',
@@ -118,9 +112,9 @@ const useTrack = () => {
     }
   }
 
-  const deleteDJ = async (djID: string, token: string) => {
+  const expelDJ = async (djId: number, token: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/tracks/${ djID }`, {
+      const response = await fetch(`http://localhost:3001/tracks/${ djId }`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +155,7 @@ const useTrack = () => {
     verifyIfTrackAlreadyBeenCreated,
     verifyTrackAcess,
     updateTrack,
-    deleteDJ,
+    expelDJ,
     deleteTrack
   };
 }

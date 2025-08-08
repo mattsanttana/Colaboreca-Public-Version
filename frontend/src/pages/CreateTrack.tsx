@@ -7,8 +7,7 @@ import { RootState } from '../redux/store';
 import { saveTrack } from '../redux/actions';
 import useTrack from '../utils/useTrack'
 
-// Componentes que não precisam ser carregados inicialmente
-const MessagePopup = lazy(() => import('./MessagePopup'));
+const MessagePopup = lazy(() => import('./MessagePopup')); // Componente que não precisa ser carregado inicialmente
 
 // Props recebidas pelo redux
 interface Props {
@@ -16,6 +15,7 @@ interface Props {
   token: string; // Token da pista
 }
 
+// Componente da página de criação de pista
 const CreateTrack: React.FC<Props> = ({ code, token }) => {
   const [buttonDisabled, setButtonDisabled] = useState(true); // Estado responsável por habilitar/desabilitar o botão
   const [isLoading, setIsLoading] = useState(true); // Estado responsável por controlar o carregamento da página
@@ -65,7 +65,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   const handleClick = async () => {
     // Caso os estados de trackName e code sejam diferente de null/undefined
     if (trackName && code) {
-      const track = await trackActions.createTrack({ trackName, code }); // Chama a função de criar a pista
+      const track = await trackActions.createTrack(trackName, code); // Chama a função de criar a pista
       // Caso retorne o status 201
       if (track?.status === 201) {
         dispatch(saveTrack(track.data.token)); // Dispacha a ação de salvar o token da pista no redux
@@ -74,24 +74,24 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
       } else if (track?.status === 401) {
         // Renderiza o popup de mensagem informando que a conta do Spotify do usuário precisa ser premium para criar uma pista
         setPopupMessageData({
-          message: 'Sua conta do Spotify precisa ser premium para criar uma pista.',
-          redirectTo: '/',
-          show: true
+          message: 'Sua conta do Spotify precisa ser premium para criar uma pista.', // Mensagem de erro
+          redirectTo: '/', // Redireciona para a página inicial
+          show: true // Mostra o popup
         });
         // Caso o status seja igual a 400
       } else if (track?.status === 400) {
         // Renderiza o popup de mensagem informando que o nome da pista é muito curto ou muito longo
         setPopupMessageData({
-          message: 'O nome da sua pista é muito curto ou muito longo, por favor tente outro.',
-          redirectTo: '',
-          show: true
+          message: 'O nome da sua pista é muito curto ou muito longo, por favor tente outro.', // Mensagem de erro
+          redirectTo: '', // Não redireciona
+          show: true // Mostra o popup
         });
       } else {
         // Caso contrário renderiza o popup de mensagem informando um erro
         setPopupMessageData({
-          message: 'Algo deu errado ao tentar criar a pista, tente novamente.',
-          redirectTo: '/',
-          show: true
+          message: 'Algo deu errado ao tentar criar a pista, tente novamente.', // Mensagem de erro
+          redirectTo: '/', // Redireciona para a página inicial
+          show: true // Mostra o popup
         });
       }
     }
@@ -107,25 +107,39 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   return (
     <>
       { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
-      <Suspense fallback={<Spinner />}>
+      <Suspense
+        fallback={ <Spinner /> } // Spinner de carregamento
+      >
         {/* Componente de popup de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
           handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
       </Suspense>
-      { /* Componente de carregamento */ }
+      { /* Verifica se está carregando */ }
       { isLoading ? (
+        // Caso esteja carregando renderiza uma animação de carregamento
         <Container
-          className='d-flex justify-content-center align-items-center'
-          style={{ height: '100vh' }}
+          className='d-flex justify-content-center align-items-center' // Classe para centralizar o conteúdo
+          style={{ height: '100vh' }} // Altura da tela
         >
-          <Image src={ logo } alt='Loading Logo' className='logo-spinner' /> { /* Logo de carregamento */ }
+          { /* Aniamção de carregamento */ }
+          <Image
+            alt='Animação de carergamento' // Texto alternativo
+            className='logo-spinner' // Classe de animação de carregamento
+            src={ logo } // Caminho da imagem
+          />
         </Container>
       ) : (
-        <Container className='d-flex align-items-center justify-content-center vh-100'>
-          <Row className='justify-content-center d-flex flex-column'>
-            <Col className='text-center mb-5'>
+        <Container
+          className='d-flex align-items-center justify-content-center vh-100' // Classe para centralizar o conteúdo
+        >
+          <Row
+            className='justify-content-center d-flex flex-column' // Classe para centralizar o conteúdo
+          >
+            <Col
+              className='text-center mb-5' // Classe para centralizar o conteúdo
+            >
               { /* Logo do alicaivo */ }
               <Image
                 alt='logo' // Texto alternativo
@@ -133,12 +147,23 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
                 src={ logo } // Caminho da imagem
                 style={{ maxWidth: '300px' }} // Estilo CSS para definir a largura máxima
               />
-              <Form.Group className='mb-3' style={{ maxWidth: '500px' }}>
+              <Form.Group
+                className='mb-3' // Classe para estilização
+                style={{ maxWidth: '500px' }} // Estilo para definir a largura máxima
+              >
                 { /* Contador de caracteres */ }
-                <Container style={{ marginBottom: '10px', textAlign: 'center' }}>
-                  <span style={{ color: trackName.length < 3 ? 'red' : 'white' }}>
-                    {trackName.length}/32
-                  </span>
+                <Container
+                  style={{
+                    marginBottom:'10px', // Margem inferior
+                    textAlign: 'center' // Alinhamento do texto
+                  }}
+                >
+                  <Container
+                    as='span' // Define o elemento como um span
+                    style={{ color: trackName.length < 3 ? 'red' : 'white' }} // Se o comprimento for menor que 3, a cor do texto será vermelha caso contrário será branca
+                  >
+                    { trackName.length }/32 { /* Contador de caracteres */ }
+                  </Container>
                 </Container>
                 { /* Campo de entrada para o nome da pista */ }
                 <Form.Control
@@ -146,17 +171,17 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
                   className='text-center custom-input' // Classe CSS personalizada
                   maxLength={ 32 } // Limite de caracteres
                   onChange={ handleChange } // Função de mudança
-                  onKeyDown={ handleKeyDown}  // Função de tecla pressionada
+                  onKeyDown={ handleKeyDown }  // Função de tecla pressionada
                   placeholder='Nome da Pista' // Placeholder
                   // Estilos do campo
                   style={{
-                    height: '50px',
-                    fontSize: '1.2rem',
-                    marginBottom: '20px',
-                    textAlign: 'center',
+                    height: '50px', // Altura do campo
+                    fontSize: '1.2rem', // Tamanho da fonte
+                    marginBottom: '20px', // Margem inferior
+                    textAlign: 'center', // Alinhamento do texto
                   }}
                   type='text' // Tipo de entrada
-                  value={trackName} // Valor do campo
+                  value={ trackName } // Valor do campo
                 />
                 { /* Botão para criar a pista */ }
                 <Button
@@ -184,7 +209,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
 
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.trackReducer.token
+  token: state.trackReducer.token // Token da pista
 });
 
 const CreateTrackConnected = connect(mapStateToProps)(CreateTrack); // Conecta o componente ao Redux

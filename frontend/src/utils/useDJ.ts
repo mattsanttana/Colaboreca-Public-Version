@@ -1,7 +1,7 @@
 interface CreateDJ {
   djName: string;
   characterPath: string;
-  trackId: string;
+  trackId: number;
 }
 
 const useDJ = () => {
@@ -45,7 +45,7 @@ const useDJ = () => {
     }
   }
   
-  const getAllDJs = async (trackId: string) => {
+  const getAllDJs = async (trackId: number) => {
     try {
       const response = await fetch(`http://localhost:3001/djs/${ trackId }`);
       const data = await response.json();
@@ -56,7 +56,7 @@ const useDJ = () => {
     }
   }
 
-  const getDJById = async (djId: string | undefined, trackId: string | undefined) => {
+  const getDJById = async (djId: string | undefined, trackId: number | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/djs/${ djId }/${ trackId }`, {
         method: 'GET',
@@ -74,7 +74,7 @@ const useDJ = () => {
     }
   }
 
-  const verifyIfTheDJIsTheProfileOwner = async (id: string | undefined, token: string) => {
+  const verifyIfTheDJIsTheProfileOwner = async (id: number | undefined, token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/djs/verify-if-the-dj-is-the-profile-owner/${ id }`, {
         method: 'GET',

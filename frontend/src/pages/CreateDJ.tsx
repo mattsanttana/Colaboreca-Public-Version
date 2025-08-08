@@ -1,18 +1,21 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Button, Card, Col, Container, Form, Image, Row, Spinner } from 'react-bootstrap';
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Container, Button, Form, Row, Col, Image, Card, Spinner } from 'react-bootstrap';
+import { charactersPaths, horizontalLogo, logo } from '../assets/images/characterPath';
 import { saveDJ } from '../redux/actions';
 import { RootState } from '../redux/store';
-import MessagePopup from './MessagePopup';
 import useDJ from '../utils/useDJ';
-import { charactersPaths, horizontalLogo, logo } from '../assets/images/characterPath';
 
+const MessagePopup = lazy(() => import('./MessagePopup')); // Componente que não precisa ser carregado inicialmente
+
+// Props recebidas pelo redux
 interface CreateDJProps {
   token: string;
   trackId: string;
 }
 
+// Componente da página de criação do DJ
 const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   const [buttonDisabled, setButtonDisabled] = useState(true); // Estado responsável por habilitar/desabilitar o botão
   // Estado responsável por armazenar os dados do DJ (nome e caminho do personagem)
@@ -32,7 +35,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   // UseEffect responsável por verificar se o DJ já foi criada pra esta pista neste dispositivo
   useEffect(() => {
     const fetchData = async () => {
-      const response = await djActions.getDJData(token); // Chama a função que verifica se o DJ já foi criado
+      const response = await djActions.getDJData(token); // Chama a função que verifica se o DJ já foi criado pra esta pista neste dispositivo
       // Se o DJ já foi criada para esta pista neste dispositivo
       if (Number(response?.data?.dj?.trackId) === Number(trackId)) {
         navigate(`/track/${response?.data.dj.trackId}`); // Redireciona o usuário para a pista
@@ -76,7 +79,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
       const dj = await djActions.createDJ({
         djName: djData.name, // Nome do DJ
         characterPath: djData.selectedCharacterPath, // Caminho do personagem
-        trackId // ID da pista
+        trackId: Number(trackId) // ID da pista
       });
 
       // Se o status for igual a 201
@@ -87,22 +90,25 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
       } else if (dj?.status === 400) {
         // Renderiza uma mensagem de erro dizendo que aquele nome de usuário já existe
         setPopupMessageData({
-          message: 'Este vulgo já existe, por favor tente outro',
-          redirectTo: '',
-          show: true
+          message: 'Este vulgo já existe, por favor tente outro', // Mensagem de erro
+          redirectTo: '', // Não redireciona
+          show: true // Mostra o popup
         })
         // Se o status for igual a 401
       } else if (dj?.status === 401) {
+        // Renderiza uma mensagem de erro dizendo que a pista foi excluída
         setPopupMessageData({
-          message: 'Pista excluída, por favor entre em uma nova pista',
-          redirectTo: '/',
-          show: true
+          message: 'Pista excluída, por favor entre em uma nova pista', // Mensagem de erro
+          redirectTo: '/', // Redireciona para a página inicial
+          show: true // Mostra o popup
         })
+        // Caso contário
       } else {
+        // Renderiza uma mensagem de erro genérica
         setPopupMessageData({
-          message: 'Algo deu errado, por favor tente novamente em alguns minutos',
-          redirectTo: '/',
-          show: true
+          message: 'Algo deu errado, por favor tente novamente em alguns minutos', // Mensagem de erro
+          redirectTo: '/', // Redireciona para a página inicial
+          show: true // Mostra o popup
         })
       }
     }
@@ -115,7 +121,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
 
   // Função responsável por chamar a função de handlerClick ao apertar o botão 'enter'
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !buttonDisabled) {
       handleClick();
     }
   };
@@ -123,97 +129,187 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   return (
     <>
       { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
-      <Suspense fallback={<Spinner />}>
+      <Suspense
+        fallback={ <Spinner /> } // Spinner de carregamento
+      >
         {/* Componente de popup de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
           handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
       </Suspense>
-      { /* Componente de carregamento */ }
+      { /* Verifica se está carregando */ }
       { isLoading ? (
+        // Caso esteja carregando renderiza uma animação de carregamento
         <Container
-          className='d-flex justify-content-center align-items-center'
-          style={{ height: '100vh' }}
+          className='d-flex justify-content-center align-items-center' // Classes para centralizar o conteúdo
+          style={{ height: '100vh' }} // Altura da tela
         >
-          <Image alt='Loading Logo' className='logo-spinner' src={ logo } />
+          { /* Logo de carregamento */ }
+          <Image
+            alt='Logo de carregamento' // Texto alternativo
+            className='logo-spinner' // Classe para animação de carregamento
+            src={ logo } // Caminho do logo
+          />
         </Container>
       ) : (
-        <Container className='menu-container'>
+        <Container
+          className='menu-container' // Classe do container
+        >
+          { /* Caso a fase for 1 renderiza a tela de escolha do personagem */ }
           { phase === 1 ? (
-            <Container className='menu-background'>
-              <Image src={ horizontalLogo } alt='horizontalLogo' className='logo' style={{width: '200px'}}/>
-              <Container className='text-center'>
-                <Image src={ djData.selectedCharacterPath } alt='Avatar escolhido' className='chosen-character' roundedCircle />
-                <h2 className='text-white'>{ djData.name }</h2>
+            <Container
+              className='menu-background' // Classe do background
+            >
+              { /* Logo horizontal */ }
+              <Image
+                alt='Logo horizontal' // Texto alternativo
+                className='logo' // Classe do logo
+                src={ horizontalLogo } // Caminho do logo
+                // Estilo do logo
+                style={{ width: '200px' }} // Largura do logo
+              />
+              <Container
+                className='text-center' // Classe para centralizar o texto
+              >
+                { /* Personagem escolhido */ }
+                <Image
+                  alt='Avatar escolhido' // Texto alternativo
+                  className='chosen-character'  // Classe do personagem
+                  roundedCircle // Borda arredondada
+                  src={ djData.selectedCharacterPath } // Caminho do personagem
+                />
+                { /* Nome do DJ */ }
+                <h2
+                  className='text-white' // Classe do texto
+                >
+                  { djData.name }
+                </h2>
               </Container>
-              <h1 className='text-white'>Escolha o seu personagem</h1>
+              { /* Título da tela */ }
+              <h1
+                className='text-white' // Cor do texto
+              >
+                Escolha o seu personagem
+              </h1>
+              { /* Card que contém os personagens */ }
               <Card
-                className='text-center card-style'
+                className='text-center card-style' // Classe do card
+                // Estilo do card
                 style={{
-                  backgroundColor: '#000000',
-                  boxShadow: '0 0 0 0.5px #ffffff',
-                  padding: '0'
+                  backgroundColor: '#000000', // Cor de fundo do card
+                  boxShadow: '0 0 0 0.5px #ffffff', // Sombra do card
+                  padding: '0' // Espaçamento do card
                   }}
-                  >
+              >
                 <Card.Body>
-                  <Row className='image-container'>
-                    {charactersPaths.map((character, index) => (
-                      <Col key={index} className='image-col'>
+                  <Row
+                    className='image-container' // Classe do container de imagens
+                  >
+                    { /* Mapeia os caminhos dos personagens e renderiza cada um deles */ }
+                    { charactersPaths.map((character, index) => (
+                      <Col
+                      className='image-col' // Classe da coluna
+                        key={ index } // Chave única para cada coluna
+                      >
                         <Image
-                          src={character}
-                          alt={`Character ${index}`}
-                          onClick={() => handleClickCharacter(character)}
-                          onMouseEnter={() => setHoveredCharacter(character)}
-                          onMouseLeave={() => setHoveredCharacter(null)}
-                          className={`image-style ${djData.selectedCharacterPath === character ?
-                            'selected-style' : ''}`}
-                          style={{ opacity: hoveredCharacter === character ? 0.8 : 1 }}
+                          alt={ `Personagem ${ index }` } // Texto alternativo
+                          className={ `image-style ${ djData.selectedCharacterPath === character ? 'selected-style' : ''}` } // Caso o personagem seja o selecionado, adiciona a classe de estilo apropriada
+                          onClick={() => handleClickCharacter(character)} // Função chamada ao clicar no personagem
+                          onMouseEnter={() => setHoveredCharacter(character)} // Função chamada ao passar o mouse por cima do personagem
+                          onMouseLeave={() => setHoveredCharacter(null)} // Função chamada ao tirar o mouse de cima do personagem
+                          src={ character } // Caminho do personagem
+                          // Estilo do personagem
+                          style={{ opacity: hoveredCharacter === character ? 0.8 : 1 }} // Opacidade do personagem (caso o mouse esteja em cima, a opacidade diminui)
                         />
                       </Col>
                     ))}
                   </Row>
                 </Card.Body>
               </Card>
-              <Button variant='primary' onClick={handleClick} className='mt-3' style={{ width: '100%'}}>Ok</Button>
+              { /* Botão de confirmar a escolha do personagem */ }
+              <Button
+                className='mt-3' // Classe de margem superior
+                onClick={ handleClick } // Função chamada ao clicar no botão
+                // Estilo do botão
+                style={{ width: '100%' }} // Largura do botão
+                variant='primary' // Cor do botão
+              >
+                Ok
+              </Button>
             </Container>
+            // Caso a fase seja 2 renderiza a tela de escolha do nome
           ) : (
-            <div className='d-flex flex-column align-items-center'>
-              <Image src={ horizontalLogo } alt='horizontal_logo' style={{width: '300px'}}/>
+            <Container
+              className='d-flex flex-column align-items-center' // Classes para centralizar o conteúdo
+            >
+              { /* Logo horizontal */ }
               <Image
-                src={ djData.selectedCharacterPath }
-                alt='Avatar escolhido'
-                className='chosen-character'
-                roundedCircle
-                />
-              <div style={{ marginBottom: '10px', textAlign: 'center' }}>
-                <span style={{ color: djData.name.length < 3 ? 'red' : 'white' }}>
+                alt='Logo horizontal' // Texto alternativo
+                src={ horizontalLogo } // Caminho do logo
+                // Estilo do logo
+                style={{ width: '300px' }} // Largura da logo
+              />
+              { /* Personagem escolhido */ }
+              <Image
+                alt='Avatar escolhido' // Texto alternativo
+                className='chosen-character' // Classe do personagem
+                roundedCircle // Borda arredondada
+                src={ djData.selectedCharacterPath } // Caminho do personagem
+              />
+              { /* Contador de caracteres */ }
+              <Container
+                // Estilo do container
+                style={{
+                  marginBottom: '10px', // Margem inferior
+                  textAlign: 'center' // Alinhamento do texto
+                }}>
+                <Container
+                  as='span' // Define o container como um span
+                  style={{ color: djData.name.length < 3 ? 'red' : 'white' }} // Cor do texto (vermelho se o nome tiver menos de 3 caracteres)
+                >
                   { djData.name.length }/16
-                </span>
-              </div>
-              <Form.Group className='d-flex flex-column align-items-center'>
+                </Container>
+              </Container>
+              <Form.Group
+                className='d-flex flex-column align-items-center' // Classes para centralizar o conteúdo
+              >
+                { /* Entrada do nome do DJ */ }
                 <Form.Control
-                  type='text'
-                  placeholder='Insira um vulgo'
-                  name='name'
-                  value={ djData.name }
-                  onChange={ handleChange }
-                  onKeyDown={ handleKeyDown }
-                  className='my-3 custom-input'
-                  style={{ height: '50px', fontSize: '1.2rem', marginBottom: '20px', textAlign: 'center' }}
-                  autoComplete='off'
-                  maxLength={ 16 }
+                  autoComplete='off' // Desabilita o autocomplete
+                  className='my-3 custom-input' // Classe do input
+                  maxLength={ 16 } // Limite de caracteres
+                  name='name' // Nome do input
+                  onChange={ handleChange } // Função chamada ao mudar o valor do input
+                  onKeyDown={ handleKeyDown } // Função chamada ao apertar uma tecla
+                  placeholder='Insira um vulgo' // Texto placeholder
+                  // Estilo do input
+                  style={{
+                    fontSize: '1.2rem', // Tamanho da fonte
+                    height: '50px', // Altura do input
+                    marginBottom: '20px', // Margem inferior
+                    textAlign: 'center' // Alinhamento do texto
+                  }}
+                  type='text' // Tipo do input
+                  value={ djData.name } // Valor do input
                 />
+                { /* Botão de confirmar a escolha do nome */ }
                 <Button
-                  variant='primary'
-                  onClick={ handleClick }
-                  disabled={ buttonDisabled }
-                  style={{ height: '50px', fontSize: '1.2rem', marginTop: '10px', width: '100%' }}
-                  >
-                    Ok
+                  disabled={ buttonDisabled } // Desabilita o botão se o estado buttonDisabled for true
+                  onClick={ handleClick } // Função chamada ao clicar no botão
+                  // Estilo do botão
+                  style={{
+                    height: '50px', // Altura do botão
+                    fontSize: '1.2rem', // Tamanho da fonte
+                    marginTop: '10px', // Margem superior
+                    width: '100%' // Largura do botão
+                  }}
+                  variant='primary' // Cor do botão
+                >
+                  Ok
                 </Button>
               </Form.Group>
-            </div>
+            </Container>
           )}
         </Container>
     )}
@@ -221,10 +317,11 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
   );
 };
 
+// Mapeia o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token
+  token: state.djReducer.token // Token do DJ
 });
 
-const CreateDJConnected = connect(mapStateToProps)(CreateDJ);
+const CreateDJConnected = connect(mapStateToProps)(CreateDJ); // Conecta o componente ao Redux
 
-export default CreateDJConnected;
+export default CreateDJConnected; // Exporta o componente conectado ao Redux

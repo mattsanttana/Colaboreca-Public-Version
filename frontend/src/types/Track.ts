@@ -1,5 +1,5 @@
 export type Track = {
-  id: string;
+  id: number;
   trakName: string;
   spotifyToken: string;
 };

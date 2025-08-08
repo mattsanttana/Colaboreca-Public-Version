@@ -1,92 +1,88 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
-import { Container, Row, Col, Button, Form, Card, Table, Spinner } from 'react-bootstrap';
+import { lazy, Suspense } from 'react';
+import { Button, Card, Col, Container, Image, Row, Spinner } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import DJProfileMini from './DJProfileMini';
 import Header from './Header';
 import Menu from './Menu';
-import { RootState } from '../redux/store';
-import MessagePopup from './MessagePopup';
 import { logo } from '../assets/images/characterPath'
-import RankingChangePopup from './RankingChangePopup';
-import usePlayback from '../utils/usePlayback';
-import useFetchTrackData from '../utils/useFetchTrackData';
+import { RootState } from '../redux/store';
 import useFetchPlaybackData from '../utils/useFetchPlaybackData';
+import useFetchTrackData from '../utils/useFetchTrackData';
 import useMenu from '../utils/useMenu';
-import { DJMusic } from '../types/SpotifySearchResponse';
-import useDJ from '../utils/useDJ';
-import { DJ } from '../types/DJ';
-import TrackInfoPopup from './TrackInfoPopup';
-import DJInfoPopup from './DJInfoPopup';
+import AddedMusicsByDJ from './AddedMusicsByDJ';
+import CharactersSelectPopup from './CharactersSelectPopup';
+import DeleteConfirmationPopup from './DeleteDJConfirmationPopup';
+import EditOrDeleteDJPopup from './EditOrDeleteDJPopup';
+import useDJProfile from '../utils/useDJProfile';
+
+// Componentes que não precisam ser carregados inicialmente
+const MessagePopup = lazy (() => import('./MessagePopup'));
+const RankingChangePopup = lazy (() => import('./RankingChangePopup'));
+const TrackInfoPopup = lazy(() => import('./TrackInfoPopup'));
 const VotePopup = lazy(() => import('./VotePopup'));
 
+// Props recebidas pelo redux
 interface Props {
-  djToken: string;
-  trackToken: string;
+  djToken: string; // Token do DJ
+  trackToken: string; // Token da pista
 }
 
+// Componente principal da página de perfil do DJ
 const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
-  const { trackId, djId } = useParams()
-  const [ musics, setMusics ] = useState<DJMusic[]>([]);
-  const [ filter, setFilter ] = useState<string>('1');
-  const [ djProfile, setDJProfile ] = useState<DJ>();
-  const [ showTrackInfoPopup, setShowTrackInfoPopup ] = useState(false) // Estado para controlar o popup de informações da pista
-  const [ isProfileOwner, setIsProfileOwner ] = useState(false) // Estado para controlar se o usuário é o dono do perfil
-  const [ showDJInfoPopup, setShowDJInfoPopup ] = useState(false) // Estado para controlar o popup de informações do DJ
-
-  const djActions = useDJ(); // Hook personalizado para ações do DJ
-  const playbackActions = usePlayback();
-
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previewRanking, setPopupMessageData, setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
-  } = useFetchTrackData(trackId, djToken, trackToken);
+    dj, djs, isTrackOwner, popupMessageData, previewRanking, setPopupMessageData, setShowRankingChangePopup,
+    showTrackInfoPopup, setTrackName, showRankingChangePopup, trackName, setShowTrackInfoPopup, trackId
+  } = useFetchTrackData(djToken, trackToken);
 
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(trackId, djToken)
+  } = useFetchPlaybackData(djToken)
+
+  const { 
+    addedMusics, djProfile, editedCharacterPath, isProfileOwner, setShowDJInfoPopup, setEditedCharacterPath, setShowCharacterPopup,
+    setShowDeleteConfirmation, showCharacterPopup, showDeleteConfirmation, showDJInfoPopup
+  } = useDJProfile(djToken, isTrackOwner, setPopupMessageData)
   
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu() // Hook personalizado para lidar com o menu
 
-  useEffect(() => {
-    const fetchMusicsData = async () => {
-      if (trackId) {
-        const [ fetchedDJProfile, fetchedVerifyIfDJIsOwner, fetchedMusics, ] = await Promise.all([
-          djActions.getDJById(djId, trackId),
-          djActions.verifyIfTheDJIsTheProfileOwner(djId, trackId),
-          playbackActions.getAddedMusicsByDJ(djId, djToken)
-        ])
-
-        if(fetchedDJProfile?.status !== 200) {
-          setPopupMessageData({
-            message: 'Algo deu errado ao buscar o DJ, por favor tente novamente mais tarde.',
-            redirectTo: isTrackOwner ? `/track-info/${trackId}` : `/track/${trackId}`,
-            show: true
-          })
-        } else {
-          setDJProfile(fetchedDJProfile.data);
-          setIsProfileOwner(fetchedVerifyIfDJIsOwner ?? false);
-          setMusics(fetchedMusics);
-        }
-      }
-    }
-
-    fetchMusicsData();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const playedMusics = musics.filter((music) => music.wasPlayed);
-  const notPlayedMusics = musics.filter((music) => !music.wasPlayed);
-
+  // Renderiza o componente DJProfile
   return (
     <Container
-    onTouchStart={handleTouchStart}
-    onTouchMove={handleTouchMove}
-    onTouchEnd={handleTouchEnd}
+      onTouchStart={ handleTouchStart } // Adiciona o evento de toque inicial
+      onTouchMove={ handleTouchMove } // Adiciona o evento de movimento do toque
+      onTouchEnd={ handleTouchEnd } // Adiciona o evento de toque final
     >
       { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
       <Suspense fallback={<Spinner />}>
+        { /* Componente de popup para altear o avatar */ }
+        <CharactersSelectPopup
+          onHide={ () => setShowCharacterPopup(false) } // Função para fechar o popup
+          setEditedCharacterPath={ setEditedCharacterPath } // Função de armazenar o novo personagem
+          setShowCharacterPopup={ setShowCharacterPopup } // Função de estado do popup de seleção de personagem
+          show={ showCharacterPopup } // Estado para exibir o popup
+        />
+        { /* Componente de popup de confirmação de exclusão */ }
+        <DeleteConfirmationPopup
+          dj={ dj } // DJ logado
+          djToken={ djToken } // Token do DJ logado
+          onHide={ () => setShowDeleteConfirmation(false) } // Função para fechar o popup
+          setPopupMessageData={ setPopupMessageData } // Função para definir os dados do popup de mensagem
+          show={ showDeleteConfirmation } // Estado para exibir o popup de confirmação
+        />
+        { /* Componente de popup para editar ou excluir o DJ */ }
+        <EditOrDeleteDJPopup
+          dj={ dj } // DJ logado
+          djToken={ djToken } // Token do DJ logado
+          editedCharacterPath={ editedCharacterPath } // Caminho do personagem editado
+          setShow={ setShowDJInfoPopup } // Estado para mostrar o popup
+          setEditedCharacterPath={ setEditedCharacterPath } // Função para definiri o personagem escolhido
+          setPopupMessageData={ setPopupMessageData } // Função pra definir os dados do popup de mensagem
+          setShowCharacterPopup={ setShowCharacterPopup } // Função para exibir o popup de seleção de avatar
+          setShowDeleteConfirmation={ setShowDeleteConfirmation } // Função para exibir o popup de confirmação de exclusão
+          show={ showDJInfoPopup } // Estado para exibir o popup de edição ou exclusão
+        />
         {/* Componentes de popups de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
@@ -110,150 +106,86 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         />
         { /* popup de votação */ }
         <VotePopup
-          showVotePopup={ showVotePopup } // Envia o estado do popup como prop
-          setShowVotePopup={ setShowVotePopup }  // Função para fechar o popup
-          playingNow={ playingNow } // Envia o estado de reprodução como prop
           djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
-        />
-        <DJInfoPopup
-          dj={dj} // Envia o DJ atual como prop
-          djToken={djToken} //Envia o token do DJ atual como prop
-          setShow={setShowDJInfoPopup} // Função para definir o estado do popup
-          show={showDJInfoPopup} // Estado do popup de informações do DJ
+          handleClose={ () => setShowVotePopup(false) }  // Função para fechar o popup
+          playingNow={ playingNow } // Envia o estado de reprodução como prop
+          showVotePopup={ showVotePopup } // Envia o estado do popup como prop
         />
       </Suspense>
       { /* Verifica se está carregando */ }
-      {isLoading ? (
+      { isLoading ? (
         <Container
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: '100vh' }}
+          className='d-flex justify-content-center align-items-center' // Centraliza o conteúdo
+          style={{ height: '100vh' }} // Define a altura da tela inteira
         >
-          <img src={logo} alt="Loading Logo" className="logo-spinner" />
+          { /* Se sim, exibe a logo de carregamento */ }
+          <Image
+            alt='Logo de Carregamento' // Texto alternativo para a imagem
+            className='logo-spinner' // Classe para estilização da imagem
+            src={ logo } // Caminho da imagem da logo
+          />
         </Container>
+        // Se não estiver carregando, renderiza o conteúdo principal
       ) : (
-        <div>
+        <Container>
+          { /* Renderiza o cabeçalho com as informações do DJ e o estado do menu */ }
           <Header
               dj={ dj } // Envia o DJ atual como prop
               isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop
               isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
-              showTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+              setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+              showVotePopup={ showVotePopup } // Envia o estado do popup de votação
               toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
+              trackId={ trackId } // Envia o ID da pista como prop
             />
           <Row>
-            <Col md={ 3 } className='d-none d-xxl-block'>
+            { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
+            <Col
+              className='d-none d-xxl-block' // Esconde a coluna em telas menores que xxl
+              md={ 3 } // Define a largura da coluna em telas médias
+            >
               { /* Componente de menu */ }
-              <Menu dj={ dj } isTrackOwner={ isTrackOwner } /> { /* Envia o DJ atual como prop */ }
+              <Menu
+                dj={ dj } // Envia o DJ atual como prop
+                isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+                trackId={ Number(trackId) } // Envia o ID da pista como prop
+              />
             </Col>
-            <Col className="py-4" md={12} lg={12} xl={12} xxl={9}>
+            { /* Renderiza a coluna principal com as informações do DJ */ }
+            <Col 
+              className='py-4' // Adiciona padding vertical
+              // Largura para diferentes tamanhos de tela
+              md={ 12 }  lg={ 12 }  xl={ 12 } xxl={ 9 }
+            >
               <Card
-                className="text-center"
-                style={{ backgroundColor: '#000000', padding: '0' }}
+                className='text-center' // Estilo de texto centralizado
+                style={{ backgroundColor: 'transparent', padding: '0' }} // Cor e preenchimento do card
               >
-                <Card.Img
-                  variant="top"
-                  src={ djProfile?.characterPath }
-                  className="img-fluid rounded-circle mb-3"
-                  style={{ width: '300px', margin: '0 auto' }}
+                { /* Renderiza o mini perfil do DJ */ }
+                <DJProfileMini
+                  dj={ djProfile } // Envia o perfil do DJ como prop
                 />
-                <div className="d-flex justify-content-center align-items-center mb-3">
-                <div className={`rank-square ${djProfile?.ranking === 1 ? 'gold' : djProfile?.ranking === 2 ? 'silver' : djProfile?.ranking === 3 ? 'bronze' : ''}`}>
-                    {djProfile?.ranking ? `${djProfile.ranking}º` : '-'}
-                  </div>
-                    <div className="name-square mx-3">{djProfile?.djName}</div>
-                    <div className="points-square">{djProfile?.score} pts</div>
-                  </div>
-                  {isProfileOwner && !isTrackOwner && (
-                    <Button variant="primary" style={{marginLeft: '25%', width: '50%', marginTop: '10px'}} onClick={() => setShowDJInfoPopup(true)}>
-                      Editar/Excluir DJ
-                    </Button>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px' }}>
-                      <Form.Select
-                        className='text-light'
-                        style={{ backgroundColor: '#000000', width: '140px' }}
-                        onChange={(e) => setFilter(e.target.value)}
+                  { /* Caso o usuário seja o dono do perfil e não seja o dono da pista, exibe o botão para editar/excluir DJ */ }
+                  { isProfileOwner && !isTrackOwner && (
+                    <Container className='d-flex justify-content-center align-items-center mt-4'>
+                      <Button 
+                        onClick={ () => setShowDJInfoPopup(true) } // Função para abrir o popup de informações do DJ
+                        variant='primary'  // Estilo do botão
                       >
-                        <option value="1">Todas</option>
-                        <option value="2">Tocadas</option>
-                        <option value="3">Não tocadas</option>
-                      </Form.Select>
-                    </div>
-                <Card.Body style={{height: '36vh', overflow: 'auto'}}>
-                  <Card.Title className="mt-4 text-light" style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
-                    {musics.length > 0 ? (
-                      <div className='table-responsive'>
-                        <Table striped className='text-light'>
-                          <thead>
-                            <tr>
-                              <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Música</th>
-                              <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Artista</th>
-                              <th className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>Capa</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filter === '1' ? (
-                              musics.map((music, index) => (
-                                <tr key={index}>
-                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
-                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
-                                  <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
-                                    <img
-                                      src={music.cover}
-                                      alt={music.name}
-                                      className='img-thumbnail'
-                                      style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
-                                    />
-                                  </td>
-                                </tr>
-                              ))
-                            ) : filter === '2' ? (
-                              playedMusics.map((music, index) => (
-                                <tr key={index}>
-                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
-                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
-                                  <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
-                                    <img
-                                      src={music.cover}
-                                      alt={music.name}
-                                      className='img-thumbnail'
-                                      style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
-                                    />
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              notPlayedMusics.map((music, index) => (
-                                <tr key={index}>
-                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.name}</td>
-                                  <td className='text-light' style={{ backgroundColor: '#000000', borderBottom: 'none' }}>{music.artists}</td>
-                                  <td style={{ backgroundColor: '#000000', borderBottom: 'none' }}>
-                                    <img
-                                      src={music.cover}
-                                      alt={music.name}
-                                      className='img-thumbnail'
-                                      style={{ width: '60px', height: '60px', backgroundColor: '#000000' }}
-                                    />
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </Table>
-                    </div>
-                  ) : (
-                    <div>
-                      <h4 className='text-light' style={{ margin: '100px' }}>Nenhuma música adicionada.</h4>
-                    </div>
+                        Editar/Excluir DJ
+                      </Button>
+                    </Container>
                   )}
-                  </Card.Body>
+                  { /*Renderiza o componente de músicas adicionadas pelo DJ */ }
+                  <AddedMusicsByDJ addedMusics={ addedMusics } />
                 </Card>
               </Col>
             </Row>
-          </div>
-      )}
-    </Container>
-  );
-}
+          </Container>
+        )}
+      </Container>
+    );
+  }
 
 const mapStateToProps = (state: RootState) => ({
   djToken: state.djReducer.token,

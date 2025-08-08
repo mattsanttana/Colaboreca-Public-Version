@@ -28,50 +28,72 @@ const Login = () => {
   return (
     // Se a fase for 1, exibe a tela de login
     phase === 1 ? (
-      <Container className='d-flex align-items-center justify-content-center vh-100 text-light'>
-        <Row className='w-100'>
-          <Col className='d-flex justify-content-center align-items-center' md={ 6 }>
+      <Container
+        className='d-flex align-items-center justify-content-center vh-100 text-light' // Classe para centralizar o conteúdo
+      >
+        <Row
+          className='w-100' // Classe para ocupar toda a largura
+        >
+          <Col
+            className='d-flex justify-content-center align-items-center' // Classe para centralizar o conteúdo
+            md={ 6 } // Largura da coluna
+          >
             { /* Logo do aplicativo */ }
             <Image
-              alt='logo'
-              className='img-fluid shadow-lg logo'
-              src={logo}
-              style={{ maxWidth: '350px' }}
+              alt='Logo do aplicativo' // Texto alternativo
+              className='img-fluid shadow-lg logo' // Classe para estilização
+              src={ logo } // Caminho da imagem
+              style={{ maxWidth: '350px' }} // Estilo para definir a largura máxima
             />
           </Col>
-          <Col className='d-flex flex-column justify-content-center align-items-center text-center' md={ 6 }>
-            <h1 className='login-title'>Escolha uma forma de fazer login</h1> { /* Título da página */ }
-            <Container className='d-flex align-items-center' style={{ width: '100%' }}>
+          <Col
+            className='d-flex flex-column justify-content-center align-items-center text-center' // Classe para centralizar o conteúdo
+            md={ 6 } // Largura da coluna
+          >
+            { /* Título da página */ }
+            <h1
+              className='login-title' // Classe para estilização
+            >
+                Escolha uma forma de fazer login
+            </h1>
+            <Container>
               { /* Botão para login com Spotify Premium */ }
               <Button
-                className='menu-button menu-button-spotify'
-                onClick={handleClick}
-                style={{ marginLeft: '12.5%', marginTop: '20px' }}
-                variant='primary'
+                className='menu-button menu-button-spotify mt-3' // Classe para estilização
+                onClick={ handleClick } // Função chamada ao clicar no botão
+                variant='primary' // Cor do botão
               >
                 Entrar Com Spotify Premium
               </Button>
-              {/* Ícone de ajuda */}
+              { /* Tooltip explicativo sobre o Spotify Premium */ }
               <OverlayTrigger
                 overlay={
-                  // Tooltip explicando o porquê que é necessário ter uma conta Spotify Premium
+                  // Mensagem que aparece ao passar o mouse
                   <Tooltip>
                     É necessário ter uma conta Spotify Premium porque a versão gratuita não permite adicionar músicas à fila.
                   </Tooltip>
                 }
-                placement='bottom-start'
+                placement='bottom-start' // Posição do tooltip
               >
                 <span className='ms-2'>
-                  <FaQuestionCircle style={{ cursor: 'pointer', color: '#ffffff' }} />
+                  { /* Ícone de ajuda */ }
+                  <FaQuestionCircle
+                    // Estilização do ícone de ajuda
+                    style={{
+                      cursor: 'pointer', // Cursor de ponteiro para indicar que é clicável
+                      color: '#ffffff', // Cor do ícone
+                      position: 'absolute', // Posição absoluta para sobrepor o botão
+                    }}
+                  />
                 </span>
               </OverlayTrigger>
             </Container>
-            {/* Botão para login com YT Music (em breve) */}
+            { /* Botão para login com YT Music (em breve) */ }
             <Button
-              className='menu-button mt-3'
-              disabled={true}
-              style={{ marginTop: '20%' }}
-              variant='secondary'
+              className='menu-button mt-3' // Classe para estilização
+              disabled={ true } // Botão desabilitado
+              style={{ marginTop: '20%' }} // Estilo para definir a margem superior
+              variant='secondary' // Cor do botão
             >
               Entrar com YT Music (Em breve)
             </Button>
@@ -80,7 +102,9 @@ const Login = () => {
       </Container>
     // Se a fase for 2, exibe a tela de criação de pista
     ) : (
-      <CreateTrackConnected code={code} />
+      <CreateTrackConnected
+        code={ code } // Código de autenticação
+      />
     )
   );
 };

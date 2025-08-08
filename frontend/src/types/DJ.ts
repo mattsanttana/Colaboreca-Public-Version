@@ -1,10 +1,10 @@
 export type DJ = {
-  id: string;
+  id: number;
   djName: string;
   characterPath: string;
   score: number;
   ranking: number;
-  trackId: string;
+  trackId: number;
 };
 
 export type DJPlayingNow = {

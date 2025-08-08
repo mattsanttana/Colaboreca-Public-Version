@@ -1,25 +1,29 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { Navbar, Nav, Button, Modal } from 'react-bootstrap';
+import { useCallback , useEffect, useState, useRef } from 'react';
+import { Button, Container, Image, Modal, Navbar } from 'react-bootstrap';
 import { FaBars, FaInfoCircle, FaShareAlt } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import Menu from './Menu';
 import ShareTrack from './ShareTrack';
-import { DJ } from '../types/DJ';
 import { horizontalLogo } from '../assets/images/characterPath';
+import { DJ } from '../types/DJ';
 
+// Props recebidas
 interface Props {
-  dj?: DJ | undefined;
-  isSlideMenuOpen?: boolean;
-  isTrackOwner: boolean;
-  showTrackInfoPopup: (isOpen: boolean) => void;
-  toggleMenu?: (isOpen: boolean) => void;
+  dj?: DJ | undefined; // DJ logado (opcional porque o header também serve pra donos de pistas que não são DJs)
+  isSlideMenuOpen?: boolean; // Estado do menu deslizante (opcional porque dispositivos não móveis não têm menu deslizante)
+  isTrackOwner: boolean; // Indica se o usuário é o dono da pista ou um DJ
+  setShowTrackInfoPopup: (isOpen: boolean) => void; // Função para abrir/fechar o modal com as informações da pista
+  showVotePopup?: boolean; // Indica se o popup de votação está aberto (opcional porque não é usado em todos os casos)
+  toggleMenu?: (isOpen: boolean) => void; // Função para alternar o menu (opcional porque dispositivos não móveis não têm menu deslizante)
+  trackId: string | undefined; // ID da pista atual (necessário para redirecionar corretamente)
 }
 
-const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, showTrackInfoPopup, toggleMenu }) => {
-  const { trackId } = useParams<{ trackId: string }>();
-  const [showPopup, setShowPopup] = useState(false);
-  const [pageType, setPageType] = useState('');
-  const menuRef = useRef<HTMLDivElement>(null);
+// Componente Header que é responsável por exibir o cabeçalho da aplicação, incluindo o menu lateral e o botão de compartilhar
+const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, setShowTrackInfoPopup, showVotePopup, toggleMenu, trackId }) => {
+  const [showPopup, setShowPopup] = useState(false); // Estado para controlar a exibição do modal de compartilhamento
+  
+  const menuRef = useRef<HTMLDivElement>(null); // Referência para o menu deslizante
+  const navigate = useNavigate(); // Hook para navegação entre páginas
 
   // Função para fechar o menu
   const closeMenu = useCallback(() => {
@@ -28,17 +32,19 @@ const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, showTrackI
     }
   }, [toggleMenu]);
 
+  // useEffect para adicionar um listener de evento de clique fora do menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Verifica se o clique foi fora do menu
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        closeMenu();
+        closeMenu(); // Chama a função para fechar o menu
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside); // Adiciona o listener de evento de clique fora do menu
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside); // Remove o listener quando o componente é desmontado
     };
   }, [closeMenu]);
 
@@ -49,84 +55,155 @@ const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, showTrackI
     }
   };
 
-  // Funções de abrir/fechar o modal de compartilhar
-  const handleClick = () => {
-    setShowPopup(true);
-  };
-
+  // Função para quando clicar no logo redirecinar para a página da pista
   const handleClickLogo = () => {
-    if (pageType === 'track') {
-      window.location.href = `/track/${trackId}`;
-    } else {
-      window.location.href = `/track-info/${trackId}`;
-    }
-  }
-
-  const handleClosePopup = () => {
-    setShowPopup(false);
+    navigate(isTrackOwner ? `/track-info/${ trackId }` : `/track/${ trackId }`); // Navega para a página da pista
   };
-
-  useEffect(() => {
-    const currentPageType = window.location.pathname.split('/')[1];
-    setPageType(currentPageType);
-  }, []);
-
-  // Usa a prop `isSlideMenuOpen` para controlar a visibilidade do menu
-  const isMenuVisible = isSlideMenuOpen !== undefined ? isSlideMenuOpen : false;
 
   return (
-    <div
-      className="text-center text-light"
-      style={{ backgroundColor: '#000000' }}
+    // Container principal do cabeçalho
+    <Container
+      className='text-center text-light' // Classe para centralizar o texto e definir a cor do texto
     >
-      <div
-        ref={menuRef}
-        className={`slide-menu ${isMenuVisible ? 'open' : ''}`} // Controla visibilidade com `isMenuVisible`
+      {/* Menu deslizante */}
+      <Container
+        className={ `slide-menu ${ isSlideMenuOpen ? 'open' : '' }` } // Controla visibilidade do menu
+        ref={ menuRef } // Referência para o menu
+        // Estilo do menu deslizante
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '250px',
-          height: '100%',
-          backgroundColor: '#000',
-          color: '#000',
-          zIndex: 2000,
-          transform: isMenuVisible ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease',
+          backgroundColor: '#000', // Cor de fundo do menu
+          color: '#000', // Cor do texto do menu
+          height: '100%', // Altura do menu
+          left: 0, // Posição à esquerda
+          position: 'fixed', // Posição fixa
+          top: 0, // Posição no topo
+          transform: isSlideMenuOpen && !showPopup && !showVotePopup ? 'translateX(0)' : 'translateX(-100%)', // Transição para mostrar/ocultar o menu
+          transition: 'transform 0.3s ease', // Transição suave
+          width: '250px', // Largura do menu
+          zIndex: 2000, // Z-index para sobreposição
         }}
       >
-        <Menu dj={ dj } isTrackOwner={ isTrackOwner } />
-      </div>
+        { /* Menu lateral */}
+        <Menu
+          dj={ dj } // DJ logado
+          isTrackOwner={ isTrackOwner } // Indica se o usuário é o dono da pista
+          trackId={ Number(trackId) } // ID da pista atual
+        />
+      </Container>
+      { /* Cabeçalho */ }
       <Navbar
-        className="justify-content-between"
-        style={{ width: '100%', maxWidth: '100%', margin: '0 auto'}}
+        className='w-100' // Classe para justificar o conteúdo entre os itens
+        // Estilo do cabeçalho
+        style={{
+          alignItems: 'center',
+          background: 'transparent',
+          display: 'flex',
+          justifyContent: 'space-between',
+          margin: '0 auto', // Centraliza o cabeçalho
+          maxWidth: '100%', // Largura máxima do cabeçalho
+          width: '100%' // Largura do cabeçalho
+        }}
       >
-        <Nav>
+        { /* Botão para abrir o menu deslizante em dispositivos móveis */ }
+        <Container
+          // Estilo do botão
+          style={{
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            width: 60
+          }}
+        >
           <Button
-            className="d-xxl-none"
-            style={{ backgroundColor: '#000', border: 'none', marginLeft: '5px' }}
-            onClick={toggleLocalMenu}
+            className='d-xxl-none' // Esconde o botão em telas grandes (não mobile)
+            onClick={ toggleLocalMenu } // Chama a função para alternar o menu
+            style={{
+              backgroundColor: '#000', // Cor de fundo do botão
+              border: 'none', // Sem borda
+              marginLeft: '5px' // Margem à esquerda
+            }}
           >
-            <FaBars className="bi bi-list"></FaBars>
+            <FaBars className='bi bi-list' /> { /* Ícone do botão */ }
           </Button>
-        </Nav>
-        <Navbar.Brand className="text-primary" onClick={() => handleClickLogo()} style={{ marginLeft: '180px', cursor: 'pointer' }}>
-          <img src={horizontalLogo} alt="horizontal_logo" className="horizontal_logo" style={{width: '200px'}}/>
-        </Navbar.Brand>
-        <div onClick={handleClick} style={{ marginRight: '30px', cursor: 'pointer' }}>
-          {pageType === 'track' ? <FaShareAlt style={{ fontSize: '1.5rem' }} /> : <FaInfoCircle style={{ fontSize: '1.5rem' }} />}
-        </div>
+        </Container>
+        { /* Logo horizontal */ }
+        <Container
+          style={{
+            alignItems: 'center',
+            display: 'flex',
+            flex: 1,
+            justifyContent: 'center',
+          }}
+        >
+          <Navbar.Brand
+            className='text-primary' // Classe para definir a cor do texto
+            onClick={ handleClickLogo } // Chama a função para redirecionar ao clicar no logo
+            // Estilo do logo
+            style={{ cursor: 'pointer' }}
+          >
+            <Image
+              alt='Logo "COLABORECA" horizontal' // Texto alternativo da imagem
+              src={ horizontalLogo } // Caminho da imagem
+              style={{ width: '200px' }} // Estilo da imagem
+            />
+          </Navbar.Brand>
+        </Container>
+        { /* Botão para compartilhar a pista ou mostrar detalhes da pista */ }
+        <Container
+          style={{ 
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            width: 60,
+          }}
+        >
+          <Container
+            className='d-flex align-items-center justify-content-end' // Classe para justificar o conteúdo à direita
+            onClick={ () => setShowPopup(true) } // Chama a função para abrir o modal
+            // Estilo do botão
+            style={{
+              cursor: 'pointer', // Cursor de ponteiro ao passar o mouse
+              width: '50px', // Largura do botão
+            }}
+          >
+            { 
+              isTrackOwner ? // Se não for o dono da pista, mostra o ícone de compartilhar
+                <FaInfoCircle style={{ fontSize: '1.5rem' }} /> : // Se for o dono da pista, mostra o ícone de informações
+                <FaShareAlt style={{ fontSize: '1.5rem' }} />
+            }
+          </Container>
+        </Container>
       </Navbar>
-      <Modal className="custom-modal" show={showPopup} onHide={handleClosePopup} size="lg">
-        <Modal.Header closeButton className="custom-modal-header" style={{ borderBottom: 'none' }}>
-          <Modal.Title>{pageType === 'track' ? 'Compartilhar Pista' : 'Detalhes da Pista'}</Modal.Title>
+      { /* Modal para compartilhar a pista ou mostrar detalhes da pista */ }
+      <Modal
+        className='custom-modal' // Classe personalizada para o modal
+        onHide={ () => setShowPopup(false) } // Chama a função para fechar o modal
+        show={ showPopup } // Controla a visibilidade do modal
+        size='lg' // Tamanho do modal
+      >
+        { /* Cabeçalho do modal */ }
+        <Modal.Header
+          className='custom-modal-header' // Classe personalizada para o cabeçalho do modal
+          closeButton  // Botão para fechar o modal
+          style={{ borderBottom: 'none' }} // Estilo do cabeçalho
+        >
+          { /* Título do modal */ }
+          <Modal.Title>
+            { isTrackOwner ? 'Detalhes da Pista' : 'Compartilhar Pista'} { /* "Detalhes da Pista" para o dono da pista e "Compartilhar Pista" para o DJ logado */ }
+          </Modal.Title>
         </Modal.Header>
+        { /* Corpo do modal */ }
         <Modal.Body>
-          <ShareTrack trackId={trackId} pageType={pageType} setShowPopup={ showTrackInfoPopup } />
+          { /* Componente de compartilhamento ou detalhes da pista */ }
+          <ShareTrack
+            pageType={ isTrackOwner ? 'track-info' : 'track' } // Tipo da página (detalhes ou compartilhamento)
+            setShowPopup={ setShowTrackInfoPopup } // Função para abrir/fechar o modal
+            trackId={ trackId } // ID da pista
+          />
         </Modal.Body>
       </Modal>
-    </div>
+    </Container>
   );
 }
 
-export default Header;
+export default Header; // Componente Header

@@ -1,5 +1,5 @@
 const usePlayback = () => {
-  const getState = async (trackId: string) => {
+  const getState = async (trackId: number) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/${ trackId }`);
       const data = await response.json();
@@ -10,7 +10,7 @@ const usePlayback = () => {
     }
   }
 
-  const getTopMusicsInBrazil = async (trackId: string | undefined) => {
+  const getTopMusicsInBrazil = async (trackId: number | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/top-tracks-in-brazil/${ trackId }`);
 
@@ -25,7 +25,7 @@ const usePlayback = () => {
     }
   }
 
-  const getTrackBySearch = async (trackId: string | undefined, search: string) => {
+  const getTrackBySearch = async (trackId: number | undefined, search: string) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/search/${ trackId }?search=${ search }`);
 
@@ -40,7 +40,7 @@ const usePlayback = () => {
     }
   }
 
-  const getQueue = async (trackId: string | undefined) => {
+  const getQueue = async (trackId: number | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/queue/${ trackId }`);
 
@@ -52,7 +52,7 @@ const usePlayback = () => {
     }
   }
 
-  const getAddedMusicsByDJ = async (djId: string | undefined, trackId: string | undefined) => {
+  const getAddedMusicsByDJ = async (djId: number | undefined, trackId: number | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/added-musics-by-dj/${ djId }/${ trackId }`);
 
@@ -64,7 +64,7 @@ const usePlayback = () => {
     }
   }
 
-  const getDJAddedCurrentMusic = async (trackId: string | undefined) => {
+  const getDJAddedCurrentMusic = async (trackId: number | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/dj-added-current-music/${ trackId }`);
 
@@ -77,7 +77,7 @@ const usePlayback = () => {
   }
 
   const addTrackToQueue = async (
-    trackId: string | undefined,
+    trackId: number | undefined,
     cover: string,
     name: string,
     artists: string,

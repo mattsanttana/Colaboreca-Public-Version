@@ -4,7 +4,7 @@ type TQueue = {
   characterPath: string;
   cover: string;
   musicName: string;
-  artists: string[];
+  artists: string;
 }
 
 export default TQueue;

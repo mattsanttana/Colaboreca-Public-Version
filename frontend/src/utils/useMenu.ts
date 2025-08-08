@@ -43,11 +43,11 @@ const useMenu = () => {
   const handleTouchEnd = () => {
     const distance = touchEndX - touchStartX;
 
-    if (distance > 60) {
+    if (distance > 200) {
       setIsMenuOpen(true) // Abre o menu se o deslize for da esquerda para a direita
     }
 
-    if (distance < -60) {
+    if (distance < -200) {
       setIsMenuOpen(false) // Fecha o menu se o deslize for da direita para a esquerda
     }
   };

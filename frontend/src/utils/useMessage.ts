@@ -1,7 +1,7 @@
 import { Message } from "../types/Chat";
 
 const useMessage = () => {
-  const sendMessage = async (djId: string | number | null, message: string, messageToReply: Message | null, token: string) => {
+  const sendMessage = async (djId: number | null, message: string, messageToReply: Message | null, token: string) => {
     try {
       const response = await fetch('http://localhost:3001/chats', {
         method: 'POST',
@@ -48,13 +48,13 @@ const useMessage = () => {
     }
   }
 
-  const markMessagesAsRead = async (messageIds: (string | number)[], token: string) => {
+  const markMessagesAsRead = async (messageIds: (number)[], token: string) => {
     try {
       const response = await fetch(`http://localhost:3001/chats/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${ token }`,
         },
         body: JSON.stringify({ messageIds }), // Envia os IDs das mensagens no corpo da requisição
       });

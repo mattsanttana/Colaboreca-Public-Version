@@ -3,21 +3,20 @@ import useDJ from './useDJ';
 import useTrack from './useTrack';
 import { DJ } from '../types/DJ';
 import { io } from 'socket.io-client';
+import { useParams } from 'react-router-dom';
 
 const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
 
-const useFetchTrackData = (trackId: string | undefined, djToken: string, trackToken: string) => {
+const useFetchTrackData = (djToken: string, trackToken?: string) => {
+  const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [trackName, setTrackName] = useState(''); // Nome da pista
   const [dj, setDJ] = useState<DJ>(); // DJ atual
   const [djs, setDJs] = useState<DJ[]>([]); // Lista de DJs
-  const [popupMessageData, setPopupMessageData] = useState<{message: string, redirectTo: string, show: boolean}>({
-    message: '',
-    redirectTo: '',
-    show: false
-  }); // Mensagem do popup
+  const [isTrackOwner, setIsTrackOwner] = useState(true); // Estado para verificar se o usuário é o dono da pista
+  const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false }); // Mensagem do popup
   const [previewRanking, setPreviewRanking] = useState<DJ[]>([]); // Ranking anterior
   const [showRankingChangePopup, setShowRankingChangePopup] = useState(false); // Estado do popup de mudança de ranking
-  const [isTrackOwner, setIsTrackOwner] = useState(true); // Estado para verificar se o usuário é o dono da pista
+  const [showTrackInfoPopup, setShowTrackInfoPopup] = useState(false); // Estado para controlar o popup de informações da pista
 
   const djActions = useDJ(); // Ações do DJ
   const trackActions = useTrack(); // Ações da pista
@@ -28,7 +27,6 @@ const useFetchTrackData = (trackId: string | undefined, djToken: string, trackTo
     const fetchData = async () => {
       // Verifica se o ID da pista existe
       if (trackId) {
-
         const pageType = window.location.pathname.split('/')[1]; // Obtém o tipo de página a partir da URL
 
         // Verifica se o tipo de página é diferente de 'track-info'
@@ -38,7 +36,7 @@ const useFetchTrackData = (trackId: string | undefined, djToken: string, trackTo
           // Busca os dados da pista e do DJ
           try {
             const [fetchedTrack, fetchedDJData] = await Promise.all([
-              trackActions.getTrackById(trackId), // Busca os dados da pista
+              trackActions.getTrackById(Number(trackId)), // Busca os dados da pista
               djActions.getDJData(djToken) // Busca os dados do DJ
             ]);
   
@@ -71,9 +69,9 @@ const useFetchTrackData = (trackId: string | undefined, djToken: string, trackTo
         } else {
           try {
             const [ fetchedTrack, fetchedVerifyTrackAcess, fetchedDJData ] = await Promise.all([
-              trackActions.getTrackById(trackId), // Busca os dados da pista
-              trackActions.verifyTrackAcess(trackToken, trackId), // Verifica o acesso à pista
-              djActions.getAllDJs(trackId) // Busca todos os DJs da pista
+              trackActions.getTrackById(Number(trackId)), // Busca os dados da pista
+              trackActions.verifyTrackAcess(trackToken ?? '', Number(trackId)), // Verifica o acesso à pista
+              djActions.getAllDJs(Number(trackId)) // Busca todos os DJs da pista
             ])
     
             // Verifica se o DJ tem acesso à pista se não tiver, exibe um popup de erro
@@ -104,7 +102,7 @@ const useFetchTrackData = (trackId: string | undefined, djToken: string, trackTo
     useEffect(() => {
       // Verifica se o socket está conectado e se o DJ existe
       if (socket.connected && dj) {
-        socket.emit('joinRoom', `track_${trackId}`); // Entra na sala da pista
+        socket.emit('joinRoom', `track_${ trackId }`); // Entra na sala da pista
       }
 
       // Socket que recebe as atualizações feitas no nome da pista
@@ -202,8 +200,11 @@ const useFetchTrackData = (trackId: string | undefined, djToken: string, trackTo
     previewRanking, // Ranking anterior
     setPopupMessageData, // Função para definir os dados do popup de mensagem
     setShowRankingChangePopup, // Função para definir o estado do popup de mudança de ranking
+    setShowTrackInfoPopup, // Função para definir o estado do popup de informações da pista
     setTrackName, // Função para definir o nome da pista
     showRankingChangePopup, // Estado do popup de mudança de ranking
+    showTrackInfoPopup, // Estado do popup de informações da pista
+    trackId,
     trackName, // Nome da pista
    };
 }

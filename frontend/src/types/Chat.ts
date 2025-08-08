@@ -1,7 +1,7 @@
 export type Message = {
   id: number
-  djId: string;
-  receiveDJId: string;
+  djId: number;
+  receiveDJId: number;
   message: string;
   chatId?: string;
   createdAt: Date;
