@@ -34,7 +34,7 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previewRanking, setPopupMessageData, setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
+    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
   } = useFetchTrackData(djToken, trackToken);
 
   // Hook personalizado para buscar dados de reprodução
@@ -90,8 +90,9 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
               currentRanking={ djs } // Envia o ranking atual como prop
               dj={ dj } // Envia o DJ atual como prop
               handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
-              previousRanking={ previewRanking } // Envia o ranking anterior como prop
+              previousRanking={ previousRanking } // Envia o ranking anterior como prop
               showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+              trackName={ trackName } // Nome da pista'
             />
             { /* Popup de votação */ }
             <VotePopup
@@ -163,23 +164,24 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
               md={ 3 } // Largura para telas médias
             >
               { /* Componente de pódio */ }
-              <Container
+              <div
                 onClick={ handleClickPodium } // Função para lidar com o clique no pódio
-                style={{ cursor: 'pointer' }} // Estilo para indicar que o componente é clicável
-              >
+                className='gradient-border mb-3 card-hover'
+                style={{ backgroundColor: '#2e30594D', cursor: 'pointer' }} // Estilo do container do pódio
+              > 
                 <Podium
-                  dj={ dj } // Envia o DJ atual como prop
                   djs={ djs } // Envia a lista de DJs como prop
+                  trackName={ trackName }
                 />
-              </Container>
+              </div>
               { /* Componente de pré-visualização da fila */ }
-              <Container
-                className='queue-container' // Classe para estilizar o container da fila
+              <div
+                className='gradient-border mb-3 card-hover' // Classe para estilizar o container da fila
                 onClick={ handleClickQueue } // Função para lidar com o clique na fila
-                style={{ cursor: 'pointer' }} // Estilo para indicar que o componente é clicável
+                style={{ backgroundColor: '#2e30594D', cursor: 'pointer' }} // Estilo do container do pódio
               >
-                <QueuePreview queue={ queue.slice(0, 5) } /> { /* Envia a fila de reprodução como prop */ }
-              </Container>
+                <QueuePreview queue={ queue.slice(0, 6) } /> { /* Envia a fila de reprodução como prop */ }
+              </div>
             </Col>
           </Row>
         </Container>

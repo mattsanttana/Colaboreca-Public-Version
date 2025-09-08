@@ -21,11 +21,11 @@ export const getDJScore = (music: IMusicWithDJAndVotes) => {
 
   // Calcular os pontos de acordo com as regras
   const pointsMap = {
-    very_good: 3,
-    good: 1,
+    very_good: 90,
+    good: 30,
     normal: 0,
-    bad: -1,
-    very_bad: -3
+    bad: -30,
+    very_bad: -90
   };
 
   let totalPoints = 0; // Pontuação total a ser adicionada ao score do DJ

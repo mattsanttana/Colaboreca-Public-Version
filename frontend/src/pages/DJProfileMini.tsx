@@ -1,47 +1,111 @@
 import React from 'react';
-import { Image, Col, Container } from 'react-bootstrap';
+import { Image, Col } from 'react-bootstrap';
 import { DJ } from '../types/DJ';
+import { FaStar } from 'react-icons/fa';
 
-// Recebe as props
 type Props = {
-  dj: DJ | undefined; // DJ cujas informações serão exibidas
+  dj: DJ | undefined;
 };
 
-const DJProfileMini: React.FC<Props> = ({ dj }) => (
-   <Col>
-    { /* Imagem do DJ */ }
-    <Image
-      alt={ `Personagem do DJ ${ dj?.djName }` } // Texto alternativo da imagem
-      className='img-fluid rounded-circle mb-3' // Classe para estilizar a imagem
-      src={ dj?.characterPath } // Caminho da imagem do DJ
-      style={{
-        border: '2px solid #000', // Borda preta ao redor da imagem
-        boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)', // Sombra para dar destaque
-        height: '250px', // Altura da imagem
-        objectFit: 'cover', // Ajusta a imagem para cobrir o espaço sem distorção
-        objectPosition: 'center', // Centraliza a imagem
-        width: '250px', // Largura da imagem
-      }}
-    />
-    <Container className='d-flex justify-content-center align-items-center squeres-container'>
-      { /* Exibe o ranking do DJ */ }
-      <div
-        // Classe para estilizar o quadrado do ranque de acordo com a posição
-        className={
-          `rank-square ${dj?.ranking === 1 ? 'gold' :
-            dj?.ranking === 2 ? 'silver' :
-              dj?.ranking === 3 ?
-                'bronze' : ''}`
-        }
-      >
-        { dj?.ranking ? `${dj.ranking}º` : '-' }
+const DJProfileMini: React.FC<Props> = ({ dj }) => {
+  const formatScore = (score: number | undefined) => {
+      return score?.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    };
+
+  return (
+    <Col className='d-flex flex-column align-items-center'>
+      {/* Wrapper para posicionar rank sobre a imagem */}
+      <div style={{ position: 'relative', width: '250px', height: '250px' }}>
+        <Image
+          alt={ `Personagem do DJ ${ dj?.djName }` }
+          className='img-fluid rounded-circle mb-3 profile-avatar'
+          src={ dj?.characterPath }
+          style={{
+            backgroundColor: '#2e30594D',
+            border: '2px solid #000',
+            height: '230px',
+            width: '230px',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+        {/* Rank dentro da imagem */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            right: '10px',
+            width: '54px',
+            height: '54px',
+            borderRadius: '50%',
+            background:
+              dj?.ranking === 1
+                ? '#FFD700'
+                : dj?.ranking === 2
+                ? '#C0C0C0'
+                : dj?.ranking === 3
+                ? '#CD7F32'
+                : '#222',
+            color: dj?.ranking && dj.ranking <= 3 ? '#000' : '#fff',
+            fontWeight: 'bold',
+            fontSize: '1.5rem',
+            fontFamily: '"Bebas Neue", Oswald, Arial, sans-serif',
+            border: '2px solid #444',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow:
+              dj?.ranking === 1
+                ? '0 0 8px #FFD700'
+                : dj?.ranking === 2
+                ? '0 0 8px #C0C0C0'
+                : dj?.ranking === 3
+                ? '0 0 8px #CD7F32'
+                : 'none',
+          }}
+        >
+          { dj?.ranking ? dj.ranking : '—' }
+        </div>
       </div>
-      { /* Exibe o nome do DJ */ }
-      <div className='name-square mx-3'>{ dj?.djName }</div>
-      { /* Exibe a pontuação do DJ */ }
-      <div className='points-square'>{ dj?.score.toLocaleString('pt-BR') } pts</div>
-    </Container>
-  </Col>
-);
+      {/* Nome e pontuação */}
+      <div 
+        className='d-flex flex-column align-items-center mt-2'
+        style={{ lineHeight: '1.2' }}
+      >
+        {/* Nome */}
+        <div
+          style={{
+            fontSize: '1.2rem',
+            fontWeight: '600',
+            color: '#ccc', // cor clarinha pra combinar com o fundo
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+          }}
+        >
+          { dj?.djName }
+        </div>
+
+        {/* Pontuação */}
+        <span
+          className='d-flex align-items-center'
+          style={{
+            fontSize: '1rem',
+            fontWeight: '400',
+            color: '#aaa', // um pouco mais apagado
+          }}
+        >
+          { formatScore(dj?.score) }
+          <FaStar
+            className='ms-2'
+            style={{
+              color: '#FFD700', // estrela dourada
+              fontSize: '1rem',
+            }}
+          />
+        </span>
+      </div>
+    </Col>
+  )
+};
 
 export default DJProfileMini;

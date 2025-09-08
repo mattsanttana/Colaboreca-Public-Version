@@ -146,80 +146,6 @@ input[type=number]::-webkit-inner-spin-button {
   border-radius: 50%;
 }
 
-/* podium square rank, point and name style */
-
-.rank-square-short,
-.points-square-short,
-.name-square-short {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  margin: -9px
-}
-
-.rank-square-short {
-  background-color: #ffdddd;
-}
-
-.rank-square.gold {
-  background-color: gold;
-  border: 2px solid gold;
-  box-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold;
-}
-
-.rank-square.silver {
-  background-color: silver;
-  border: 2px solid silver;
-  box-shadow: 0 0 5px silver, 0 0 10px silver, 0 0 15px silver;
-}
-
-.rank-square.bronze {
-  background-color: #cd7f32;
-  /* Cor de bronze */
-  border: 2px solid #cd7f32;
-  box-shadow: 0 0 5px #cd7f32, 0 0 10px #cd7f32, 0 0 15px #cd7f32;
-}
-
-.gold {
-  background-color: gold !important;
-  border: 2px solid gold !important;
-  box-shadow: 0 0 3px gold, 0 0 6px gold, 0 0 10px gold !important;
-}
-
-.silver {
-  background-color: silver !important;
-  border: 2px solid silver !important;
-  box-shadow: 0 0 3px silver, 0 0 6px silver, 0 0 10px silver !important;
-}
-
-.bronze {
-  background-color: #cd7f32 !important;
-  /* Cor de bronze */
-  border: 2px solid #cd7f32 !important;
-  box-shadow: 0 0 3px #cd7f32, 0 0 6px #cd7f32, 0 0 10px #cd7f32 !important;
-}
-
-.gold .message-text,
-.silver .message-text,
-.bronze .message-text {
-  color: black !important;
-}
-
-.points-square-short {
-  background-color: #ddffdd;
-}
-
-.name-square-short {
-  background-color: #ddddff;
-  width: auto;
-  padding: 0 10px;
-}
-
 /* dj table img style */
 
 .img-thumbnail-hover {
@@ -302,20 +228,52 @@ input[type=number]::-webkit-inner-spin-button {
 
 /* menu items style */
 
-aside .nav-link {
+.menu-item .nav-link {
   transition: background-color 0.3s ease;
-  border-radius: 15%;
+  border-radius: 30px;
+  will-change: transform;
+  font-weight: bold;
 }
 
-aside .nav-link:hover {
-  background-color: #f0f0f0;
-  border-radius: 15%;
+.menu-item .nav-link:hover {
+  background-color: #5da2ba4D;
+  /* hover azul ciano claro e transparente */
+  border-radius: 30px;
+  will-change: transform;
 }
 
 
 .menu-item {
   font-size: 1.1rem;
-  padding: 0.70rem 1.20rem;
+  padding: 0.40rem 1.20rem;
+}
+
+.menu-nav {
+  border-right: 2px solid transparent;
+  border-image: linear-gradient(to bottom, #fff4c2, #ffb703, #c99700, #ffda6a) 1;
+}
+
+.menu-link-bright {
+  color: #e6a700 !important;
+  font-weight: bold;
+  transition: text-shadow 0.2s;
+  text-shadow:
+    0 0 6px #fff3,
+    /* brilho branco suave e difuso */
+    0 1px 2px #0003;
+  /* leve sombra preta para contraste */
+}
+
+.hide-scroll {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE e Edge antigos */
+}
+
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari */
 }
 
 /* menu profile style */
@@ -323,89 +281,6 @@ aside .nav-link:hover {
 .menu-container,
 .squeres-container {
   will-change: transform;
-}
-
-.rank-square,
-.points-square,
-.name-square {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 60px;
-  height: 60px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  font-size: 1.4rem;
-  margin: -9px
-}
-
-.rank-square {
-  background-color: #ffdddd;
-}
-
-.points-square {
-  background-color: #ddffdd;
-}
-
-.name-square {
-  background-color: #ddddff;
-  width: auto;
-  padding: 0 10px;
-}
-
-/* rank table style */
-
-.custom-table {
-  .name-square {
-    background-color: #ddddff;
-    width: auto;
-    padding: 0 10px;
-  }
-
-  /* rank table style */
-
-  .custom-table {
-    border-collapse: collapse;
-    width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .custom-table th,
-  .custom-table td {
-    text-align: left;
-    border-collapse: collapse;
-    width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .custom-table th,
-  .custom-table td {
-    text-align: left;
-    padding: 8px;
-  }
-
-  .custom-table th {
-    background-color: #f8f9fa;
-    color: #333;
-  }
-
-  .custom-table tr:nth-child(even) {
-    background-color: #f2f2f2;
-  }
-
-  height: 50px;
-  border-radius: 50%;
-}
-
-.custom-table .btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: #fff;
-}
-
-.custom-table .btn-danger:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
 }
 
 /* modal black style */
@@ -434,13 +309,6 @@ aside .nav-link:hover {
   align-items: center;
   overflow: hidden;
   /* evita que filhos transbordem */
-}
-
-.custom-modal .modal-content .dj-square,
-.custom-modal .modal-content .track-square,
-.custom-modal .modal-content .music-square {
-  color: #000000;
-  /* Torna a fonte preta */
 }
 
 .custom-input {
@@ -710,11 +578,12 @@ aside .nav-link:hover {
 }
 
 .dj-square {
+  color: #2e3059;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   font-size: 1.0em;
-  background-color: #5da2ba;
+  background: linear-gradient(90deg, #ffb703, #a8dadc, #4cc9f0, #186ea7);
   border-radius: 8px;
   width: 50%;
   /* Largura fixa */
@@ -729,7 +598,8 @@ aside .nav-link:hover {
 }
 
 .track-square {
-  position: absolute;
+  color: #2e3059;
+  position: absolute !important;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -740,41 +610,41 @@ aside .nav-link:hover {
   /* Altura fixa */
   font-weight: bold;
   top: 70px;
-  background-color: #5da2ba;
-  border-radius: 8px;
-  overflow: auto;
-  padding: 10px;
+  background: linear-gradient(90deg, #ffb703, #a8dadc, #4cc9f0, #186ea7);
+  border-radius: 12px;
+  padding: 6px 16px;
+  text-overflow: ellipsis;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
 }
 
 .music-square {
+  color: #2e3059;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   font-size: 1.0rem;
-  background-color: #5da2ba;
+  background: linear-gradient(90deg, #ffb703, #a8dadc, #4cc9f0, #186ea7);
   border-radius: 8px;
   width: 50%;
-  /* Largura fixa */
   height: 60px;
-  /* Altura fixa */
-  overflow: auto;
-  /* Permite rolagem quando o conteúdo é maior que o contêiner */
   padding: 10px;
-  /* Espaçamento interno para que o texto não fique colado nas bordas */
   box-sizing: border-box;
-  /* Inclui padding e border na largura e altura total */
   white-space: nowrap;
   position: relative;
   overflow: hidden;
   display: flex;
 }
 
+.music-scroll-container {
+  width: 100%;
+}
+
 .music-scroll {
   display: inline-block;
   white-space: nowrap;
-  /* Mantém o texto em uma única linha */
-  animation: none;
-  /* Aplica a animação de rolagem */
+  position: relative;
 }
 
 .music-square:hover .music-scroll {
@@ -974,21 +844,6 @@ aside .nav-link:hover {
   animation: rankChange 1s ease-in-out;
 }
 
-.highlighted {
-  border: 2px solid rgb(13, 110, 253);
-  animation: highlight-animation 1s infinite alternate;
-}
-
-@keyframes highlight-animation {
-  from {
-    border-color: rgb(13, 110, 253);
-  }
-
-  to {
-    border-color: white
-  }
-}
-
 @keyframes blink {
   0% {
     background-color: rgba(255, 255, 255, 0.1);
@@ -1020,10 +875,25 @@ aside .nav-link:hover {
 }
 
 .dj-rank {
+  display: flex;
+  flex-direction: column;
+  /* empilha o nome e a imagem */
   position: absolute;
   transform: translate(-50%, 0);
   /* centraliza horizontalmente */
+  align-items: center;
+  /* centraliza horizontal */
+  justify-content: center;
+}
+
+.dj-rank p {
+  /* aproxima do boneco */
+  font-weight: bold;
+  /* deixa mais marcante */
   text-align: center;
+  font-size: 1rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+  /* dá um brilhozinho pra destacar */
 }
 
 .dj-rank-1 {
@@ -1053,3 +923,259 @@ aside .nav-link:hover {
   width: 150px;
   height: 150px;
 }
+
+.points-up {
+  color: #0f0;
+  text-shadow: 0 0 8px #0f0, 0 0 12px #0f0;
+}
+
+.points-down {
+  color: #f00;
+  text-shadow: 0 0 8px #f00, 0 0 12px #f00;
+}
+
+.point-arrow {
+  margin-left: 6px;
+  animation: pulseUp 0.8s ease-in-out infinite;
+}
+
+.point-arrow.up {
+  color: #0f0;
+}
+
+.point-arrow.down {
+  color: #f00;
+}
+
+.points-icon {
+  margin-left: 4px;
+  font-size: 0.8rem;
+  color: gold;
+}
+
+@keyframes pulseUp {
+
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+/* Adicione no seu CSS global */
+@keyframes float {
+  0% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 8px 15px rgba(255, 255, 255, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.animated-tr {
+  border-radius: 8px;
+  /* Cantos arredondados */
+  transition: all 0.3s ease;
+}
+
+.animated-tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    border-color: #ffffff;
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 204, 0, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 204, 0, 0);
+    border-color: #ffffff;
+  }
+}
+
+.highlighted {
+  animation: pulse-element 1s infinite;
+  z-index: 2;
+}
+
+@keyframes pulse-element {
+  0% {
+    box-shadow: 0 0 10px 5px rgba(46, 48, 89, 0.7);
+    background-color: #2e3059;
+  }
+
+  50% {
+    box-shadow: 0 0 10px 5px rgba(46, 48, 89, 0.4);
+    background-color: #212529;
+  }
+
+  100% {
+    box-shadow: 0 0 10px 5px rgba(46, 48, 89, 0);
+    background-color: #2e3059;
+  }
+}
+
+@keyframes float3d {
+  0% {
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+
+  50% {
+    transform: translate3d(0, -5px, 10px) rotateX(5deg);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+}
+
+/* Melhorar performance */
+animated.div {
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.ranking-row {
+  background-color: #212529;
+  /* bg-dark */
+  transition: background-color 0.3s ease;
+}
+
+.ranking-row:hover {
+  background-color: #3a3f45;
+  /* bg-dark-secondary */
+}
+
+.search-input::placeholder {
+  color: #fff !important;
+  /* branco */
+  opacity: 1;
+}
+
+.search-group {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  /* garante que arredondamento aplique nos dois */
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.search-group:focus-within {
+  box-shadow: 0 0 0 3px #2e3059;
+  border-radius: 8px;
+}
+
+.search-input:focus,
+.search-group:focus-within .search-input,
+.search-group:focus-within .search-icon {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #494c80;
+  pointer-events: auto;
+  /* permite clicar */
+}
+
+.times-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  left: auto;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  color: #494c80;
+  pointer-events: auto;
+}
+
+.search-input::placeholder {
+  color: #6c757d !important;
+  /* muda a cor */
+  opacity: 1;
+  /* garante que não fique transparente demais */
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 10px;
+  /* Aplica o arredondamento no container */
+  overflow: hidden;
+  /* Garante que nada vaze */
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* ocupa toda a área */
+  padding: 2px;
+  /* largura da borda */
+  border-radius: inherit;
+  /* respeita o border-radius do pai */
+  background: linear-gradient(to right, #fff4c2, #494c80, #2e3059, #186ea7);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  /* não atrapalha clique */
+}
+
+.card-hover:hover {
+  background-color: #868f9733 !important;
+  /* exemplo: cor mais opaca no hover */
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+/* 🎨 Paleta base (a que tu já tem)
+
+Cinzas e grafites: #6c757d, #3a3f45, #212529
+
+Azuis escuros: #494c80, #2e3059
+
+Azul vibrante (link atual): #186ea7
+
+✨ Sugestões pra enriquecer
+
+Cor de destaque quente (pra botões principais, ícones ou hover)
+
+#e63946 (vermelho coral intenso)
+
+ou #ffb703 (amarelo dourado mais suave, lembra energia/astro)
+
+Tons secundários frios (pra dar respiro sem fugir do dark)
+
+#4cc9f0 (ciano claro, ótimo pra hover de links)
+
+#a8dadc (um azul clarinho acinzentado, ótimo pra texto em destaque)
+
+Detalhes mais “futuristas” (pra ícones, efeitos de glow, etc)
+
+#9d4edd (roxo neon elegante)
+
+#f72585 (magenta vibrante, pode ser usado bem sutilmente) */

@@ -112,7 +112,7 @@ const useTrack = () => {
     }
   }
 
-  const expelDJ = async (djId: number, token: string) => {
+  const expelDJ = async (djId: number, token: string | undefined) => {
     try {
       const response = await fetch(`http://localhost:3001/tracks/${ djId }`, {
         method: 'DELETE',

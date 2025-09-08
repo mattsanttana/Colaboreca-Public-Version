@@ -5,11 +5,13 @@ import { DJ } from '../types/DJ';
 
 // Props do componente
 type Props = {
+  dj?: DJ; // DJ atual (opcional)
   djs: DJ[]; // Lista de DJs
+  trackName: string;
 }
 
 // Componente de pódio
-const Podium: React.FC<Props> = ({ djs }) => {
+const Podium: React.FC<Props> = ({ dj, djs , trackName }) => {
   const [djPodium, setPodium] = useState<DJ[]>([]); // Estado para armazenar o pódio
 
   // useEffect para atualizar o pódio sempre que a lista de DJs mudar
@@ -26,16 +28,46 @@ const Podium: React.FC<Props> = ({ djs }) => {
   return (
     <Container className='py-4'>
       <Card
-        className='text-center text-light' // Classe para centralizar o texto e aplicar cor
+        className='text-center' // Classe para centralizar o texto e aplicar cor
         // Estilo do card
         style={{
           boxShadow: '0 0 0 0.5px #ffffff', // Sombra do card
-          top: '60px' // Distância do topo
+          top: '60px', // Distância do topo
         }}
       >
+        <Card.Header
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottom: 'none' // remove borda chata
+          }}
+        >
+          <div
+            className='gradient-border'
+            style={{
+              background: 'linear-gradient(90deg, #ffb703, #a8dadc, #4cc9f0, #186ea7)',
+              borderRadius: '12px',
+              padding: '6px 16px',
+              fontWeight: 'bold',
+              color: '#2e3059',
+              textAlign: 'center',
+              minWidth: '120px',
+              maxWidth: '250px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              boxShadow: '0px 2px 6px rgba(0,0,0,0.3)',
+              textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+              marginBottom: '10px'
+            }}
+          >
+            { trackName }
+          </div>
+        </Card.Header>
         <Card.Body
           className='hide-scrollbar' // Classe para esconder a barra de rolagem
-          style={{ height: '400px' }} // Estilo para altura e rolagem
+          style={{ height: '30vh' }} // Estilo para altura e rolagem
         >
           <div className='podium-wrapper'>
             { /* Imagem do pódio */ }
@@ -48,41 +80,47 @@ const Podium: React.FC<Props> = ({ djs }) => {
               { /* 1º lugar */ }
               { djPodium[0] && (
                 <div className='dj-rank dj-rank-1'>
-                  { /* Nome do DJ no 1º lugar */ }
-                  <p className='text-light mt-3'>{ djPodium[0].djName }</p> 
-                  { /* Imagem do DJ no pódio */ }
-                  <Image
-                    alt={ `Personagem do 1º lugar no pódio: ${ djPodium[0].djName }` } // Texto alternativo da imagem
-                    className='dj-img' // Classe da imagem do DJ
-                    key={ djPodium[0].id } // Chave única para o componente
-                    src={ djPodium[0].characterPath } // Caminho da imagem do DJ
-                  />
+                  <div className={ dj?.id === djPodium[0].id ? 'dj-dancing' : '' }>
+                    { /* Nome do DJ no 1º lugar */ }
+                    <p className='text-light mt-3'>{ djPodium[0].djName }</p> 
+                    { /* Imagem do DJ no pódio */ }
+                    <Image
+                      alt={ `Personagem do 1º lugar no pódio: ${ djPodium[0].djName }` } // Texto alternativo da imagem
+                      className='dj-img' // Classe da imagem do DJ
+                      key={ djPodium[0].id } // Chave única para o componente
+                      src={ djPodium[0].characterPath } // Caminho da imagem do DJ
+                    />
+                  </div>
                 </div>
               )}
               { /* 2º lugar */ }
               { djPodium[1] && (
                 <div className='dj-rank dj-rank-2'>
-                  <p className='text-light mt-3'>{ djPodium[1].djName }</p>
-                  { /* Renderiza o popover com as opções de perfil e chat */ }
-                  <Image
-                    alt={ `Personagem do 2º lugar no pódio: ${ djPodium[1].djName }` } // Texto alternativo da imagem
-                    className='dj-img' // Classe da imagem do DJ
-                    key={ djPodium[1].id } // Chave única para o componente
-                    src={ djPodium[1].characterPath } // Caminho da imagem do DJ
-                  />
+                  <div className={ dj?.id === djPodium[1].id ? 'dj-dancing' : '' }>
+                    <p className='text-light mt-3'>{ djPodium[1].djName }</p>
+                    { /* Renderiza o popover com as opções de perfil e chat */ }
+                    <Image
+                      alt={ `Personagem do 2º lugar no pódio: ${ djPodium[1].djName }` } // Texto alternativo da imagem
+                      className='dj-img' // Classe da imagem do DJ
+                      key={ djPodium[1].id } // Chave única para o componente
+                      src={ djPodium[1].characterPath } // Caminho da imagem do DJ
+                    />
+                  </div>
                 </div>
               )}
               { /* 3º lugar */ }
               { djPodium[2] && (
                 <div className='dj-rank dj-rank-3'>
-                  { /* Renderiza o nome do DJ no 3º lugar */ }
-                  <p className='text-light mt-3'>{ djPodium[2].djName }</p>
-                  <Image
-                    alt={ `Personagem do 3º lugar no pódio: ${ djPodium[2].djName }` } // Texto alternativo da imagem
-                    className='dj-img' // Classe da imagem do DJ
-                    key={ djPodium[2].id } // Chave única para o componente
-                    src={ djPodium[2].characterPath } // Caminho da imagem do DJ
-                  />
+                  <div className={ dj?.id === djPodium[2].id ? 'dj-dancing' : '' }>
+                    { /* Renderiza o nome do DJ no 3º lugar */ }
+                    <p className='text-light mt-3'>{ djPodium[2].djName }</p>
+                    <Image
+                      alt={ `Personagem do 3º lugar no pódio: ${ djPodium[2].djName }` } // Texto alternativo da imagem
+                      className='dj-img' // Classe da imagem do DJ
+                      key={ djPodium[2].id } // Chave única para o componente
+                      src={ djPodium[2].characterPath } // Caminho da imagem do DJ
+                    />
+                  </div>
                 </div>
               )}
             </Container>

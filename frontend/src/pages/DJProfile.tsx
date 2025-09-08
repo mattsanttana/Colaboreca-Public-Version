@@ -31,7 +31,7 @@ interface Props {
 const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previewRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     showTrackInfoPopup, setTrackName, showRankingChangePopup, trackName, setShowTrackInfoPopup, trackId
   } = useFetchTrackData(djToken, trackToken);
 
@@ -92,9 +92,10 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         <RankingChangePopup
           showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
           dj={ dj } // Envia o DJ atual como prop
-          previousRanking={ previewRanking } // Envia o ranking anterior como prop
+          previousRanking={ previousRanking } // Envia o ranking anterior como prop
           currentRanking={ djs } // Envia o ranking atual como prop
           handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+          trackName={ trackName } // Nome da pista
         />
         { /* Popup de informações da pista */ }
         <TrackInfoPopup

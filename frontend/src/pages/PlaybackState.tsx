@@ -1,5 +1,5 @@
 import { Card, Container } from 'react-bootstrap';
-import { BarChart, Bar, ResponsiveContainer, YAxis, XAxis } from 'recharts';
+import { BarChart, Bar, ResponsiveContainer, YAxis, XAxis, Tooltip } from 'recharts';
 import { DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
 import { Vote } from '../types/Vote';
@@ -62,35 +62,58 @@ const PlaybackState: React.FC<Props> = ({ djPlayingNow, playingNow, trackName, v
             trackName={ trackName } // Nome da pista
           />
           { /* Gráfico de votos */ }
-          { data.some((item) => item.value > 0) && (
-            <Container className='bar-chart'>
+          { data.some(item => item.value > 0) && (
+            <div className='gradient-border mt-4 p-3' style={{ backgroundColor: '#2e30594D' }}>
               { /* Gráfico de barras responsivo */ }
-              <ResponsiveContainer height='100%' width='100%'>
-                <BarChart
-                  data={ data } // Dados do gráfico
-                  layout='vertical' // Layout do gráfico
-                >
-                  { /* Ticks do eixo Y com tamanho de fonte 15 */ }
+              <ResponsiveContainer height={ 300 } width='100%'>
+                <BarChart data={ data } layout='vertical'>
+                  <defs>
+                    <linearGradient id='barGradient' x1='0' y1='0' x2='1' y2='0'>
+                      <stop offset='0%' stopColor='#fff4c2'/>
+                      <stop offset='33%' stopColor='#494c80'/>
+                      <stop offset='66%' stopColor='#2e3059'/>
+                      <stop offset='100%' stopColor='#186ea7'/>
+                    </linearGradient>
+                  </defs>
                   <XAxis
-                    allowDecimals={ false } // Não permite valores decimais
-                    domain={ [0, 'dataMax'] } // Domínio do eixo X
-                    type='number' // Tipo do eixo X
+                    allowDecimals={false}
+                    domain={[0, 'dataMax']}
+                    type='number'
+                    tick={{ fontSize: 17, fill: '#a8dadc', fontWeight: 'bold' }}
+                    axisLine={{ stroke: '#ffb703' }}
+                    tickLine={false}
                   />
-                  { /* Ticks do eixo Y com tamanho de fonte 15 */ }
                   <YAxis
-                    dataKey='name' // Chave de dados para o eixo Y
-                    tick={{ fontSize: 15 }} // Tamanho da fonte dos ticks
-                    type='category' // Tipo do eixo Y
-                    width={ 100 } // Largura do eixo Y
+                    dataKey='name'
+                    tick={{
+                      fontSize: 17,
+                      fill: '#a8dadc',
+                      fontWeight: 'bold',
+                    }}
+                    type='category'
+                    width={110}
+                    axisLine={{ stroke: '#ffb703' }}
+                    tickLine={false}
                   />
-                  { /* Barra do gráfico com os dados */ }
+                  <Tooltip
+                    cursor={{ fill: '#ffb70322' }}
+                    contentStyle={{
+                      background: '#222',
+                      border: '1px solid #ffb703',
+                      color: '#fff',
+                      borderRadius: 8,
+                      fontWeight: 'bold'
+                    }}
+                  />
                   <Bar
-                    dataKey='value' // Chave de dados para a barra
-                    fill='#8884d8' // Cor da barra
+                    dataKey='value'
+                    fill='url(#barGradient)'
+                    radius={[8, 8, 8, 8]}
+                    barSize={24}
                   />
                 </BarChart>
               </ResponsiveContainer>
-            </Container>
+            </div>
           )}
         </Card.Body>
       </Card>

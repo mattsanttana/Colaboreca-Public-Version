@@ -1,227 +1,214 @@
-import { Table, Button, Container, Image, Spinner } from 'react-bootstrap';
-import { DJ } from '../types/DJ';
-import useTrack from '../utils/useTrack';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense } from 'react';
+import { Button, Container, FormControl, Image, Spinner } from 'react-bootstrap';
+import { FaArrowUp, FaArrowDown, FaTimes, FaStar, FaSearch, FaUserSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { animated } from '@react-spring/web';
+import { DJ } from '../types/DJ';
+import useRankingTable from '../utils/useRankingTable';
 
 // Componentes que não precisam ser carregados inicialmente
 const ExpelDJConfirmationPopup = lazy(() => import('./ExpelDJConfirmationPopup'));
 
 // Props para o componente RankingTable
 interface Props {
-  djs: DJ[]; // Lista de DJs
-  isTrackOwner: boolean; // Indica se o usuário é o dono da pista
-  trackId: number; // ID da pista
-  trackToken: string; // Token da pista
+  currentRanking: DJ[]; // Ranking atual
+  dj?: DJ, // DJ atual (opcional)
+  isTrackOwner?: boolean; // Indica se o usuário é o dono da pista
+  previousRanking: DJ[]; // Ranking anterior
+  trackToken?: string; // Token da pista
 }
 
 // Componente responsável por exibir a tabela de ranking dos DJs
-const RankingTable: React.FC<Props> = ({ djs, isTrackOwner, trackId, trackToken }) => {
-  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false); // Estado para controlar a exibição do modal de confirmação
-  const [selectedDJ, setSelectedDJ] = useState<DJ | null>(null); // Estado para armazenar o DJ selecionado para expulsão
-
+const RankingTable: React.FC<Props> = ({ currentRanking, dj, isTrackOwner, previousRanking, trackToken }) => {
   const navigate = useNavigate(); // Hook para navegação entre rotas
-  const trackActions = useTrack(); // Hook personalizado para ações relacionadas à pista
 
-  // Função para confirmar a expulsão do DJ selecionado
-  const confirmExpelDJ = () => {
-    // Se um DJ estiver selecionado, chama a ação de expulsão e fecha o modal
-    if (selectedDJ) {
-      trackActions.expelDJ(selectedDJ.id, trackToken); // Chama a ação de expulsão do DJ
-      setSelectedDJ(null); // Limpa o DJ selecionado
-      setShowConfirmModal(false); // Fecha o modal de confirmação
-    }
-  };
-  
-  // Função para lidar com a ação de expulsar um DJ
-  const handleExpelDJ = (dj: DJ) => {
-    setSelectedDJ(dj); // Define o DJ selecionado para expulsão
-    setShowConfirmModal(true); // Abre o modal de confirmação
-  };
+  // Hook personalizado para gerenciar o estado e lógica da tabela de ranking
+  const {
+    setShowConfirmModal, showConfirmModal, trackId, search, setSearch, tableRef, tableHeight, rowRefs,
+    filteredRanking, points, pointDirection, updatedDJId, springs, confirmExpelDJ, handleExpelDJ, formatScore
+  } = useRankingTable(currentRanking, dj, previousRanking, trackToken);
 
   return (
-    // Container para a tabela de ranking
     <Container className='table-responsive'>
+      { /* Carregaento preguiçoso para componentes menos importantes */ }
       <Suspense fallback={ <Spinner /> }>
-        { /* Popup de confirmação de expulsão de DJ */ }
+        { /* Modal de confirmação para expulsar DJ */ }
         <ExpelDJConfirmationPopup
-          confirmExpelDJ={ confirmExpelDJ } // Função para confirmar a expulsão do DJ
-          setShowConfirmModal={ setShowConfirmModal } // Função para fechar o modal
-          showConfirmModal={ showConfirmModal } // Estado para controlar a exibição do modal
+          confirmExpelDJ={ confirmExpelDJ } // Função para confirmar expulsão
+          setShowConfirmModal={ setShowConfirmModal } // Função para controlar exibição do modal
+          showConfirmModal={ showConfirmModal } // Estado de exibição do modal
         />
       </Suspense>
-      { /* Tabela de ranking dos DJs */ }
-      <Table>
-        { /* Cabeçalho da tabela */ }
-        <thead>
-          <tr>
-            { /* Coluna de imagem do DJ */ }
-            <th
-              className='text-light'
-              style={{
-                backgroundColor: 'transparent',
-                borderBottom: 'none'
-              }}
+      
+      { /* Barra de busca */ }
+      <Container className='d-flex justify-content-end'>
+        <div className='search-group my-3' style={{ width: '30%', position: 'relative' }}>
+          <FaSearch className='search-icon' /> { /* Ícone de busca */ }
+          { /* Verifica se há texto na busca para mostrar o ícone de limpar */ }
+          { search ? (
+            // Ícone de limpar busca
+            <FaTimes
+              className='times-icon'
+              style={{ cursor: 'pointer' }}
+              onClick={ () => setSearch('') } // Limpa o campo de busca
             />
-            { /* Coluna de nome do DJ */ }
-            <th
-              className='text-light'
-              style={{
-                backgroundColor: 'transparent',
-                borderBottom: 'none'
-              }}
-            />
-            { /* Coluna de pontos do DJ */ }
-            <th
-              className='text-light'
-              style={{
-                backgroundColor: 'transparent',
-                borderBottom: 'none'
-              }}/>
-            { /* Verifica se o usuário é o dono da pista para exibir a coluna de expulsão */ }
-            { isTrackOwner && (
-              // Coluna de expulsão do DJ
-              <th
-                className='text-light'
-                style={{
-                  backgroundColor: 'transparent',
-                  borderBottom: 'none'
-                }}
-              />
+          // Se não houver texto, não mostra nada
+          ) : null }
+          { /* Campo de entrada para busca de DJs */ }
+          <FormControl
+            className='search-input'
+            type='text'
+            placeholder='Buscar DJ'
+            value={ search } // Valor do campo de busca
+            onChange={e => setSearch(e.target.value)} // Atualiza o estado da busca ao digitar
+            style={{
+              paddingLeft: '2rem', // espaço pro ícone
+              backgroundColor: '#212529',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              paddingRight: '2rem' // espaço pro ícone não cobrir texto
+            }}
+          />
+        </div>
+      </Container>
+      {/* Container principal para animação */}
+      <Container 
+        ref={ tableRef } // Referência para medir altura
+        style={{ 
+          position: 'relative', 
+          height: tableHeight,
+          minHeight: '300px' // Garante altura mínima
+        }}
+      >
+        { /* Mapeia o ranking filtrado para exibir cada DJ */ }
+        { filteredRanking.map((dj, index) => (
+          // Linha animada para cada DJ
+          <animated.div
+            key={ dj.id }
+            ref={ el => rowRefs.current[index] = el } // Referência para medir altura da linha
+            id={ `dj-${ dj.id }` } // ID para scroll
+            className={ `ranking-row d-flex align-items-center mb-2 p-2 rounded ${ dj.id === updatedDJId ? 'highlighted' : '' }` } // Classe para destacar DJ atualizado
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 1,
+              transform: springs[index].y.to(y => `translateY(${y}px)`),
+              transition: 'background-color 0.3s ease',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+            // Navega para o perfil do DJ ao clicar na linha
+            onClick={() => navigate(
+              isTrackOwner 
+                ? `/track-info/profile/${ trackId }/${ dj.id }` // Rota para dono da pista
+                : `/track/profile/${ trackId }/${ dj.id }` // Rota para outros usuários
             )}
-          </tr>
-        </thead>
-        { /* Corpo da tabela */ }
-        <tbody>
-          { /* Ordedna e mapeia os DJs e renderiza uma linha para cada um */ }
-          { djs.sort((a, b) => {
-            if (a.ranking === 0) return 1; // Se o ranking for 0, coloca no final
-            if (b.ranking === 0) return -1; // Se o ranking for 0, coloca no final
-            return a.ranking - b.ranking; // Ordena pelo ranking
-            }).map((selectedDJ: DJ) => (
-              <tr key={ selectedDJ.id }>
-                { /* Renderiza a imagem do DJ */ }
-                <td
-                  id='dj-image'
-                  className='text-light'
+          >
+            {/* Posição */}
+            <Container className='flex-shrink-0' style={{ width: '50px', textAlign: 'center' }}>
+              <span
+                className='d-inline-flex align-items-center justify-content-center'
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background:
+                    dj.ranking === 1
+                      ? '#FFD700' // Ouro
+                      : dj.ranking === 2
+                      ? '#C0C0C0' // Prata
+                      : dj.ranking === 3
+                      ? '#CD7F32' // Bronze
+                      : '#222', // Padrão
+                  color:
+                    dj.ranking === 1 || dj.ranking === 2 || dj.ranking === 3
+                      ? '#000' // Preto para medalhas
+                      : '#fff', // Branco para os outros
+                  fontWeight: 'bold',
+                  fontSize: '1.3rem',
+                  fontFamily: '"Bebas Neue", Oswald, Arial, sans-serif',
+                  border: '2px solid #444',
+                  boxShadow:
+                    dj.ranking === 1
+                      ? '0 0 8px #FFD700' // Brilho dourado
+                      : dj.ranking === 2
+                      ? '0 0 8px #C0C0C0' // Brilho prateado
+                      : dj.ranking === 3
+                      ? '0 0 8px #CD7F32' // Brilho bronze
+                      : 'none', // Sem brilho
+                }}
+              >
+                { dj.ranking === 0 ? '—' : dj.ranking } { /* Mostra travessão se ranking for 0 */ }
+              </span>
+            </Container>
+
+            {/* Avatar e Nome */}
+            <div className='d-flex align-items-center flex-grow-1'> 
+              {/* Avatar */}
+              <div className='flex-shrink-0 mx-2'>
+                <Image
+                  alt={ `Personagem do DJ ${ dj.djName }` }
+                  src={ dj.characterPath }
+                  className='img-thumbnail'
                   style={{
-                    backgroundColor: 'transparent',
-                    borderBottom: 'none'
+                    width: '50px',
+                    height: '50px',
+                    backgroundColor: '#1d1d1d',
+                    border:
+                      dj.ranking === 1
+                        ? '2px solid #FFD700' // Ouro
+                        : dj.ranking === 2
+                        ? '2px solid #C0C0C0' // Prata
+                        : dj.ranking === 3
+                        ? '2px solid #CD7F32' // Bronze
+                        : '1px solid #444', // Padrão
+                    boxShadow:
+                      dj.ranking === 1
+                        ? '0 0 10px #FFD700' // Brilho dourado
+                        : dj.ranking === 2
+                        ? '0 0 10px #C0C0C0' // Brilho prateado
+                        : dj.ranking === 3
+                        ? '0 0 10px #CD7F32' // Brilho bronze
+                        : 'none'
                   }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: 32,
-                        height: 32,
-                        lineHeight: '32px',
-                        borderRadius: '50%',
-                        background:
-                          selectedDJ.ranking === 1
-                            ? '#FFD700'
-                            : selectedDJ.ranking === 2
-                            ? '#C0C0C0'
-                            : selectedDJ.ranking === 3
-                            ? '#CD7F32'
-                            : '#222',
-                        color:
-                          selectedDJ.ranking === 1 ||
-                          selectedDJ.ranking === 2 ||
-                          selectedDJ.ranking === 3
-                            ? '#000'
-                            : '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '1.3rem',
-                        fontFamily: '"Bebas Neue", Oswald, Arial, sans-serif',
-                        border: '2px solid #444',
-                        boxShadow:
-                          selectedDJ.ranking === 1
-                            ? '0 0 8px #FFD700'
-                            : selectedDJ.ranking === 2
-                            ? '0 0 8px #C0C0C0'
-                            : selectedDJ.ranking === 3
-                            ? '0 0 8px #CD7F32'
-                            : 'none',
-                        letterSpacing: 1,
-                      }}
-                    >
-                      { selectedDJ.ranking === 0 ? '—' : selectedDJ.ranking }
-                    </span>
-                    <Image
-                      alt={selectedDJ.djName}
-                      className='img-thumbnail img-thumbnail-hover'
-                      onClick={ () => navigate(
-                        isTrackOwner ? `/track-info/profile/${ trackId }/${ selectedDJ.id }` : `/track/profile/${ trackId }/${ selectedDJ.id }`
-                      )} // Navega para a página do DJ ao clicar
-                      src={selectedDJ.characterPath}
-                      style={{
-                        backgroundColor: '#1d1d1dff',
-                        border:
-                          selectedDJ.ranking === 1
-                            ? '2px solid #FFD700'
-                            : selectedDJ.ranking === 2
-                            ? '2px solid #C0C0C0'
-                            : selectedDJ.ranking === 3
-                            ? '2px solid #CD7F32'
-                            : 'none',
-                        boxShadow:
-                          selectedDJ.ranking === 1
-                            ? '0 0 10px #FFD700'
-                            : selectedDJ.ranking === 2
-                            ? '0 0 10px #C0C0C0'
-                            : selectedDJ.ranking === 3
-                            ? '0 0 10px #CD7F32'
-                            : 'none',
-                        cursor: 'pointer',
-                        height: '50px',
-                        width: '50px',
-                      }}
-                    />
-                  </div>
-                </td>
-                { /* Renderiza o nome do DJ */ }
-                <td
-                 className='text-light'
-                 style={{
-                  backgroundColor: 'transparent',
-                  borderBottom: 'none'
-                 }}
-                >
-                  { selectedDJ.djName }
-                </td>
-                { /* Renderiza os pontos do DJ */ }
-                <td
-                  className='text-light'
-                  style={{
-                    backgroundColor: 'transparent',
-                    borderBottom: 'none'
-                  }}
-                >
-                  { selectedDJ.score.toLocaleString('pt-BR') } pts
-                </td>
-                { /* Se o usuário for o dono da pista, renderiza o botão de expulsão */ }
-                { isTrackOwner && (
-                  // Coluna de expulsão do DJ
-                  <td
-                    className='text-light' 
-                    style={{
-                      backgroundColor: 'transparent',
-                      borderBottom: 'none'
-                    }}
-                  >
-                    <Button
-                      variant='danger'
-                      onClick={ () => handleExpelDJ(selectedDJ) } // Chama a função para expulsar o DJ
-                    >
-                      Expulsar
-                    </Button>
-                  </td>
-                )}
-              </tr>
-            ))}
-        </tbody>
-      </Table>
+                />
+              </div>
+              
+              {/* Nome */}
+              <div className='text-light'>
+                { dj.djName }
+              </div>
+            </div>
+            
+            {/* Pontuação */}
+            <div
+              // Classe condicional para indicar aumento ou diminuição de pontos
+              className={ `flex-shrink-0 text-light ${
+                pointDirection[dj.id] === 'up' ? 'points-up' : pointDirection[dj.id] === 'down' ? 'points-down' : ''
+              }` }
+            >
+              <span className='d-flex align-items-center'>
+                { formatScore(points[dj.id] !== undefined ? points[dj.id] : dj.score) } { /* Formata e exibe a pontuação */ }
+                <FaStar className='ms-2 points-icon' /> { /* Ícone de estrela */ }
+                { pointDirection[dj.id] === 'up' && <FaArrowUp className='ms-2 point-arrow up' /> } { /* Ícone de seta para cima se pontos aumentaram */ }
+                { pointDirection[dj.id] === 'down' && <FaArrowDown className='ms-2 point-arrow down' /> } { /* Ícone de seta para baixo se pontos diminuíram */ }
+              </span>
+            </div>
+            
+            {/* Botão de expulsão */}
+            { isTrackOwner && (
+              <div className='flex-shrink-0 ms-3'>
+                <Button variant='danger' size='sm' title='Expulsar DJ' onClick={() => handleExpelDJ(dj)}>
+                  <FaUserSlash /> { /* Ícone de expulsão */ }
+                </Button>
+              </div>
+            )}
+          </animated.div>
+        ))}
+      </Container>
     </Container>
   );
 }

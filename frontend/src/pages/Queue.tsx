@@ -34,7 +34,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previewRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
   } = useFetchTrackData(djToken, trackToken);
 
@@ -67,8 +67,9 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
           dj={ dj } // Envia o DJ atual como prop
           currentRanking={ djs } // Envia o ranking atual como prop
           handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
-          previousRanking={ previewRanking } // Envia o ranking anterior como prop
+          previousRanking={ previousRanking } // Envia o ranking anterior como prop
           showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+          trackName={ trackName } // Nome da pista
         />
         { /* Popup de informações da pista */ }
         <TrackInfoPopup

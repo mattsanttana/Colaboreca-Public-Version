@@ -49,7 +49,7 @@ const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
         </Form.Select>
       </Container>
       { /* Renderiza o card com as músicas adicionadas pelo DJ */ }
-      <Card.Body style={{ height: '36vh', overflow: 'auto' }}>
+      <Card.Body style={{ height: '45vh', overflow: 'auto' }}>
         { /* Título do card */ }
         <Card.Title className='mt-4 text-light' style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
         { /* Verifica se há músicas adicionadas pelo DJ */ }
@@ -97,7 +97,7 @@ const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
                         style={{
                           backgroundColor: 'transparent', // Cor de fundo transparente
                           height: '60px', // Altura da imagem
-                          width: '60px' // Largura da imagem
+                          minWidth: '60px', // Largura mínima da imagem
                         }}
                       />
                     </td>

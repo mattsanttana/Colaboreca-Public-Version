@@ -12,9 +12,10 @@ const useFetchTrackData = (djToken: string, trackToken?: string) => {
   const [trackName, setTrackName] = useState(''); // Nome da pista
   const [dj, setDJ] = useState<DJ>(); // DJ atual
   const [djs, setDJs] = useState<DJ[]>([]); // Lista de DJs
+  const [globalPreviousRanking, setGlobalPreviousRanking] = useState<DJ[]>([]); // Para animações
   const [isTrackOwner, setIsTrackOwner] = useState(true); // Estado para verificar se o usuário é o dono da pista
   const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false }); // Mensagem do popup
-  const [previewRanking, setPreviewRanking] = useState<DJ[]>([]); // Ranking anterior
+  const [previousRanking, setPreviousRanking] = useState<DJ[]>([]); // Ranking anterior
   const [showRankingChangePopup, setShowRankingChangePopup] = useState(false); // Estado do popup de mudança de ranking
   const [showTrackInfoPopup, setShowTrackInfoPopup] = useState(false); // Estado para controlar o popup de informações da pista
 
@@ -129,31 +130,31 @@ const useFetchTrackData = (djToken: string, trackToken?: string) => {
 
       // Socket que recebe a informação de que um DJ foi atualizado
       const handleDJUpdated = (updatedDJ: DJ) => {
-        // Atualiza a lista de DJs
-        setDJs((prevDJs) =>
-          prevDJs.map((dj) => {
-            // Verifica se o ID do DJ atual é igual ao ID do DJ atualizado
-            if (Number(dj.id) === Number(updatedDJ.id)) {
-              return updatedDJ; // Atualiza o DJ na lista
-            }
-            return dj; // Caso contrário mantém o DJ atual
-          })
+        // 1. Captura global do estado anterior para animações gerais
+        const previousState = [...djs];
+        setGlobalPreviousRanking(previousState);
+        
+        // 2. Atualiza a lista de DJs
+        setDJs(prevDJs => 
+          prevDJs.map(dj => 
+            Number(dj.id) === Number(updatedDJ.id) ? updatedDJ : dj
+          )
         );
 
-        // Atualiza o DJ atual (se aplicável)
+        // 3. Verificação específica para popup (DJ atual subindo)
         setDJ((currentDJ) => {
-          // Verifica se o ID do DJ atual é igual ao ID do DJ atualizado
           if (currentDJ?.id === updatedDJ.id) {
-            const updatedDJRanking = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking; // Define o ranking atualizado tratando o 0 como infinito( não ranquado )
-            const currentDJRanking = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking; // Define o ranking atual tratando o 0 como infinito ( não ranquado )
-            // Verifica se o ranking atualizado é menor que o ranking atual
-            if (updatedDJRanking < currentDJRanking) {
-              setPreviewRanking(djs); // Atualiza o estado previewRank
-              setShowRankingChangePopup(true); // Exibe o popup de mudança de ranque
+            const updatedRank = updatedDJ.ranking === 0 ? Infinity : updatedDJ.ranking;
+            const currentRank = currentDJ.ranking === 0 ? Infinity : currentDJ.ranking;
+            
+            if (updatedRank < currentRank) {
+              // 4. Captura estado anterior específico para o popup
+              setPreviousRanking(previousState);
+              setShowRankingChangePopup(true);
             }
-            return updatedDJ; // Atualiza o DJ atual
+            return updatedDJ;
           }
-          return currentDJ; // Mantém o DJ atual
+          return currentDJ;
         });
       };
 
@@ -195,9 +196,10 @@ const useFetchTrackData = (djToken: string, trackToken?: string) => {
   return {
     dj, // DJ atual
     djs, // Lista de DJs
+    globalPreviousRanking,
     isTrackOwner, // Estado para verificar se o usuário é o dono da pista
     popupMessageData, // Dados do popup de mensagem
-    previewRanking, // Ranking anterior
+    previousRanking, // Ranking anterior
     setPopupMessageData, // Função para definir os dados do popup de mensagem
     setShowRankingChangePopup, // Função para definir o estado do popup de mudança de ranking
     setShowTrackInfoPopup, // Função para definir o estado do popup de informações da pista

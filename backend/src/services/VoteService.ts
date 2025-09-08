@@ -44,41 +44,41 @@ export default class VoteService {
 
   // Método para verificar se a música que não teve seus pontos aplicados foi tocada e aplicar os pontos ao DJ
   async checkPlaybackState() {
-  try {
-    if (this.isRunning) return; // Se o serviço já está rodando, não faz nada
-    this.isRunning = true; // Marca o serviço como rodando
+    try {
+      if (this.isRunning) return; // Se o serviço já está rodando, não faz nada
+      this.isRunning = true; // Marca o serviço como rodando
 
-    const tracksData = await this.trackModel.findAll(); // Busca todas as tracks
-    // Faz uma verificação para cada track
-    await Promise.allSettled(tracksData.map(async (track) => {
-      const token = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Pega o token de acesso do Spotify
-      
-      if (!token) return; // Se o token não for encontrado, não faz nada
+      const tracksData = await this.trackModel.findAll(); // Busca todas as tracks
+      // Faz uma verificação para cada track
+      await Promise.allSettled(tracksData.map(async (track) => {
+        const token = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Pega o token de acesso do Spotify
 
-      const music = track.colaborecaQueue.find((music) => !music.pointsApllied); // Busca a música que não teve seus pontos aplicados
-      if (!music || !music.id) return; // Se a música não for encontrada, não faz nada
+        if (!token) return; // Se o token não for encontrado, não faz nada
 
-      const queue = await SpotifyActions.getQueue(token); // Pega a fila de reprodução do Spotify
-      const musicInQueue = queue.queue.find((track: Music) => track.uri === music?.musicURI); // Verifica se a música está na fila de reprodução
-      const currentMusicURI = queue.currently_playing?.uri; // Pega a URI da música que está sendo reproduzida atualmente
+        const music = track.colaborecaQueue.find((music) => !music.pointsApllied); // Busca a música que não teve seus pontos aplicados
+        if (!music || !music.id) return; // Se a música não for encontrada, não faz nada
 
-      // Se a música não está na fila de reprodução e não é a música que está sendo reproduzida atualmente, aplica os pontos ao DJ
-      if (currentMusicURI && music?.musicURI !== currentMusicURI && musicInQueue === undefined) {
-        await this.applyPointsToDJ(track.id, music.id); // Aplica os pontos ao DJ
+        const queue = await SpotifyActions.getQueue(token); // Pega a fila de reprodução do Spotify
+        const musicInQueue = queue.queue.find((track: Music) => track.uri === music?.musicURI); // Verifica se a música está na fila de reprodução
+        const currentMusicURI = queue.currently_playing?.uri; // Pega a URI da música que está sendo reproduzida atualmente
+
+        // Se a música não está na fila de reprodução e não é a música que está sendo reproduzida atualmente, aplica os pontos ao DJ
+        if (currentMusicURI && music?.musicURI !== currentMusicURI && musicInQueue === undefined) {
+          await this.applyPointsToDJ(track.id, music.id); // Aplica os pontos ao DJ
+        }
+      }));
+      // Se acontecer um erro, exibe no console e retorna uma mensagem de erro
+    } catch (error) {
+      console.error(error);
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
       }
-    }));
-  // Se acontecer um erro, exibe no console e retorna uma mensagem de erro
-  } catch (error) {
-    console.error(error);
-    if (error instanceof Error) {
-      return { status: 'ERROR', data: { message: error.message } };
-    } else {
-      return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+    } finally {
+      this.isRunning = false; // Marca o serviço como não rodando
     }
-  } finally {
-    this.isRunning = false; // Marca o serviço como não rodando
   }
-}
 
   // Método para verificar se o DJ já votou na música atual
   async verifyIfDJHasAlreadVoted(authorization: string) {
@@ -241,7 +241,7 @@ export default class VoteService {
       // Atualizar o score de todos os DJs que votaram na música
       for (const dj of votingDJs) {
         const djVote = votes.find(vote => vote.djId === dj.id); // Busca o voto do DJ
-        const newScore = (dj.score ?? 0) + (djVote?.vote && score.majorityVote.includes(djVote.vote) ? 0.50 : 0.25); // Calcula o novo score
+        const newScore = (dj.score ?? 0) + (djVote?.vote && score.majorityVote.includes(djVote.vote) ? 15 : 5); // Calcula o novo score
 
         const updateDJSCORE = await this.djModel.update({ score: newScore }, { id: dj.id }, { transaction }); // Atualiza o score do DJ
 
@@ -262,7 +262,7 @@ export default class VoteService {
 
         if (sortedDJs[i].ranking !== newRanking) {
           const updateDJRank = await this.djModel.update({ ranking: newRanking }, { id: sortedDJs[i].id }, { transaction });
-    
+
           // Se a atualização do ranking do DJ não for bem-sucedida, desfaz a transação e retorna uma mensagem de erro
           if (!updateDJRank || !updateDJRank[0]) {
             await transaction.rollback(); // Rollback da transação

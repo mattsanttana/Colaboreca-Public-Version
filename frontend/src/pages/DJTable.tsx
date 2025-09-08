@@ -30,7 +30,7 @@ const DJTable: React.FC<Props> = ({ djPlayingNow, playingNow, showAddedByandTrac
       const containerWidth = containerElement.clientWidth; // Largura do container
       
       const isPlaying = playingNow && playingNow.is_playing && playingNow.currently_playing_type === 'track'; // Verifica se a música está tocando
-      const scrollAmount = scrollWidth - containerWidth + 20; // Distância total que o texto precisa rolar
+      const scrollAmount = scrollWidth - containerWidth + 15; // Distância total que o texto precisa rolar
       
       // Verifica se a música está tocando ou se o texto é maior que o container
       if ((isPlaying || scrollWidth > containerWidth) && scrollWidth > containerWidth) {
@@ -57,29 +57,31 @@ const DJTable: React.FC<Props> = ({ djPlayingNow, playingNow, showAddedByandTrac
         { showAddedByandTrackName && (
           <>
             { /* Exibição do nome do DJ */ }
-            <div className='dj-square mx-2 hide-scrollbar'>
-              <div style={{ fontWeight: 'bold' }}>Discotecando:</div>
-              <div>{ addedByDJ ? djPlayingNow?.addedBy : '-' }</div>
+            <div className='dj-square mx-2 hide-scrollbar gradient-border'>
+              <span style={{ fontWeight: 'bold' }}>Discotecando:</span>
+              <p>{ addedByDJ ? djPlayingNow?.addedBy :'—' }</p>
             </div>
             { /* Exibição do nome da pista */ }
-            <div className='track-square mx-2 hide-scrollbar'>
-              <div>{ trackName }</div>
+            <div className='track-square mx-2 hide-scrollbar gradient-border'>
+              <span>{ trackName }</span>
             </div>
           </>
         )}
         <div
-          className='music-square mx-2 hide-scrollbar' // Classe para estilização
+          className='music-square mx-2 gradient-border' // Classe para estilização
           ref={ containerRef } // Ref para o container do texto rolante
         >
-          <div style={{ fontWeight: 'bold' }}>Tocando:</div>
-          <div
-            className='music-scroll' // Classe para estilização do texto rolante
-            ref={ scrollRef } // Ref para o elemento de rolagem
-          >
-            {/* Texto rolante com o nome da música e os artistas */}
-            { isTrackPlaying && playingNow?.item
-              ? `${ playingNow.item.name } - ${ playingNow.item.artists?.map((artist) => artist.name).join(', ') }`
-              : 'Nenhuma música tocando'}
+          <span style={{ fontWeight: 'bold' }}>Tocando:</span>
+          <div className='music-scroll-container'>
+            <span
+              className='music-scroll' // Classe para estilização do texto rolante
+              ref={ scrollRef } // Ref para o elemento de rolagem
+            >
+              {/* Texto rolante com o nome da música e os artistas */}
+              { isTrackPlaying && playingNow?.item
+                ? `${ playingNow.item.name } - ${ playingNow.item.artists?.map((artist) => artist.name).join(', ') }`
+                : 'Nenhuma música tocando'}
+            </span>
           </div>
         </div>
       </Container>
