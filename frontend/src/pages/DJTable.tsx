@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Card, Container, Spinner } from 'react-bootstrap';
-import { FaExclamationTriangle } from 'react-icons/fa';
-import { djTable, djTablePlaying } from '../assets/images/characterPath';
+import { djTable, djTablePlaying, logo, loudspeakerBottom, loudspeakerTop } from '../assets/images/characterPath';
 import { DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
 
@@ -51,7 +50,7 @@ const DJTable: React.FC<Props> = ({ djPlayingNow, playingNow, showAddedByandTrac
   // Renderiza o componente DJTable
   return (
     // Container principal
-    <Container style={{ padding: '0px' }}>
+    <Container>
       { /* Exibição do estado de reprodução */ }
       <Container className='d-flex justify-content-center align-items-center squeres-container'>
         { showAddedByandTrackName && (
@@ -98,11 +97,31 @@ const DJTable: React.FC<Props> = ({ djPlayingNow, playingNow, showAddedByandTrac
         <Card.Img
           alt='Mesa de discotecagem' // Descrição da imagem
           className='img-fluid dj-table' // Classe para estilização
-          src={ addedByDJ ? djTablePlaying : djTable } // Caminho da imagem da mesa de DJ
+          src={ isTrackPlaying ?  djTablePlaying : djTable } // Caminho da imagem da mesa de DJ
         />
         {/* Renderização condicional das notas musicais e da capa/spinner */}
         { isTrackPlaying ? (
           <>
+            <Card.Img
+              alt='Fone animado' // Descrição da imagem
+              className='img-fluid loudspeaker-top-left' // Classe para estilização
+              src={ loudspeakerTop } // Caminho da imagem da nota musical
+            />
+            <Card.Img
+              alt='Fone animado' // Descrição da imagem
+              className='img-fluid loudspeaker-top-right' // Classe para estilização
+              src={ loudspeakerTop } // Caminho da imagem da nota musical
+            />
+            <Card.Img
+              alt='Fone animado' // Descrição da imagem
+              className='img-fluid loudspeaker-bottom-left' // Classe para estilização
+              src={ loudspeakerBottom } // Caminho da imagem da nota musical
+            />
+            <Card.Img
+              alt='Fone animado' // Descrição da imagem
+              className='img-fluid loudspeaker-bottom-right' // Classe para estilização
+              src={ loudspeakerBottom } // Caminho da imagem da nota musical
+            />
             { /* Animação no lado superior esquero */ }
             <div className='music-notes-animation-top-left' style={{ backgroundColor: 'transparent' }}>
               <span className='music-note'>♪</span>
@@ -132,7 +151,7 @@ const DJTable: React.FC<Props> = ({ djPlayingNow, playingNow, showAddedByandTrac
               // Se sim, renderiza a imagem do álbum
               <Card.Img
                 alt={ `Capa do álbum da música ${ playingNow.item.album.name }` }
-                className='img-fluid music-inside-table'
+                className='img-fluid music-inside-table-spinning'
                 src={ playingNow.item.album.images[0].url }
               />
             ) : (
@@ -144,7 +163,11 @@ const DJTable: React.FC<Props> = ({ djPlayingNow, playingNow, showAddedByandTrac
           </>
           // Caso não tenha música tocando, renderiza um ícone indicando que não há música
         ) : (
-          <FaExclamationTriangle className='music-inside-table' style={{ width: '60px' }} /> // Ícone de aviso
+          <Card.Img
+            alt='Logo do Colaboreca' // Descrição da imagem
+            className='img-fluid music-inside-table'
+            src={ logo }
+          />
         )}
       </div>
     </Container>

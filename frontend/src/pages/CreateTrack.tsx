@@ -69,7 +69,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
       // Caso retorne o status 201
       if (track?.status === 201) {
         dispatch(saveTrack(track.data.token)); // Dispacha a ação de salvar o token da pista no redux
-        navigate(`/track-info/${track.data.id}`); // Redireciona o usuário pra pista
+        navigate(`/track-info/${ track.data.id }`); // Redireciona o usuário pra pista
         // Caso o status seja igual a 401
       } else if (track?.status === 401) {
         // Renderiza o popup de mensagem informando que a conta do Spotify do usuário precisa ser premium para criar uma pista

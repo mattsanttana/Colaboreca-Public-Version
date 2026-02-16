@@ -31,7 +31,7 @@ interface Props {
 const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     showTrackInfoPopup, setTrackName, showRankingChangePopup, trackName, setShowTrackInfoPopup, trackId
   } = useFetchTrackData(djToken, trackToken);
 
@@ -131,14 +131,16 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         <Container>
           { /* Renderiza o cabeçalho com as informações do DJ e o estado do menu */ }
           <Header
-              dj={ dj } // Envia o DJ atual como prop
-              isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop
-              isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
-              setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
-              showVotePopup={ showVotePopup } // Envia o estado do popup de votação
-              toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
-              trackId={ trackId } // Envia o ID da pista como prop
-            />
+            currentRanking={ djs } // Envia o ranking atual como prop
+            dj={ dj } // Envia o DJ atual como prop
+            isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
+            isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+            previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
+            setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            showVotePopup={ showVotePopup } // Envia o estado do popup de votação
+            toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
+            trackId={ trackId } // Envia o ID da pista como prop
+          />
           <Row>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
             <Col
@@ -147,8 +149,10 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
             >
               { /* Componente de menu */ }
               <Menu
+                currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
                 isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+                previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
             </Col>
@@ -164,7 +168,9 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
               >
                 { /* Renderiza o mini perfil do DJ */ }
                 <DJProfileMini
+                  currentRanking={ djs }
                   dj={ djProfile } // Envia o perfil do DJ como prop
+                  previousRanking={ globalPreviousRanking }
                 />
                   { /* Caso o usuário seja o dono do perfil e não seja o dono da pista, exibe o botão para editar/excluir DJ */ }
                   { isProfileOwner && !isTrackOwner && (

@@ -34,7 +34,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
   } = useFetchTrackData(djToken, trackToken);
 
@@ -105,9 +105,11 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
         <Container>
           { /* Cabeçalho do componente */ }
           <Header
+            currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+            previousRanking={ globalPreviousRanking } // Envia o ranking anterior global como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
@@ -121,9 +123,11 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
             >
               { /* Componente de menu */ }
               <Menu
+                currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
                 isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
-                trackId={ Number(trackId) }
+                previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
+                trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
             </Col>
             <Col

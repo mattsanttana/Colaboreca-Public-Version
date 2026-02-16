@@ -1,145 +1,283 @@
-import { Card, Container, Image, Table } from 'react-bootstrap';
-import { Music } from '../types/SpotifySearchResponse';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, Container, Image, Spinner } from 'react-bootstrap';
+import TQueue from '../types/TQueue';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
+import { logo } from '../assets/images/characterPath';
+import { useNavigate } from 'react-router-dom';
 
-// Props do componente
-type Props = {
-  queue: Music[] | undefined;
+interface Props {
+  previewQueue: TQueue[];
+  isLoading: boolean;
+  isTrackOwner: boolean;
+  trackId: string | undefined;
 }
 
-// Componente de pré-visualização da fila (renderiza as primeiras 3 músicas da fila)
-const QueuePreview: React.FC<Props> = ({ queue }) => (
-  <Container className='py-4 p-0'>
-    <Card
-      className='text-center text-light m-0 p-0' // Classe para centralizar o texto e aplicar cor
-      style={{ boxShadow: '0 0 0 0.5px #ffffff', padding: 0, margin: 0 }} // Estilo do card
-    >
-      <Card.Body 
-        // className='p-0' // Remove o preenchimento do corpo do card
-        // Estilo do corpo do card
-        style={{ 
-          height: '360px', // Altura fixa do card
-          display: 'flex', // Flexbox para organizar o conteúdo
-          flexDirection: 'column', // Direção da coluna
-          justifyContent: 'space-between', // Espaçamento entre os itens
-        }}
-      >
-        <Container
-          // Estilo do container para a tabela
-          className='hide-scrollbar p-0 m-0' // Classe para esconder a barra de rolagem
-          style={{
-            flex: 1, // Permite que o container ocupe o espaço restante
-            margin: 0, // Margem
-            msOverflowStyle: 'none', // Estilo para esconder a barra de rolagem no Microsoft Edge
-            padding: 0, // Espeçanento
-            scrollbarWidth: 'none', // Esconde a barra de rolagem no Firefox
-          }}
-        >
-          { /* Título do card */ }
-          <Card.Title className='text-start '>A seguir:</Card.Title>
-          { /* Tabela para exibir as músicas da fila */ }
-          <Table
-            className='m-0 p-0' // Remove margens e preenchimento da tabela
-            style={{
-              tableLayout: 'fixed',
-              width: '100%', // Largura total da tabela
-              wordWrap: 'break-word', // Quebra de palavras
-              margin: 0, // Margem
-              padding: 0, // Espaçamento
-            }}
-          >
-            { /* Cabeçalho da tabela */ }
-            <thead>
-              <tr>
-                { /* Coluna da imagem do álbum */ }
-                <th
-                  className='text-light' // Classe para aplicar cor ao texto
-                  // Estilo do cabeçalho da coluna
-                  style={{
-                    backgroundColor: 'transparent', // Cor de fundo do cabeçalho
-                    borderBottom: 'none', // Remove a borda inferior
-                    width: '50px', // largura fixa da coluna da imagem
-                  }}
-                />
-                { /* Coluna do nome da música */ }
-                <th
-                  className='text-light p-0 m-0' // Classe para aplicar cor ao texto
-                  // Estilo do cabeçalho da coluna
-                  style={{
-                    backgroundColor: 'transparent', // Cor de fundo do cabeçalho
-                    borderBottom: 'none', // Remove a borda inferior
-                    padding: 0, // Remove o preenchimento
-                    margin: 0, // Remove a margem
-                  }}
-                />
-              </tr>
-            </thead>
-            { /* Corpo da tabela com as músicas da fila */ }
-            <tbody>
-              { /* Mapeia as músicas da fila para criar as linhas da tabela */ }
-              { queue?.map((track: Music, index: number) => (
-                <tr key={ index }>
-                  { /* Coluna da imagem do álbum */ }
-                  <td
-                    // Estilo da coluna da imagem do álbum
-                    style={{
-                      backgroundColor: 'transparent', // Cor de fundo da coluna
-                      borderBottom: 'none', // Remove a borda inferior
-                      padding: 0, // Remove o preenchimento
-                      margin: 0, // Remove a margem
-                      width: '50px', // largura igual à imagem
-                      height: '50px' // altura igual à imagem (opcional)
-                    }}
-                  >
-                    { /* Imagem do álbum da música */ }
-                    <Image 
-                      alt={ `Capa do da música ${ track.name }` } // Texto alternativo para a imagem
-                      className='img-thumbnail'  // Classe para aplicar estilo de miniatura à imagem
-                      src={ track.album.images[0].url } // URL da imagem do álbum
-                      // Estilo da imagem
-                      style={{
-                        backgroundColor: 'transparent', // Cor de fundo da imagem
-                        border: 'none', // Remove a borda da imagem
-                        height: '50px', // Altura da imagem
-                        width: '50px', // Largura da imagem
-                        display: 'block', // Exibe a imagem como um bloco
-                      }} 
-                    />
-                  </td>
-                  { /* Coluna do nome da música e artista */ }
-                  <td
-                    className='text-light text-start p-0 m-0' // Classe para aplicar cor e posição do texto
-                    // Estilo do texto
-                    style={{
-                      backgroundColor: 'transparent', // Fundo da imagem transparente
-                      borderBottom: 'none', // Sem bordas inferior
-                      margin: 0, // Margem
-                      padding: 0, // Espaçamento
-                      width: '50%' // Largura
-                    }}
-                  >
-                    <div
-                      style={{
-                        overflow: 'hidden', // Esconde a barra de rolagem
-                        textOverflow: 'ellipsis', // Adiciona reticências caso o texto for muito longo
-                        whiteSpace: 'nowrap', // Não permite quebra de linha
-                        width: '100%' // Largura
-                      }}
-                      // Texto que vai ser vispivel ao passar o mouse em cima
-                      title={ track.name + ' - ' + track.artists.map((artist) => artist.name).join(', ') }
-                    >
-                      <strong>{ track.name} </strong>
-                      <br />
-                      { track.artists.map((artist) => artist.name).join(', ') }
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Container>
-      </Card.Body>
-    </Card>
-  </Container>
-)
+const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, isTrackOwner, trackId }) => {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  
+  const expandedRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const expandedContentRef = useRef<HTMLDivElement>(null);
 
-export default QueuePreview; // Exporta o componente QueuePreview
+  const navigate = useNavigate();
+
+  const toggleExpand = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  // Função para rolar até o elemento expandido
+  const scrollToExpanded = useCallback(() => {
+    if (expandedRef.current) {
+      expandedRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    if (expandedIndex !== null) {
+      const timeout = setTimeout(() => {
+        scrollToExpanded();
+      }, 50); // pequeno delay só pra garantir a animação de altura
+
+      return () => clearTimeout(timeout);
+    }
+  }, [expandedIndex, scrollToExpanded]);
+
+  // Efeito para reajustar scroll quando o conteúdo expandido muda
+  useEffect(() => {
+    const handleResize = () => {
+      if (expandedIndex !== null) {
+        scrollToExpanded();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [expandedIndex, scrollToExpanded]);
+
+  return (
+    <Container className='py-4 p-0'>
+      <Card className='text-center text-light m-0 p-0'
+        style={{ boxShadow: '0 0 0 0.5px #ffffff', padding: 0, margin: 0 }}>
+        <Card.Body style={{ height: '360px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div
+            className="d-flex align-items-center justify-content-between mb-3"
+          >
+            <Card.Title className="mb-0 text-start" style={{ color: '#fff4c2'}}>
+              A seguir:
+            </Card.Title>
+
+            <span
+              onClick={() =>
+                navigate(
+                  isTrackOwner
+                    ? `/track-info/queue/${trackId}`
+                    : `/track/queue/${trackId}`
+                )
+              }
+              style={{
+                fontSize: '0.85em',
+                cursor: 'pointer',
+                color: '#e6a700',
+                opacity: 0.8
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.8')}
+            >
+              Ver fila →
+            </span>
+          </div>  
+          { isLoading ? (
+            <div className="d-flex align-items-center justify-content-center flex-grow-1">
+              <Spinner animation='border' variant='light' />
+            </div>
+          ) : (
+            <div 
+              style={{ 
+                flex: 1, 
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                position: 'relative'
+              }} 
+              ref={scrollContainerRef}
+            >
+              <AnimatePresence mode="popLayout">
+                { previewQueue.map((track, index) => (
+                  <motion.div
+                    key={ track.id }
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
+                    className="mb-2"
+                    ref={ expandedIndex === index ? expandedRef : null }
+                  >
+                    { /* Item principal (sempre visível) */ }
+                    <motion.div
+                      onClick={ () => toggleExpand(index) }
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        padding: '8px',
+                      }}
+                      whileHover={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                      className="d-flex align-items-center"
+                    >
+                      <div className="me-2" style={{ width: '24px', opacity: 0.7, fontWeight: 'bold' }}>
+                        {index + 1}
+                      </div>
+                      
+                      <Image 
+                        src={track.cover}
+                        alt={`Capa da música ${ track.musicName || 'Desconhecida' }`}
+                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                        className="me-3"
+                      />
+                      
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div 
+                          className="text-truncate" 
+                          style={{ 
+                            fontWeight: 'bold', 
+                            fontSize: '0.9em',
+                            color: '#fff4c2',
+                            textAlign: 'left'
+                          }}
+                        >
+                          { track.musicName || 'Música Desconhecida' }
+                        </div>
+                        <div 
+                          className="text-truncate" 
+                          style={{ 
+                            fontSize: '0.8em', 
+                            opacity: 0.7,
+                            color: '#fff4c2',
+                            textAlign: 'left'
+                          }}
+                        >
+                          { track.artists || 'Artista Desconhecido' }
+                        </div>
+                      </div>
+
+                      {/* Ícone de expansão */}
+                      <motion.div
+                        animate={{ rotate: expandedIndex === index ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{ marginLeft: '8px', fontSize: '12px' }}
+                      >
+                        ▼
+                      </motion.div>
+                    </motion.div>
+
+                    {/* Conteúdo expandido (acordeão) */}
+                    <AnimatePresence>
+                      { expandedIndex === index && (
+                        <motion.div
+                          ref={expandedContentRef}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{
+                            height: { duration: 0.3 },
+                            opacity: { duration: 0.2 }
+                          }}
+                          onAnimationComplete={() => {
+                            expandedContentRef.current?.scrollIntoView({
+                              behavior: 'smooth',
+                              block: 'center',
+                            });
+                          }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <div
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              borderRadius: '4px',
+                              marginTop: '8px',
+                              padding: '12px',
+                              fontSize: '0.85em',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '12px',
+                            }}
+                          >
+                            {/* Imagem do personagem/DJ */}
+                            { track.characterPath ? (
+                              <Image
+                                src={ track.characterPath }
+                                alt={ `Imagem do DJ ${ track.addedBy || 'Desconhecido' }` }
+                                className='dj-character-hover'
+                                onClick={ () => navigate(
+                                  isTrackOwner
+                                    ? `/track-info/profile/${ trackId }/${ track.djId}`
+                                    : `/track/profile/${ trackId }/${ track.djId }`
+                                ) }
+                                style={{
+                                  width: '45px',
+                                  height: '45px',
+                                  backgroundColor: '#2e30594D',
+                                  borderRadius: '4px',
+                                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                                  flexShrink: 0,
+                                  cursor: 'pointer',
+                                }}
+                              />
+                            ) : (
+                              <Image
+                                alt='Logo do Colaboreca'
+                                className='img-thumbnail'
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  backgroundColor: '#2e30594D',
+                                  borderRadius: '4px',
+                                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                                  flexShrink: 0,
+                                }}
+                                src={logo}
+                              />
+                            )}
+
+                            {/* Info do DJ que adicionou */}
+                            <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ 
+                                opacity: 0.7,
+                                color: '#fff4c2',
+                                textAlign: 'left'
+                              }}>
+                                Adicionado por:
+                              </span>
+                              <strong style={{ 
+                                color: '#fff4c2',
+                                textAlign: 'left'
+                              }}>
+                                {track.addedBy || 'Desconhecido'}
+                              </strong>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              { previewQueue.length === 0 && !isLoading && (
+                <div className="text-center py-5" style={{ opacity: 0.5 }}>
+                  Dispositivo Desconectado
+                </div>
+              )}
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+    </Container>
+  );
+};
+
+export default QueuePreview;

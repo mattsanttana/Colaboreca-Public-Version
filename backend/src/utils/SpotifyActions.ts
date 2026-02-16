@@ -13,7 +13,7 @@ export default class SpotifyActions {
       const bodySettings = {
         grant_type: 'authorization_code', // Tipo de concessão
         code, // Código de autorização
-        redirect_uri: 'http://localhost:5173/login', // URL de redirecionamento
+        redirect_uri: 'http://127.0.0.1:5173/login', // URL de redirecionamento
       };
 
       const body = new URLSearchParams(Object.entries(bodySettings)).toString(); // Transformar o corpo em uma string
@@ -90,14 +90,14 @@ export default class SpotifyActions {
       // Requisição para pegar o usuário atual
       const response = await axios.get('https://api.spotify.com/v1/me', {
         headers: {
-          Authorization: `Bearer ${ token }`, // Token de acesso
+          Authorization: `Bearer ${token}`, // Token de acesso
         },
       });
 
       return response.data; // Retornar os dados do usuário
     } catch (error) {
       // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
-      console.error(error);
+      console.error('Erro do matt: ', error);
       if (error instanceof Error) {
         return { status: 'ERROR', data: { message: `Erro ao tentar buscar o usuário: ${error.message}` } };
       } else {
@@ -209,7 +209,7 @@ export default class SpotifyActions {
       const response = await axios.get<GetTrackBySearchResponse>(
         `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50&market=BR`, {
         headers: {
-          Authorization: `Bearer ${ token }`, // Token de acesso
+          Authorization: `Bearer ${token}`, // Token de acesso
         },
       });
 
@@ -237,7 +237,7 @@ export default class SpotifyActions {
       // Requisição para pegar a fila de reprodução
       const response = await axios.get('https://api.spotify.com/v1/me/player/queue', {
         headers: {
-          Authorization: `Bearer ${ token }`, // Token de acesso
+          Authorization: `Bearer ${token}`, // Token de acesso
         },
       });
 

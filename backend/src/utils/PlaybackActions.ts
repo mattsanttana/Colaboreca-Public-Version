@@ -12,6 +12,7 @@ export default class PlaybackActions {
     const completeQueue = spotifyQueue.queue.map((spotifyTrack: any) => {
       // Adicionar informações da música
       const responseTrack = {
+        id: spotifyTrack.id,
         cover: spotifyTrack.album.images[0].url,
         musicName: spotifyTrack.name,
         artists: spotifyTrack.artists.map((artist: any) => artist.name).join(', '),

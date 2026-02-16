@@ -69,9 +69,10 @@ const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playi
       <Modal
         className='custom-modal' // Classe personalizada para o modal
         show={ showVotePopup } // Estado do popup de votação
+        dialogClassName='vote-modal' /* adiciona classe específica pro modal */
       >
         { /* Cabeçalho do modal */ }
-        <Modal.Header style={{ borderBottom: 'none', position: 'relative' }}>
+        <Modal.Header className='custom-modal-header'> {/* Classe personalizada para o cabeçalho do modal */ }
           { /* Ícone de ajuda com informações sobre os votos */ }
           <OverlayTrigger
             overlay={
@@ -131,6 +132,7 @@ const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playi
           <Button
             disabled={ isSubmitting } // Desabilita o botão se o estado de envio for verdadeiro
             onClick={ handleVoteSubmit } // Função para enviar o voto
+            className='primary-button' // Classe personalizada para o botão
           >
             { isSubmitting ? <Spinner animation='border' size='sm' /> : 'Enviar Voto' } { /* Caso o voto esteja sendo enviado renderiza um spinner no botão */ }
           </Button>

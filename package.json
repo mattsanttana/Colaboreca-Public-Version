@@ -4,10 +4,10 @@
   "description": "Projeto baseado na funcionalidade de uma jukebox, onde o usuário pode adicionar músicas a uma playlist e votar nas músicas que já estão na playlist. A música mais votada é a que toca primeiro.",
   "main": "index.js",
   "scripts": {
-    "install:front": "cd ./app/frontend && npm install",
-    "install:back": "cd ./app/backend && npm install",
+    "install:front": "cd ./frontend && npm install",
+    "install:back": "cd ./backend && npm install",
     "install:apps": "npm run install:front && npm run install:back",
-    "test": "env $(cat ./app/backend/.env) jest -i --forceExit --verbose",
+    "test": "env $(cat ./backend/.env) jest -i --forceExit --verbose",
     "test:browser": "SHOW_BROWSER=true npm test",
     "test:debug": "DEBUG=true npm test",
     "compose:up": "docker-compose up -d --build",

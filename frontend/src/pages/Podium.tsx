@@ -46,7 +46,7 @@ const Podium: React.FC<Props> = ({ dj, djs , trackName }) => {
           <div
             className='gradient-border'
             style={{
-              background: 'linear-gradient(90deg, #ffb703, #a8dadc, #4cc9f0, #186ea7)',
+              background: 'linear-gradient(90deg, #494c80, #a8dadc, #186ea7, #4cc9f0)',
               borderRadius: '12px',
               padding: '6px 16px',
               fontWeight: 'bold',

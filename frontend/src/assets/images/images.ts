@@ -32,3 +32,5 @@ export { default as image29 } from './background/background.png';
 export { default as image30 } from './podium/podium.png';
 export { default as image31 } from './dj_table/dj_table.png';
 export { default as image32 } from './dj_table/dj_table_playing.png';
+export { default as image33 } from './dj_table/loudspeaker_bottom.png';
+export { default as image34 } from './dj_table/loudspeaker_top.png';

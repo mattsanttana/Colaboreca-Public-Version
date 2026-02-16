@@ -6,6 +6,8 @@ export const background = images.image29;
 export const podium = images.image30;
 export const djTable = images.image31;
 export const djTablePlaying = images.image32;
+export const loudspeakerBottom = images.image33;
+export const loudspeakerTop = images.image34;
 
 export const charactersPaths = [
   images.image0,

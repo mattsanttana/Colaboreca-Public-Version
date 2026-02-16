@@ -4,9 +4,10 @@ import TQueue from '../types/TQueue';
 import PlayingNow from '../types/PlayingNow';
 import { useParams } from 'react-router-dom';
 
-const useQueue = (playingNow: PlayingNow | null, currentTrackIndex: number) => {
+const useQueue = (playingNow: PlayingNow | null, currentTrackIndex?: number) => {
   const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [ queue, setQueue ] = useState<TQueue[]>([]); // Estado para armazenar a fila de músicas
+  const [ isLoadingQueue, setIsLoadingQueue ] = useState<boolean>(true); // Estado para indicar se está carregando
 
   const playbackActions = usePlayback(); // Ações de reprodução, como pular músicas
   const trackRefs = useRef<(HTMLDivElement | null)[]>([]); // Referências para os itens da fila
@@ -18,6 +19,7 @@ const useQueue = (playingNow: PlayingNow | null, currentTrackIndex: number) => {
         const queue = await playbackActions.getQueue(Number(trackId)); // Busca a fila de músicas usando a ação de reprodução
 
         setQueue(queue); // Atualiza o estado da fila com os dados recebidos
+        setIsLoadingQueue(false); // Define o estado de carregamento como falso
       }
     }
 
@@ -29,16 +31,15 @@ const useQueue = (playingNow: PlayingNow | null, currentTrackIndex: number) => {
   // useEffect para atualizar o índice da música no carrossel
   useEffect(() => {
     // Rolar para o item selecionado sempre que currentTrackIndex mudar
-    if (trackRefs.current[currentTrackIndex]) {
-      trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'end' }); // Rola suavemente para o item selecionado
+    if (currentTrackIndex !== undefined && trackRefs.current[currentTrackIndex]) {
+      trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-
-    // Na lista de dependências, adicionamos currentTrackIndex para que o efeito seja executado sempre que o índice da música atual mudar
   }, [currentTrackIndex]);
 
   return {
     queue,
     trackRefs,
+    isLoadingQueue
   }
 }
 

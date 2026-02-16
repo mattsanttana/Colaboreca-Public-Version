@@ -54,16 +54,15 @@ export default class TrackService {
         throw new Error('Error generating ID');
       }
 
-      let trackWithId = await this.trackModel.findOne({ id }); // Verificar se já existe uma pista com esse ID
+      let trackWithSameId = await this.trackModel.findOne({ id }); // Verificar se já existe uma pista com esse ID
 
       // Enquanto houver uma pista com o ID ou o ID não tiver seis caracteres, gere um novo ID
-      while (trackWithId || id.toString().length !== 6) {
+      while (trackWithSameId || id.toString().length !== 6) {
         id = generateShortId();
-        trackWithId = await this.trackModel.findOne({ id });
+        trackWithSameId = await this.trackModel.findOne({ id });
       }
 
       const track = await this.trackModel.create(id, trackName, spotifyToken); // Criar a pista
-
 
       const token = JWT.sign({ id: track.id }); // Gerar um token para a pista
 

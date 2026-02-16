@@ -9,9 +9,11 @@ import { DJ } from '../types/DJ';
 
 // Props recebidas
 interface Props {
+  currentRanking: DJ[]; // Ranking atual
   dj?: DJ | undefined; // DJ logado (opcional porque o header também serve pra donos de pistas que não são DJs)
   isSlideMenuOpen?: boolean; // Estado do menu deslizante (opcional porque dispositivos não móveis não têm menu deslizante)
   isTrackOwner: boolean; // Indica se o usuário é o dono da pista ou um DJ
+  previousRanking: DJ[]; // Ranking anterior
   setShowTrackInfoPopup: (isOpen: boolean) => void; // Função para abrir/fechar o modal com as informações da pista
   showVotePopup?: boolean; // Indica se o popup de votação está aberto (opcional porque não é usado em todos os casos)
   toggleMenu?: (isOpen: boolean) => void; // Função para alternar o menu (opcional porque dispositivos não móveis não têm menu deslizante)
@@ -19,7 +21,7 @@ interface Props {
 }
 
 // Componente Header que é responsável por exibir o cabeçalho da aplicação, incluindo o menu lateral e o botão de compartilhar
-const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, setShowTrackInfoPopup, showVotePopup, toggleMenu, trackId }) => {
+const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackOwner, previousRanking, setShowTrackInfoPopup, showVotePopup, toggleMenu, trackId }) => {
   const [showPopup, setShowPopup] = useState(false); // Estado para controlar a exibição do modal de compartilhamento
   
   const menuRef = useRef<HTMLDivElement>(null); // Referência para o menu deslizante
@@ -85,8 +87,10 @@ const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, setShowTra
       >
         { /* Menu lateral */}
         <Menu
+          currentRanking={ currentRanking } // Ranking atual
           dj={ dj } // DJ logado
           isTrackOwner={ isTrackOwner } // Indica se o usuário é o dono da pista
+          previousRanking={ previousRanking } // Ranking anterior
           trackId={ Number(trackId) } // ID da pista atual
         />
       </Container>
@@ -185,7 +189,6 @@ const Header: React.FC<Props> = ({ dj, isSlideMenuOpen, isTrackOwner, setShowTra
         <Modal.Header
           className='custom-modal-header' // Classe personalizada para o cabeçalho do modal
           closeButton  // Botão para fechar o modal
-          style={{ borderBottom: 'none' }} // Estilo do cabeçalho
         >
           { /* Título do modal */ }
           <Modal.Title>

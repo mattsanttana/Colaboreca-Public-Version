@@ -2,8 +2,7 @@ const usePlayback = () => {
   const getState = async (trackId: number) => {
     try {
       const response = await fetch(`http://localhost:3001/playback/${ trackId }`);
-      const data = await response.json();
-
+      const data = await response.json(); 
       return data;
     } catch (error) {
       console.error(error);

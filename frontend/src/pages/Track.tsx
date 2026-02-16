@@ -12,6 +12,7 @@ import { RootState } from '../redux/store';
 import useFetchPlaybackData from '../utils/useFetchPlaybackData';
 import useFetchTrackData from '../utils/useFetchTrackData';
 import useMenu from '../utils/useMenu';
+import useQueue from '../utils/useQueue';
 
 // Componentes que não precisam ser carregados inicialmente
 const MessagePopup = lazy(() => import('./MessagePopup'));
@@ -34,13 +35,17 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
+    dj, djs, globalPreviousRanking, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData,
+    setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
   } = useFetchTrackData(djToken, trackToken);
 
-  // Hook personalizado para buscar dados de reprodução
+  // Hook personalizado para buscar dados de reproduçãos
   const {
-    djPlayingNow, isLoading, playingNow, queue, setShowVotePopup, showVotePopup, votes
+    djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup, initialVoteCounts,
+    pulsingVote, revealPulse, cardVisible, revealedVotes, hidePulse, displayVoteCounts
   } = useFetchPlaybackData(djToken);
+
+  const { queue, isLoadingQueue } = useQueue(playingNow)
 
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu(); // Hook personalizado para lidar com o menu
 
@@ -51,13 +56,6 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
       `/track/ranking/${ trackId }`;
 
     navigate(url); // Redireciona para a página de DJs ou ranking
-  };
-
-  const handleClickQueue = () => {
-    const url = isTrackOwner ?
-      `/track-info/queue/${ trackId }` :
-      `/track/queue/${ trackId }`;
-    navigate(url); // Redireciona para a página de fila
   };
 
   // Renderiza o componente
@@ -120,12 +118,14 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
           />
         </Container>
       ) : (
-        <Container>
+        <Container className='gradient-border'>
           { /* Renderiza o cabeçalho */ }
           <Header
+            currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+            previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
@@ -139,23 +139,32 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
             >
               { /* Componente de menu */ }
               <Menu
+                currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
                 isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+                previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
             </Col>
             { /* Container para o estado de reprodução */ }
             <Col
-              className='d-flex flex-column align-items-center playback-state-container' // Classe para centralizar o conteúdo
+              className='d-flex flex-column align-items-center gradient-border mb-5' // Classe para centralizar o conteúdo
               // Largura para diferentes tamanhos de tela
               md={ 12 } lg={ 12 } xl={ 12 } xxl={ 6 }
+              style={{ backgroundColor: '#2e30594D' }} // Estilo do container
             >
               { /* Componente de estado de reprodução */ }
               <PlaybackState
                 djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
+                votes={ initialVoteCounts } // Envia os votos da música atual como prop
                 playingNow={ playingNow } // Envia o estado de reprodução como prop
+                pulsingVote={ pulsingVote } // Envia o evento de pulsação do voto como prop
                 trackName={ trackName } // Envia o nom da pista como prop
-                votes={ votes } // Envia os votos da música atual como prop
+                revealPulse={ revealPulse } // Envia o voto que deve pulsar no momento como prop
+                cardVisible={ cardVisible } // Envia se o card do DJ está visível como prop
+                revealedVotes={ revealedVotes } // Envia os votos que já foram revelados como prop
+                hidePulse={ hidePulse } // Envia a função para esconder a pulsação dos votos como prop
+                displayVoteCounts={ displayVoteCounts } // Envia os contadores de votos personalizados como prop
               />
             </Col>
             { /* Renderiza o componente de pódio e fila de reprodução (somente para telas não-mobiles) */ }
@@ -176,11 +185,15 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
               </div>
               { /* Componente de pré-visualização da fila */ }
               <div
-                className='gradient-border mb-3 card-hover' // Classe para estilizar o container da fila
-                onClick={ handleClickQueue } // Função para lidar com o clique na fila
-                style={{ backgroundColor: '#2e30594D', cursor: 'pointer' }} // Estilo do container do pódio
+                className='gradient-border mb-3' // Classe para estilizar o container da fila
+                style={{ backgroundColor: '#2e30594D' }} // Estilo do container do pódio
               >
-                <QueuePreview queue={ queue.slice(0, 6) } /> { /* Envia a fila de reprodução como prop */ }
+                <QueuePreview
+                  previewQueue={ queue.slice(0, 5) } // Envia a fila de reprodução como prop
+                  isLoading={ isLoadingQueue } // Envia o estado de carregamento da fila como prop
+                  isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+                  trackId={ trackId }
+                />
               </div>
             </Col>
           </Row>

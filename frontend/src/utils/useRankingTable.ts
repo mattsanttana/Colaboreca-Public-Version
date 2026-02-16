@@ -5,7 +5,7 @@ import { useMeasure, usePrevious } from 'react-use';
 import { DJ } from '../types/DJ';
 import useTrack from './useTrack';
 
-const useRankingTable = (currentRanking: DJ[], dj: DJ | undefined, previousRanking: DJ[], trackToken: string | undefined) => {
+const useRankingTable = (currentRanking: DJ[], dj: DJ | undefined, previousRanking: DJ[], trackToken?: string | undefined) => {
   const { trackId } = useParams();
   const [displayedRanking, setDisplayedRanking] = useState<DJ[]>(previousRanking); // Ranking a ser exibido
   const [pointDirection, setPointDirection] = useState<{ [key: number]: 'up' | 'down' | null }>({});

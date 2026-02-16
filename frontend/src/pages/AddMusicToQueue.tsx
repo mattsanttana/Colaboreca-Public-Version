@@ -30,7 +30,7 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking,isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
   } = useFetchTrackData(djToken);
 
@@ -114,12 +114,15 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
         <Container style={{ position: 'relative' }}>
           { /* Renderiza o cabeçalho */ }
           <Header
+            currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
-            isSlideMenuOpen={ showVotePopup ? false : isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
+            isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+            previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            showVotePopup={ showVotePopup } // Envia o estado do popup de votação
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
-            trackId={ trackId } // Envia o ID da pista atual'
+            trackId={ trackId } // Envia o ID da pista como prop
           />
           <Row>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
@@ -129,8 +132,10 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
             >
               { /* Componente de menu */ }
               <Menu
+                currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
                 isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+                previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
             </Col>

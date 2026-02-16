@@ -60,31 +60,39 @@ const ShareTrack: React.FC<Props> = ({ pageType, setShowPopup, trackId }) => {
         {/* Card que exibe o QR Code e o PIN da pista */}
         <Card
           className='text-center text-light'
-          style={{ backgroundColor: '#121212', boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
+          style={{ boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
         >
           <Card.Body>
             {/* Linha que centraliza o conteúdo do card */}
             <Row className='w-100 justify-content-center align-items-center m-0'>
-              <Col xs={12} className='d-flex flex-column justify-content-center align-items-center'>
+              <Col xs={12} className='d-flex flex-column justify-content-center align-items-center' style={{ color: '#fff4c2' }}>
                 <h3 className='mb-4'>O PIN da sua pista é:</h3>
                 <h1 className='track-id' style={{ letterSpacing: '2px', margin: 0 }}>
-                  {trackId ? `${trackId.slice(0, 3)} ${trackId.slice(3, 6)}` : ''}
+                  { trackId ? `${trackId.slice(0, 3)} ${trackId.slice(3, 6)}` : '' }
                 </h1>
                 <div
                   style={{
-                    backgroundColor: 'white',
+                    backgroundColor: '#fff4c2', // Cor de fundo
                     height: '200px',
                     marginTop: '20px',
-                    width: '200px'
+                    width: '200px',
+                    borderRadius: '12px', // Ajuste o valor para mais ou menos arredondado
+                    padding: '10px', // Espaço interno entre a borda e o QR Code
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                   }}
                 >
-                  <div className='mb-3' style={{ marginTop: '13px' }}>{generateQRCode()}</div>
+                  <div className='mb-3' style={{ marginTop: '13px' }}>{ generateQRCode() }</div>
                 </div>
               </Col>
             </Row>
             {/* Botões para compartilhar a pista e editar/excluir (se for o dono da pista) */}
             <Container className='d-flex justify-content-center align-items-center gap-2 mt-3'>
-              <Button variant='primary' onClick={() => setShowSharePopup(true)}>
+              <Button 
+                className='primary-button'
+                onClick={() => setShowSharePopup(true)}
+              >
                 Compartilhar
               </Button>
               {/* Botão para editar ou excluir a pista, visível apenas se for o dono da pista */}

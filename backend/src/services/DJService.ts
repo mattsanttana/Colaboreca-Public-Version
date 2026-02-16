@@ -40,9 +40,8 @@ export default class DJService {
 
       const response = { ...dj, token }; // Retornar o DJ e o token
 
-      
-      io.to(`track_${trackId}`).emit('dj created', { dj }); // Emitir um evento para o Socket.IO de que um novo DJ foi criado
-      
+      io.to(`track_${ trackId }`).emit('dj created', { dj }); // Emitir um evento para o Socket.IO de que um novo DJ foi criado
+
       return { status: 'CREATED', data: response }; // Retornar uma mensagem de sucesso e o status correspondente
     } catch (error) {
       // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
@@ -210,7 +209,7 @@ export default class DJService {
       }
 
       io.to(`track_${decoded.trackId}`).emit('dj updated', { djId: decoded.id }); // Emitir um evento para o Socket.IO de que um DJ foi atualizado
-      
+
       return { status: 'OK', data: { message: 'DJ updated successfully' } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {
       // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro

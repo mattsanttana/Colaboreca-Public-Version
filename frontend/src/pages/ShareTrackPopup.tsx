@@ -20,13 +20,13 @@ const shareText = 'Clique no link e venha discotecar comigo!'; // Texto de compa
 const SharePopup: React.FC<SharePopupProps> = ({ handleClose, show, trackId }) => (
   <Modal
     centered // Centraliza o modal na tela
-    className='custom-modal custom-modal-header' // Classes personalizadas para o modal
+    className='custom-modal' // Classes personalizadas para o modal
     onHide={ handleClose } // Função chamada ao fechar o modal
     show={ show } // Estado de visibilidade do modal
   >
     <Modal.Header
       closeButton // Botão de fechar o modal
-      style={{ borderBottom: 'none'}} // Estilo do cabeçalho do modal
+      style={{ borderBottom: 'none' }} // Estilo do cabeçalho do modal
     >
       <Modal.Title>Compartilhar pista</Modal.Title> {/* Título do modal */}
     </Modal.Header>
@@ -51,6 +51,7 @@ const SharePopup: React.FC<SharePopupProps> = ({ handleClose, show, trackId }) =
             // Estilo do botão de copiar link
             style={{
               alignItems: 'center', // Alinha os itens no centro
+              backgroundColor: '#a8dadc', // Cor de fundo do botão
               borderRadius: '50%', // Bordas arredondadas
               display: 'flex', // Exibe como flexbox
               height: '54px', // Altura do botão

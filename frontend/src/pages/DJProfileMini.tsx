@@ -1,17 +1,20 @@
 import React from 'react';
 import { Image, Col } from 'react-bootstrap';
 import { DJ } from '../types/DJ';
-import { FaStar } from 'react-icons/fa';
+import { FaArrowDown, FaArrowUp, FaStar } from 'react-icons/fa';
+import useRankingTable from '../utils/useRankingTable';
 
 type Props = {
-  dj: DJ | undefined;
+  currentRanking: DJ[]; // Ranking atual
+  dj: DJ | undefined; // DJ logado (pode ser undefined se o usuário não for um DJ)
+  previousRanking: DJ[]; // Ranking anterior
 };
 
-const DJProfileMini: React.FC<Props> = ({ dj }) => {
-  const formatScore = (score: number | undefined) => {
-      return score?.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    };
+const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking }) => {
+  const { points, pointDirection, formatScore } = useRankingTable(currentRanking, dj, previousRanking );
 
+  if (!dj) return null;
+  
   return (
     <Col className='d-flex flex-column align-items-center'>
       {/* Wrapper para posicionar rank sobre a imagem */}
@@ -86,23 +89,19 @@ const DJProfileMini: React.FC<Props> = ({ dj }) => {
         </div>
 
         {/* Pontuação */}
-        <span
-          className='d-flex align-items-center'
-          style={{
-            fontSize: '1rem',
-            fontWeight: '400',
-            color: '#aaa', // um pouco mais apagado
-          }}
+        <div
+          // Classe condicional para indicar aumento ou diminuição de pontos
+          className={ `flex-shrink-0 text-light ${
+            pointDirection[dj.id] === 'up' ? 'points-up' : pointDirection[dj.id] === 'down' ? 'points-down' : ''
+          }` }
         >
-          { formatScore(dj?.score) }
-          <FaStar
-            className='ms-2'
-            style={{
-              color: '#FFD700', // estrela dourada
-              fontSize: '1rem',
-            }}
-          />
-        </span>
+          <span className='d-flex align-items-center'>
+            { formatScore(points[dj.id] !== undefined ? points[dj.id] : dj.score) } { /* Formata e exibe a pontuação */ }
+            <FaStar className='ms-2 points-icon' /> { /* Ícone de estrela */ }
+            { pointDirection[dj.id] === 'up' && <FaArrowUp className='ms-2 point-arrow up' /> } { /* Ícone de seta para cima se pontos aumentaram */ }
+            { pointDirection[dj.id] === 'down' && <FaArrowDown className='ms-2 point-arrow down' /> } { /* Ícone de seta para baixo se pontos diminuíram */ }
+          </span>
+                    </div>
       </div>
     </Col>
   )

@@ -7,13 +7,15 @@ import DJProfileMini from './DJProfileMini';
 
 // Recebe as props
 type Props = {
+  currentRanking: DJ[]; // Ranking atual
   dj?: DJ; // DJ logado (opcional porque o menu também serve pra donos de pistas que não são DJs)
   isTrackOwner: boolean; // Indica se o usuário é o dono da pista ou um DJ
+  previousRanking: DJ[]; // Ranking anterior
   trackId: number; // ID da pista atual
 };
 
 // Componente Menu que é responsável por exibir o menu lateral da aplicação
-const Menu: React.FC<Props> = ({ dj, isTrackOwner, trackId }) => {
+const Menu: React.FC<Props> = ({ currentRanking, dj, isTrackOwner, previousRanking, trackId }) => {
   const navigate = useNavigate(); // Hook para navegação entre páginas
 
   // Renderiza o componente
@@ -30,7 +32,9 @@ const Menu: React.FC<Props> = ({ dj, isTrackOwner, trackId }) => {
         { !isTrackOwner && dj && (
           <Row className='mb-3 menu-container'>
             <DJProfileMini
+              currentRanking={ currentRanking } // Passa o ranking atual para o componente DJProfileMini
               dj={ dj } // Passa o DJ logado para o componente DJProfileMini
+              previousRanking={ previousRanking } // Passa o ranking anterior para o componente DJProfileMini
             />
           </Row>
         )}
@@ -63,7 +67,7 @@ const Menu: React.FC<Props> = ({ dj, isTrackOwner, trackId }) => {
                   className='d-flex menu-link-bright text-start' // Classe para estilizar o link
                   onClick={ () => navigate(`/track/add-music/${ trackId }`) } // Redireciona para a página de adicionar música
                 >
-                  <FaMusic className='me-2'/>Adicionar músicas à fila { /* Ícone de adicionar música */ }
+                  <FaMusic className='me-2'/>Adicionar<br/>músicas à fila { /* Ícone de adicionar música */ }
                 </Nav.Link>
               </Nav.Item>
             </>

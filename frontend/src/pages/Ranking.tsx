@@ -84,9 +84,11 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
       ) : (
         <Container>
           <Header
+            currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+            previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
@@ -100,8 +102,10 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
             >
               { /* Componente de menu */ }
               <Menu
+                currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
                 isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
+                previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
             </Col>
