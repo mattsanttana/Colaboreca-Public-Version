@@ -13,13 +13,12 @@ const ExpelDJConfirmationPopup = lazy(() => import('./ExpelDJConfirmationPopup')
 interface Props {
   currentRanking: DJ[]; // Ranking atual
   dj?: DJ, // DJ atual (opcional)
-  isTrackOwner?: boolean; // Indica se o usuário é o dono da pista
   previousRanking: DJ[]; // Ranking anterior
   trackToken?: string; // Token da pista
 }
 
 // Componente responsável por exibir a tabela de ranking dos DJs
-const RankingTable: React.FC<Props> = ({ currentRanking, dj, isTrackOwner, previousRanking, trackToken }) => {
+const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackToken }) => {
   const navigate = useNavigate(); // Hook para navegação entre rotas
 
   // Hook personalizado para gerenciar o estado e lógica da tabela de ranking
@@ -101,11 +100,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, isTrackOwner, previ
               cursor: 'pointer',
             }}
             // Navega para o perfil do DJ ao clicar na linha
-            onClick={() => navigate(
-              isTrackOwner 
-                ? `/track-info/profile/${ trackId }/${ dj.id }` // Rota para dono da pista
-                : `/track/profile/${ trackId }/${ dj.id }` // Rota para outros usuários
-            )}
+            onClick={() => navigate( `/track/profile/${ trackId }/${ dj.id }` )}
           >
             {/* Posição */}
             <Container className='flex-shrink-0' style={{ width: '50px', textAlign: 'center' }}>
@@ -199,7 +194,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, isTrackOwner, previ
             </div>
             
             {/* Botão de expulsão */}
-            { isTrackOwner && (
+            { dj.isOwner && (
               <div className='flex-shrink-0 ms-3'>
                 <Button variant='danger' size='sm' title='Expulsar DJ' onClick={() => handleExpelDJ(dj)}>
                   <FaUserSlash /> { /* Ícone de expulsão */ }

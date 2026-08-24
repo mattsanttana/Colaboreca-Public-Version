@@ -4,6 +4,7 @@ export type DJ = {
   characterPath: string;
   score: number;
   ranking: number;
+  isOwner: boolean;
   trackId: number;
 };
 

@@ -7,7 +7,6 @@ import storage from 'redux-persist/lib/storage'
 import rootReducer from './reducers';
 
 export type RootState = {
-  trackReducer: { token: string };
   djReducer: { token: string };
 } & PersistPartial;
 

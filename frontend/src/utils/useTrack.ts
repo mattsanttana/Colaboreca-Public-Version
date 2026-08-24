@@ -1,10 +1,10 @@
 const useTrack = () => {
-  const createTrack = async (trackName: string, code: string) => {
+  const createTrack = async (trackName: string, djName: string, characterPath: string, code: string) => {
     try {
       const response = await fetch('http://localhost:3001/tracks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackName, code }),
+        body: JSON.stringify({ trackName, djName, characterPath, code }),
       });
 
       const data = await response.json();

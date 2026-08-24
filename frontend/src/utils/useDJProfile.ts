@@ -6,7 +6,7 @@ import PopupMessageData from '../types/PopupMessageData';
 import { DJMusic } from '../types/SpotifySearchResponse';
 import { DJ } from '../types/DJ';
 
-const useDJProfile = (djToken: string, isTrackOwner: boolean, setPopupMessageData: (data: PopupMessageData) => void) => {
+const useDJProfile = (djToken: string, setPopupMessageData: (data: PopupMessageData) => void) => {
   const { djId, trackId, } = useParams(); // Pega o ID da pista e do DJ da URL
   const [addedMusics, setAddedMusics] = useState<DJMusic[]>([]); // Estado para armazenar as músicas adicionadas pelo DJ
   const [djProfile, setDJProfile] = useState<DJ>(); // Estado para armazenar o perfil do DJ
@@ -37,7 +37,7 @@ const useDJProfile = (djToken: string, isTrackOwner: boolean, setPopupMessageDat
             setPopupMessageData({
               message: 'Algo deu errado ao buscar o DJ, por favor tente novamente mais tarde.', // Mensagem de erro
               show: true, // Exibe o popup
-              redirectTo: isTrackOwner ? `/track-info/${ trackId }` : `/track/${ trackId }` // Redireciona para a página inicial da pista
+              redirectTo: `/track/${ trackId }` // Redireciona para a página inicial da pista
             })
             // Caso contrário
           } else {

@@ -4,17 +4,17 @@ import { charactersPaths } from '../assets/images/characterPath';
 // Props para o componente CharactersSelectPopup
 interface Props {
   onHide: () => void; // Função para fechar o popup
-  setEditedCharacterPath: (characterPath: string) => void;
+  setCharacterPath: (characterPath: string) => void;
   setShowCharacterPopup: (show: boolean) => void; // Função para mostrar ou esconder o popup de seleção de personagens
   show: boolean; // Estado para controlar a visibilidade do popup
 }
 
 // Componente de popup para seleção de personagens
-const CharactersSelectPopup: React.FC<Props> = ({ show, setEditedCharacterPath, setShowCharacterPopup, onHide }) => {
+const CharactersSelectPopup: React.FC<Props> = ({ show, setCharacterPath, setShowCharacterPopup, onHide }) => {
   // Função para lidar com o clique no personagem e definir o caminho do personagem editado
   const handleClickCharacter = (event: React.MouseEvent<HTMLImageElement>) => {
     const target = event.target as HTMLImageElement; // Obtém o elemento clicado
-    setEditedCharacterPath(target.src); // Define o caminho do personagem editado com o src da imagem clicada
+    setCharacterPath(target.src); // Define o caminho do personagem editado com o src da imagem clicada
     setShowCharacterPopup(false); // Fecha o popup de seleção de avatar
   };
 
@@ -22,8 +22,8 @@ const CharactersSelectPopup: React.FC<Props> = ({ show, setEditedCharacterPath, 
     <Modal
       className='custom-modal' // Classe personalizada para o modal
       onHide={ onHide } // Função chamada ao fechar o modal
+      scrollable
       show={ show } // Estado que controla se o modal está visível
-      style={{ maxHeight: '80vh', overflowY: 'auto' }} // Estilo para limitar a altura do modal e permitir rolagem
     >
       { /* Cabeçalho do modal com título e botão de fechar */ }
       <Modal.Header
@@ -36,7 +36,7 @@ const CharactersSelectPopup: React.FC<Props> = ({ show, setEditedCharacterPath, 
       { /* Corpo do modal com a lista de personagens */ }
       <Modal.Body
         className='text-center' // Classe para centralizar o texto no corpo do modal
-        style={{ overflowY: 'auto' }} // Estilo para permitir rolagem vertical no corpo do modal
+        style={{ maxHeight: '70vh', overflowY: 'auto' }} // Estilo para permitir rolagem vertical no corpo do modal
       >
         { /* Mapeia os caminhos dos personagens e renderiza uma imagem para cada um */ }
         <Row>

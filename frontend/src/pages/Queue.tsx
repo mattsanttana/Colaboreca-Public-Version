@@ -34,9 +34,9 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
-  } = useFetchTrackData(djToken, trackToken);
+  } = useFetchTrackData(djToken);
 
   // Hook personalizado para buscar dados de reprodução
   const {
@@ -108,7 +108,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
-            isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior global como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
@@ -125,7 +124,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
               <Menu
                 currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
-                isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
                 previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
@@ -175,7 +173,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
                       >
                         <QueueList
                           currentTrackIndex={ currentTrackIndex } // Índice da música selecionada
-                          isTrackOwner={ isTrackOwner } // Verificação pra deifinir se a página tá sendo acessada pelo o dono
                           queue={ queue } // Fila de reprodução atual
                           setCurrentTrackIndex={ setCurrentTrackIndex }
                           sliderRef={ sliderRef } // Referência para o slider
@@ -201,7 +198,6 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
 // Mapeia o estado global para as propriedades do componente Queue
 const mapStateToProps = (state: RootState) => ({
   djToken: state.djReducer.token, // Token do DJ, usado para autenticação
-  trackToken: state.trackReducer.token // Token da pista, usado para autenticação
 });
 
 const QueueConnected = connect(mapStateToProps)(Queue); // Conecta o componente Queue ao estado global usando Redux

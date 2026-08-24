@@ -31,9 +31,9 @@ interface Props {
 const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     showTrackInfoPopup, setTrackName, showRankingChangePopup, trackName, setShowTrackInfoPopup, trackId
-  } = useFetchTrackData(djToken, trackToken);
+  } = useFetchTrackData(djToken);
 
   // Hook personalizado para buscar dados de reprodução
   const {
@@ -43,7 +43,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   const { 
     addedMusics, djProfile, editedCharacterPath, isProfileOwner, setShowDJInfoPopup, setEditedCharacterPath, setShowCharacterPopup,
     setShowDeleteConfirmation, showCharacterPopup, showDeleteConfirmation, showDJInfoPopup
-  } = useDJProfile(djToken, isTrackOwner, setPopupMessageData)
+  } = useDJProfile(djToken, setPopupMessageData)
   
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu() // Hook personalizado para lidar com o menu
 
@@ -59,7 +59,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         { /* Componente de popup para altear o avatar */ }
         <CharactersSelectPopup
           onHide={ () => setShowCharacterPopup(false) } // Função para fechar o popup
-          setEditedCharacterPath={ setEditedCharacterPath } // Função de armazenar o novo personagem
+          setCharacterPath={ setEditedCharacterPath } // Função de armazenar o novo personagem
           setShowCharacterPopup={ setShowCharacterPopup } // Função de estado do popup de seleção de personagem
           show={ showCharacterPopup } // Estado para exibir o popup
         />
@@ -134,7 +134,6 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
-            isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
@@ -151,7 +150,6 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
               <Menu
                 currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
-                isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
                 previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
@@ -173,7 +171,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
                   previousRanking={ globalPreviousRanking }
                 />
                   { /* Caso o usuário seja o dono do perfil e não seja o dono da pista, exibe o botão para editar/excluir DJ */ }
-                  { isProfileOwner && !isTrackOwner && (
+                  { isProfileOwner && (
                     <Container className='d-flex justify-content-center align-items-center mt-4'>
                       <Button 
                         onClick={ () => setShowDJInfoPopup(true) } // Função para abrir o popup de informações do DJ
@@ -195,8 +193,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   }
 
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token,
-  trackToken: state.trackReducer.token
+  djToken: state.djReducer.token
 });
 
 const DJProfileConnected = connect(mapStateToProps)(DJProfile);

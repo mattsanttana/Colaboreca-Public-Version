@@ -25,9 +25,9 @@ interface Props {
 const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, isTrackOwner, popupMessageData, previousRanking, setPopupMessageData,
+    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData,
     setShowRankingChangePopup, setShowTrackInfoPopup, showRankingChangePopup, trackId, trackName
-  } = useFetchTrackData(djToken, trackToken);
+  } = useFetchTrackData(djToken);
 
   // Hook personalizado para buscar dados de reprodução
   const {
@@ -49,26 +49,22 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
           data={ popupMessageData } // Dados da mensagem
           handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
         />
-        { !isTrackOwner && (
-          <>
-            { /* Popup de alteração de ranking */ }
-            <RankingChangePopup
-              currentRanking={ djs } // Envia o ranking atual como prop
-              dj={ dj } // Envia o DJ atual como prop
-              handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
-              previousRanking={ previousRanking } // Envia o ranking anterior como prop
-              showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
-              trackName={ trackName } // Nome da pista
-            />
-            { /* Popup de votação */ }
-            <VotePopup
-              djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
-              handleClose={ () => setShowVotePopup(false) } // Função para fechar o popup
-              playingNow={ playingNow } // Envia o estado de reprodução como prop
-              showVotePopup={ showVotePopup } // Envia o estado do popup como prop
-            />
-          </>
-        )}
+          { /* Popup de alteração de ranking */ }
+          <RankingChangePopup
+            currentRanking={ djs } // Envia o ranking atual como prop
+            dj={ dj } // Envia o DJ atual como prop
+            handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+            previousRanking={ previousRanking } // Envia o ranking anterior como prop
+            showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+            trackName={ trackName } // Nome da pista
+          />
+          { /* Popup de votação */ }
+          <VotePopup
+            djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
+            handleClose={ () => setShowVotePopup(false) } // Função para fechar o popup
+            playingNow={ playingNow } // Envia o estado de reprodução como prop
+            showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+          />
       </Suspense>
       { isLoading ? (
         <Container
@@ -87,7 +83,6 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
-            isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
@@ -104,7 +99,6 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
               <Menu
                 currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
-                isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
                 previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
@@ -142,11 +136,8 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
                         Critérios de desempate:
                         1º critério: O DJ com mais votos positivos ou menos votos negativos terá vantagem.
                         2º critério: Se o empate persistir, quem alcançou a pontuação empatada primeiro ocupará a posição mais alta.
-                        {
-                          !isTrackOwner && (
-                            'Use sua criatividade para conquistar votos e subir no ranking! 🎵'
-                          )
-                        }
+
+                        Use sua criatividade para conquistar votos e subir no ranking! 🎵
                       </Tooltip>
                     }
                   >
@@ -177,7 +168,6 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
                       // Caso contrário, exibe a tabela com os DJs      
                       <RankingTable
                         currentRanking={ djs } // Envia o ranking atual como prop
-                        isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
                         previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                         trackToken={ trackToken } // Envia o token da pista como prop
                       />
@@ -196,7 +186,6 @@ const Ranking: React.FC<Props> = ({ djToken, trackToken }) => {
 // Mapeia o estado do Redux para as props do componente Ranking
 const mapStateToProps = (state: RootState) => ({
   djToken: state.djReducer.token, // Token do DJ
-  trackToken: state.trackReducer.token // Token da pista
 });
 
 const RankingConnected = connect(mapStateToProps)(Ranking); // Conecta o componente Ranking ao Redux

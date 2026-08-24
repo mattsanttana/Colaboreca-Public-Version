@@ -8,11 +8,10 @@ import { useNavigate } from 'react-router-dom';
 interface Props {
   previewQueue: TQueue[];
   isLoading: boolean;
-  isTrackOwner: boolean;
   trackId: string | undefined;
 }
 
-const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, isTrackOwner, trackId }) => {
+const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, trackId }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   
   const expandedRef = useRef<HTMLDivElement>(null);
@@ -72,11 +71,7 @@ const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, isTrackOwner, 
 
             <span
               onClick={() =>
-                navigate(
-                  isTrackOwner
-                    ? `/track-info/queue/${trackId}`
-                    : `/track/queue/${trackId}`
-                )
+                navigate( `/track/queue/${ trackId }`) 
               }
               style={{
                 fontSize: '0.85em',
@@ -213,11 +208,7 @@ const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, isTrackOwner, 
                                 src={ track.characterPath }
                                 alt={ `Imagem do DJ ${ track.addedBy || 'Desconhecido' }` }
                                 className='dj-character-hover'
-                                onClick={ () => navigate(
-                                  isTrackOwner
-                                    ? `/track-info/profile/${ trackId }/${ track.djId}`
-                                    : `/track/profile/${ trackId }/${ track.djId }`
-                                ) }
+                                onClick={ () => navigate( `/track/profile/${ trackId }/${ track.djId }` )}
                                 style={{
                                   width: '45px',
                                   height: '45px',

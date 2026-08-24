@@ -7,13 +7,12 @@ import { useParams } from 'react-router-dom';
 
 const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
 
-const useFetchTrackData = (djToken: string, trackToken?: string) => {
+const useFetchTrackData = (djToken: string) => {
   const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [trackName, setTrackName] = useState(''); // Nome da pista
   const [dj, setDJ] = useState<DJ>(); // DJ atual
   const [djs, setDJs] = useState<DJ[]>([]); // Lista de DJs
   const [globalPreviousRanking, setGlobalPreviousRanking] = useState<DJ[]>([]); // Para animações
-  const [isTrackOwner, setIsTrackOwner] = useState(true); // Estado para verificar se o usuário é o dono da pista
   const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false }); // Mensagem do popup
   const [previousRanking, setPreviousRanking] = useState<DJ[]>([]); // Ranking anterior
   const [showRankingChangePopup, setShowRankingChangePopup] = useState(false); // Estado do popup de mudança de ranking
@@ -28,68 +27,37 @@ const useFetchTrackData = (djToken: string, trackToken?: string) => {
     const fetchData = async () => {
       // Verifica se o ID da pista existe
       if (trackId) {
-        const pageType = window.location.pathname.split('/')[1]; // Obtém o tipo de página a partir da URL
+        // Busca os dados da pista e do DJ
+        try {
+          const [fetchedTrack, fetchedDJData] = await Promise.all([
+            trackActions.getTrackById(Number(trackId)), // Busca os dados da pista
+            djActions.getDJData(djToken) // Busca os dados do DJ
+          ]);
 
-        // Verifica se o tipo de página é diferente de 'track-info'
-        if (pageType !== 'track-info') {
-          setIsTrackOwner(false); // Define que o usuário não é o dono da pista
+          // Verifica se o DJ está na pista e caso não esteja, exibe um popup de erro
+          if (!fetchedDJData?.data.dj) {
+            setPopupMessageData({
+              message: 'Você não está nesta pista',
+              redirectTo: '/enter-track',
+              show: true
+            });
+          }
 
-          // Busca os dados da pista e do DJ
-          try {
-            const [fetchedTrack, fetchedDJData] = await Promise.all([
-              trackActions.getTrackById(Number(trackId)), // Busca os dados da pista
-              djActions.getDJData(djToken) // Busca os dados do DJ
-            ]);
-  
-            // Verifica se o DJ está na pista e caso não esteja, exibe um popup de erro
-            if (!fetchedDJData?.data.dj) {
-              setPopupMessageData({
-                message: 'Você não está nesta pista',
-                redirectTo: '/enter-track',
-                show: true
-              });
-            }
-  
-            // Verifica se a pista existe
-            if (fetchedTrack?.status === 200) {
-              setTrackName(fetchedTrack?.data.trackName); // Define o nome da pista
-              setDJs(fetchedDJData?.data.djs); // Define a lista de DJs
-              setDJ(fetchedDJData?.data.dj); // Define o DJ atual
-            } else {
-              // Caso a pista não exista, exibe um popup de erro
-              setPopupMessageData({
-                message: 'Esta pista não existe',
-                redirectTo: '/enter-track',
-                show: true
-              });
-            }
-          } catch (error) {
-            console.error('Error fetching data:', error); // Em caso de erro exibe no console
+          // Verifica se a pista existe
+          if (fetchedTrack?.status === 200) {
+            setTrackName(fetchedTrack?.data.trackName); // Define o nome da pista
+            setDJs(fetchedDJData?.data.djs); // Define a lista de DJs
+            setDJ(fetchedDJData?.data.dj); // Define o DJ atual
+          } else {
+            // Caso a pista não exista, exibe um popup de erro
+            setPopupMessageData({
+              message: 'Esta pista não existe',
+              redirectTo: '/enter-track',
+              show: true
+            });
           }
-          // Caso o tipo de página seja 'track-info', busca os dados da pista e do DJ
-        } else {
-          try {
-            const [ fetchedTrack, fetchedVerifyTrackAcess, fetchedDJData ] = await Promise.all([
-              trackActions.getTrackById(Number(trackId)), // Busca os dados da pista
-              trackActions.verifyTrackAcess(trackToken ?? '', Number(trackId)), // Verifica o acesso à pista
-              djActions.getAllDJs(Number(trackId)) // Busca todos os DJs da pista
-            ])
-    
-            // Verifica se o DJ tem acesso à pista se não tiver, exibe um popup de erro
-            if (fetchedVerifyTrackAcess?.status !== 200) {
-              setPopupMessageData({
-                message: 'Você não tem acesso a esta pista',
-                redirectTo: '/enter-track',
-                show: true
-              });
-              // Caso o DJ tenha acesso à pista, define o nome da pista e a lista de DJs
-            } else {
-              setTrackName(fetchedTrack?.data.trackName); // Define o nome da pista
-              setDJs(fetchedDJData); // Define a lista de DJs
-            }
-          } catch (error) {
-            console.error('Error fetching data:', error); // Em caso de erro exibe no console
-          }
+        } catch (error) {
+          console.error('Error fetching data:', error); // Em caso de erro exibe no console
         }
       }
     }
@@ -197,7 +165,6 @@ const useFetchTrackData = (djToken: string, trackToken?: string) => {
     dj, // DJ atual
     djs, // Lista de DJs
     globalPreviousRanking,
-    isTrackOwner, // Estado para verificar se o usuário é o dono da pista
     popupMessageData, // Dados do popup de mensagem
     previousRanking, // Ranking anterior
     setPopupMessageData, // Função para definir os dados do popup de mensagem

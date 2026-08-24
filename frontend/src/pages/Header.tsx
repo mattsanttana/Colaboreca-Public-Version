@@ -1,6 +1,6 @@
 import { useCallback , useEffect, useState, useRef } from 'react';
 import { Button, Container, Image, Modal, Navbar } from 'react-bootstrap';
-import { FaBars, FaInfoCircle, FaShareAlt } from 'react-icons/fa';
+import { FaBars, FaShareAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Menu from './Menu';
 import ShareTrack from './ShareTrack';
@@ -10,9 +10,8 @@ import { DJ } from '../types/DJ';
 // Props recebidas
 interface Props {
   currentRanking: DJ[]; // Ranking atual
-  dj?: DJ | undefined; // DJ logado (opcional porque o header também serve pra donos de pistas que não são DJs)
+  dj: DJ | undefined; // DJ logado (opcional porque o header também serve pra donos de pistas que não são DJs)
   isSlideMenuOpen?: boolean; // Estado do menu deslizante (opcional porque dispositivos não móveis não têm menu deslizante)
-  isTrackOwner: boolean; // Indica se o usuário é o dono da pista ou um DJ
   previousRanking: DJ[]; // Ranking anterior
   setShowTrackInfoPopup: (isOpen: boolean) => void; // Função para abrir/fechar o modal com as informações da pista
   showVotePopup?: boolean; // Indica se o popup de votação está aberto (opcional porque não é usado em todos os casos)
@@ -21,7 +20,7 @@ interface Props {
 }
 
 // Componente Header que é responsável por exibir o cabeçalho da aplicação, incluindo o menu lateral e o botão de compartilhar
-const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackOwner, previousRanking, setShowTrackInfoPopup, showVotePopup, toggleMenu, trackId }) => {
+const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previousRanking, setShowTrackInfoPopup, showVotePopup, toggleMenu, trackId }) => {
   const [showPopup, setShowPopup] = useState(false); // Estado para controlar a exibição do modal de compartilhamento
   
   const menuRef = useRef<HTMLDivElement>(null); // Referência para o menu deslizante
@@ -57,11 +56,6 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackO
     }
   };
 
-  // Função para quando clicar no logo redirecinar para a página da pista
-  const handleClickLogo = () => {
-    navigate(isTrackOwner ? `/track-info/${ trackId }` : `/track/${ trackId }`); // Navega para a página da pista
-  };
-
   return (
     // Container principal do cabeçalho
     <Container
@@ -89,7 +83,6 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackO
         <Menu
           currentRanking={ currentRanking } // Ranking atual
           dj={ dj } // DJ logado
-          isTrackOwner={ isTrackOwner } // Indica se o usuário é o dono da pista
           previousRanking={ previousRanking } // Ranking anterior
           trackId={ Number(trackId) } // ID da pista atual
         />
@@ -141,7 +134,7 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackO
         >
           <Navbar.Brand
             className='text-primary' // Classe para definir a cor do texto
-            onClick={ handleClickLogo } // Chama a função para redirecionar ao clicar no logo
+            onClick={ () => navigate(`/track/${ trackId }`) } // Chama a função para redirecionar ao clicar no logo
             // Estilo do logo
             style={{ cursor: 'pointer' }}
           >
@@ -169,12 +162,8 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackO
               cursor: 'pointer', // Cursor de ponteiro ao passar o mouse
               width: '50px', // Largura do botão
             }}
-          >
-            { 
-              isTrackOwner ? // Se não for o dono da pista, mostra o ícone de compartilhar
-                <FaInfoCircle style={{ fontSize: '1.5rem' }} /> : // Se for o dono da pista, mostra o ícone de informações
-                <FaShareAlt style={{ fontSize: '1.5rem' }} />
-            }
+          > 
+            <FaShareAlt style={{ fontSize: '1.5rem' }} />
           </Container>
         </Container>
       </Navbar>
@@ -192,14 +181,14 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, isTrackO
         >
           { /* Título do modal */ }
           <Modal.Title>
-            { isTrackOwner ? 'Detalhes da Pista' : 'Compartilhar Pista'} { /* "Detalhes da Pista" para o dono da pista e "Compartilhar Pista" para o DJ logado */ }
+            Compartilhar Pista
           </Modal.Title>
         </Modal.Header>
         { /* Corpo do modal */ }
         <Modal.Body>
           { /* Componente de compartilhamento ou detalhes da pista */ }
           <ShareTrack
-            pageType={ isTrackOwner ? 'track-info' : 'track' } // Tipo da página (detalhes ou compartilhamento)
+            pageType={ 'track' } // Tipo da página (detalhes ou compartilhamento)
             setShowPopup={ setShowTrackInfoPopup } // Função para abrir/fechar o modal
             trackId={ trackId } // ID da pista
           />

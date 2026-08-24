@@ -1,7 +1,6 @@
 import { combineReducers } from 'redux';
-import trackReducer from './trackReducer';
 import djReducer from './djReducer';
 
-const rootReducer = combineReducers({ trackReducer, djReducer });
+const rootReducer = combineReducers({ djReducer });
 
 export default rootReducer;

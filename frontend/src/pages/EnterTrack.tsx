@@ -201,7 +201,6 @@ const EnterTrack: React.FC<Props> = ({ djToken }) => {
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
   djToken: state.djReducer.token, // Token do DJ
-  trackToken: state.trackReducer.token // Token da pista
 });
 
 const EnterTrackConnected = connect(mapStateToProps)(EnterTrack); // Conecta o componente ao Redux

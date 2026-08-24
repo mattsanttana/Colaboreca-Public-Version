@@ -30,7 +30,7 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking,isTrackOwner, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
   } = useFetchTrackData(djToken);
 
@@ -117,7 +117,6 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
-            isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
@@ -134,7 +133,6 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
               <Menu
                 currentRanking={ djs } // Envia o ranking atual como prop
                 dj={ dj } // Envia o DJ atual como prop
-                isTrackOwner={ isTrackOwner } // Envia se o usuário é o dono da pista como prop
                 previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />

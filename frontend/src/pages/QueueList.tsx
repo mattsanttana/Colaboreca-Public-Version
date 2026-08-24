@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 
 interface Props {
   currentTrackIndex: number; // Índice da música selecionada
-  isTrackOwner: boolean;
   queue: TQueue[]; // Fila de reprodução atual
   setCurrentTrackIndex: (index: number) => void;
   sliderRef: React.RefObject<Slider | null>;
@@ -15,7 +14,7 @@ interface Props {
 }
 
 // Componente da lista de músicas da fila de reprodução
-const QueueList: React.FC<Props> = ({ currentTrackIndex, isTrackOwner, queue, setCurrentTrackIndex, sliderRef, trackId, trackRefs }) => { 
+const QueueList: React.FC<Props> = ({ currentTrackIndex, queue, setCurrentTrackIndex, sliderRef, trackId, trackRefs }) => { 
   const navigate = useNavigate(); // Hook para navegação
   
   // Função para pular para o item clicado no carrossel
@@ -53,9 +52,7 @@ const QueueList: React.FC<Props> = ({ currentTrackIndex, isTrackOwner, queue, se
                 <Image
                   alt={ `Música adicionada por ${ track.addedBy }` }
                   className='img-thumbnail i' // Classe para estilizar a imagem
-                  onClick={ () => navigate(
-                    isTrackOwner ? `/track-info/profile/${ trackId }/${ track.djId }` : `/track/profile/${ trackId }/${ track.djId }`
-                  ) } // Navega para a página de perfil do DJ ou da música
+                  onClick={ () => navigate( `/track/profile/${ trackId }/${ track.djId }` )} // Navega para a página de perfil do DJ ou da música
                   // Define o estilo da imagem
                   style={{
                     backgroundColor: '#000000', // Cor de fundo da imagem
