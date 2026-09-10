@@ -4,7 +4,7 @@ import { Music } from '../types/SpotifySearchResponse';
 
 // Props recebidas pelo componente
 interface Props {
-  handleClose: () => void; // Função para fechar o modal
+  onHide: () => void; // Função para fechar o modal
   handleConfirm: () => void; // Função para confirmar a adição da música
   isAddingTrack: boolean; // Estado de carregamento da adição da música
   selectedMusic: Music | null; // Música selecionada para adicionar à fila
@@ -12,10 +12,10 @@ interface Props {
 }
 
 // Componente de popup de confirmação para adicionar música à fila
-const AddMusicConfirmationPopup: React.FC<Props> = ({ show, isAddingTrack, selectedMusic, handleClose, handleConfirm }) => (
+const AddMusicConfirmationPopup: React.FC<Props> = ({ show, isAddingTrack, selectedMusic, onHide, handleConfirm }) => (
   <Modal
     className='custom-modal' // Classe personalizada para o modal
-    onHide={ handleClose } // Função chamada ao fechar o modal
+    onHide={ onHide } // Função chamada ao fechar o modal
     show={ show } // Estado de visibilidade do modal
   >
     { /* Cabeçalho do modal com título e botão de fechar */ }
@@ -79,7 +79,7 @@ const AddMusicConfirmationPopup: React.FC<Props> = ({ show, isAddingTrack, selec
     <Modal.Footer style={{ borderTop: 'none' }}>
       <>
         <Button
-          onClick={ handleClose } // Função para fechar o modal
+          onClick={ onHide } // Função para fechar o modal
           variant='secondary' // Estilo secundário para o botão
         >
           Cancelar

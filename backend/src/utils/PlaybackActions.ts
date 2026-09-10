@@ -37,9 +37,12 @@ export default class PlaybackActions {
         };
       } else {
         // Caso contrário, a música foi adicionada pelo próprio aplicativo
+        const ownerDJ = djs.find((dj: IDJ) => dj.isOwner === true);
+
         return {
-          addedBy: trackName,
-          characterPath: null,
+          djId: ownerDJ?.id,
+          addedBy: ownerDJ?.djName,
+          characterPath: ownerDJ?.characterPath ?? null,
           ...responseTrack
         };
       }
@@ -77,6 +80,7 @@ export default class PlaybackActions {
 
     let addedBy; // Variável para armazenar quem adicionou a música
     let characterPath; // Variável para armazenar o caminho do personagem
+    let addedByApp = false; // Variável para armazenar se a música foi adicionada pelo aplicativo
 
     // Se encontrar a música que está tocando no momento na fila do Colaboreca
     if (colaborecaMusic) {
@@ -84,8 +88,10 @@ export default class PlaybackActions {
       characterPath = djs.find((dj: any) => dj.id === colaborecaMusic.djId)?.characterPath; // Definir o caminho do personagem
     } else {
       // Caso contrário, a música foi adicionada pelo próprio aplicativo
-      addedBy = undefined;
-      characterPath = null;
+      const ownerDJ = djs.find((dj: IDJ) => dj.isOwner === true);
+      addedBy = ownerDJ?.djName;
+      characterPath = ownerDJ?.characterPath ?? null;
+      addedByApp = true; // Definir que a música foi adicionada pelo aplicativo
     }
 
     // Retornar a música com a informação do DJ que a adicionou
@@ -94,9 +100,10 @@ export default class PlaybackActions {
       cover: currentMusic?.album.images[0].url,
       musicName: currentMusic?.name,
       artists: currentMusic?.artists.map((artist: any) => artist.name),
-      djId: addedBy === undefined ? null : colaborecaMusic?.djId,
+      djId: colaborecaMusic?.djId,
       addedBy,
       characterPath,
+      addedByApp,
       spotifyQueue
     };
   }

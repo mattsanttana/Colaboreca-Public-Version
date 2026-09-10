@@ -10,11 +10,11 @@ import { RootState } from '../redux/store';
 import { connect } from 'react-redux';
 
 interface Props {
-  djToken?: string; // Token do DJ, opcional
+  token: string; // Token do DJ, opcional
 }
 
 // Página de entrar numa pista
-const EnterTrack: React.FC<Props> = ({ djToken }) => {
+const EnterTrack: React.FC<Props> = ({ token }) => {
   const { trackIdParam } = useParams(); // Pega o ID da pista da URL
   const [buttonDisabled, setButtonDisabled] = useState(true); // Estado responsável por habilitar/desabilitar botão
   const [phase, setPhase] = useState(1); // Estado responsável por aramazenar a fase que o usuário está (entrar ou criar o dj)
@@ -47,7 +47,7 @@ const EnterTrack: React.FC<Props> = ({ djToken }) => {
   useEffect(() => {
     if (!trackIdParam) {
       const fetchData = async () => {
-        const response = await djActions.getDJData(djToken ?? ''); // Busca os dados do DJ com o token
+        const response = await djActions.getDJData(token ?? ''); // Busca os dados do DJ com o token
 
         // Caso haja resposta e o status for igual a 200
         if (response?.status === 200) {
@@ -120,7 +120,7 @@ const EnterTrack: React.FC<Props> = ({ djToken }) => {
         {/* Componente de popup de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
+          onHide={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
       </Suspense>
       <Container
@@ -200,7 +200,7 @@ const EnterTrack: React.FC<Props> = ({ djToken }) => {
 
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token, // Token do DJ
+  token: state.reducer.token, // Token do DJ
 });
 
 const EnterTrackConnected = connect(mapStateToProps)(EnterTrack); // Conecta o componente ao Redux

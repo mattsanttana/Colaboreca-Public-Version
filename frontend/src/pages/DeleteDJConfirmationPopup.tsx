@@ -7,14 +7,14 @@ import { DJ } from '../types/DJ';
 // Props para o componente DeleteConfirmationPopup
 interface Props {
   dj: DJ | undefined;
-  djToken: string;
+  token: string;
   onHide: () => void; // Função chamada quando o usuário fecha o popup
   setPopupMessageData: (data: PopupMessageData) => void;
   show: boolean; // Estado que controla se o popup está visível
 }
 
 // Componente de popup para confirmação de exclusão
-const DeleteConfirmationPopup: React.FC<Props> = ({ dj, djToken, onHide, setPopupMessageData, show}) => {
+const DeleteConfirmationPopup: React.FC<Props> = ({ dj, token, onHide, setPopupMessageData, show}) => {
   const djActions = useDJ(); // Ações relacionadas ao DJ
   const navigate = useNavigate(); // Navegação entre páginas
 
@@ -30,7 +30,7 @@ const DeleteConfirmationPopup: React.FC<Props> = ({ dj, djToken, onHide, setPopu
       });
     }
   
-    const response = await djActions.deleteDJ(djToken); // Chama a ação para excluir o DJ com o token fornecido
+    const response = await djActions.deleteDJ(token); // Chama a ação para excluir o DJ com o token fornecido
   
     // Verifica se a resposta da exclusão foi bem-sucedida
     if (response?.status === 200) {

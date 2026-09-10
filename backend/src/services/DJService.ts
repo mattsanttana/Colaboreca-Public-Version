@@ -18,23 +18,33 @@ export default class DJService {
   async createDJ(data: { djName: string, characterPath: string, trackId: number }) {
     const { djName, trackId, characterPath } = data; // Receber os dados do DJ
     const io = getSocket(); // Obtenha a instância do Socket.IO
+    const transaction = await this.sequelize.transaction(); // Iniciar uma transação para garantir a atomicidade da operação
 
     try {
-      const track = await this.trackModel.findOne({ id: trackId }); // Verificar se a pista existe
+      const track = await this.trackModel.findOne({ id: trackId }, { transaction }); // Verificar se a pista existe
 
       // Se a pista não existir, retorne uma mensagem de erro
       if (!track) {
+        await transaction.rollback(); // Se a pista não existir, faça o rollback da transação
         return { status: 'UNAUTHORIZED', data: { message: 'This track does not exist' } };
       }
 
-      const djExists = await this.djModel.findOne({ djName, trackId }); // Verificar se já existe um DJ com o mesmo nome
+      const djWithSameName = await this.djModel.findOne({ djName, trackId }, { transaction }  ); // Verificar se já existe um DJ com o mesmo nome
 
       // Se o DJ já existir, retorne uma mensagem de erro
-      if (djExists) {
+      if (djWithSameName) {
+        await transaction.rollback(); // Se o DJ já existir, faça o rollback da transação
         return { status: 'CONFLICT', data: { message: 'DJ already exists' } };
       }
 
-      const dj = await this.djModel.create(djName, characterPath, trackId); // Criar um novo DJ
+      const dj = await this.djModel.create({djName, characterPath, trackId }, { transaction }); // Criar um novo DJ
+
+      if (!dj) {
+        await transaction.rollback();
+        return { status: 'ERROR', data: { message: 'An error occurred while creating the DJ' } };
+      }
+
+      await transaction.commit(); // Se tudo ocorrer bem, faça o commit da transação
 
       const token = JWT.sign({ id: dj.id, trackId }); // Gerar um token com o ID do DJ e o ID da pista
 

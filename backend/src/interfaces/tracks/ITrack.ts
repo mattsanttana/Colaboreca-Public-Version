@@ -6,6 +6,9 @@ import { IMusic } from '../musics/IMusic';
 export interface ITrack extends Identifiable {
   trackName: string; // Nome da pista
   spotifyToken: string; // Token do Spotify
+  queueOpen: boolean; // Se a fila está aberta ou não
+  maxSongsPerDJ: number; // Número máximo de músicas por DJ
+  veryBadVotesToSkip: number; // Número de votos negativos para pular a música
   createdAt: Date; // Data de criação
   updatedAt: Date; // Data de atualização
 }
@@ -15,6 +18,9 @@ export interface ITrackQueueData {
   id: number; // ID da pista
   trackName: string; // Nome da pista
   spotifyToken: string; // Token do Spotify
+  queueOpen: boolean; // Se a fila está aberta ou não
+  maxSongsPerDJ: number; // Número máximo de músicas por DJ
+  veryBadVotesToSkip: number; // Número de votos negativos para pular a música
   createdAt: Date; // Data de criação
   updatedAt: Date; // Data de atualização
   djs: IDJ[]; // DJs da pista

@@ -87,7 +87,7 @@ const useFetchPlaybackData = (djToken: string) => {
   useEffect(() => {
     const isPlayingDJ = Boolean(djPlayingNow?.addedBy);
     // entrada: monta card e revela votos em sequência
-    if (isPlayingDJ && !prevDjRef.current) {
+    if (isPlayingDJ && !djPlayingNow?.addedByApp && !prevDjRef.current) {
       setCardVisible(true);
       timersRefVotes.current.forEach(clearTimeout);
       timersRefVotes.current = [];

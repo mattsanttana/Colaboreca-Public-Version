@@ -9,7 +9,6 @@ import { RootState } from '../redux/store';
 import useMenu from '../utils/useMenu';
 import useFetchTrackData from '../utils/useFetchTrackData';
 import useFetchPlaybackData from '../utils/useFetchPlaybackData';
-import TrackInfoPopup from './TrackInfoPopup';
 import useAddMusicToQueue from '../utils/useAddMusicToQueue';
 import TrackGrid from './AddTrackGrid';
 
@@ -21,23 +20,23 @@ const VotePopup = lazy(() => import('./VotePopup'));
 
 // Props recebidas pelo redux
 interface Props {
-  djToken: string; // Token do DJ
+  token: string; // Token do DJ
 }
 
 // Componente principal da página de adicionar música à fila
-const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
+const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   const [search, setSearch] = useState(''); // Estado para armazenar o texto de pesquisa
 
   // Hook personalizado para buscar dados da pista
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
-    setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
-  } = useFetchTrackData(djToken);
+    setTrackName, showRankingChangePopup, trackId, trackName
+  } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(djToken);
+  } = useFetchPlaybackData(token);
 
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu(); // Hook personalizado para lidar com o menu
 
@@ -50,7 +49,7 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
   const {
     handleClick, handleCloseModal, handleConfirmAddTrack, isAddingTrack, isDebouncing,
     memoizedSearchResults, memoizedTopTracksInBrazil,selectedMusic, showModal
-  } = useAddMusicToQueue(search, djToken, setPopupMessageData);
+  } = useAddMusicToQueue(search, token, setPopupMessageData);
 
   return (
     <Container
@@ -62,7 +61,7 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
       <Suspense fallback={ <Spinner /> }>
         { /* Modal de confirmação de adição de música */ }
         <AddMusicConfirmationModal
-          handleClose={ handleCloseModal } // Função para fechar o modal
+          onHide={ handleCloseModal } // Função para fechar o modal
           handleConfirm={ handleConfirmAddTrack } // Função para confirmar a adição da música
           isAddingTrack={ isAddingTrack } // Estado de carregamento da adição da música
           selectedMusic={ selectedMusic } // Música selecionada para adicionar à fila
@@ -71,30 +70,23 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
         {/* Popup de mensagem */ }
         <MessagePopup
           data={ popupMessageData }
-          handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })}
+          onHide={() => setPopupMessageData({ ...popupMessageData, show: false })}
         />
         { /* Popup de alteração de ranking */ }
         <RankingChangePopup
           currentRanking={ djs } // Envia o ranking atual como prop
           dj={ dj } // Envia o DJ atual como prop
-          handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+          onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
           previousRanking={ previousRanking } // Envia o ranking anterior como prop
-          showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+          show={ showRankingChangePopup } // Envia o estado do popup como prop
           trackName={ trackName } // Nome da pista'
-        />
-        { /* Popup de informações da pista */ }
-        <TrackInfoPopup
-          trackName={ trackName } // Nome da pista
-          setTrackName={ setTrackName } // Função para definir o nome da pista
-          show={ showTrackInfoPopup } // Estado do popup de informações da pista
-          setShow={ setShowTrackInfoPopup } // Função para definir o estado do popup
         />
         { /* Popup de votação */ }
         <VotePopup
           djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
-          handleClose={ () => setShowVotePopup(false) } // Função para fechar o popup
+          onHide={ () => setShowVotePopup(false) } // Função para fechar o popup
           playingNow={ playingNow } // Envia o estado de reprodução como prop
-          showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+          show={ showVotePopup } // Envia o estado do popup como prop
         />
       </Suspense>
       { /* Verifica se está carregando */ }
@@ -118,10 +110,12 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
-            setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            setTrackName={ setTrackName }
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
+            token={ token } // Envia o token do DJ como prop
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
             trackId={ trackId } // Envia o ID da pista como prop
+            trackName={ trackName } // Envia o nome da pista como prop
           />
           <Row>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
@@ -193,7 +187,7 @@ const AddMusicToQueue: React.FC<Props> = ({ djToken }) => {
 
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token // Mapeia o token do DJ do estado global para as props do componente
+  token: state.reducer.token // Mapeia o token do DJ do estado global para as props do componente
 });
 
 const AddMusicToQueueConnected = connect(mapStateToProps)(AddMusicToQueue); // Conecta o componente ao Redux

@@ -48,6 +48,17 @@ const useRankingTable = (currentRanking: DJ[], dj: DJ | undefined, previousRanki
   }, [displayedRanking, rowHeight]);
 
   useEffect(() => {
+      const currentDJId = dj?.id;
+      const previousDJ = previousRanking.find(({ id }) => Number(id) === Number(currentDJId));
+      const currentDJ = currentRanking.find(({ id }) => Number(id) === Number(currentDJId));
+      const currentDJRankingChanged =
+        previousDJ !== undefined &&
+        currentDJ !== undefined &&
+        previousDJ.ranking !== currentDJ.ranking;
+
+      // Não destaca o DJ na carga inicial nem quando só os pontos foram alterados.
+      setUpdatedDJId(null);
+
       // Determina qual ranking usar como base inicial
       const initialRanking = previousRanking.length > 0 
         ? [...previousRanking] 
@@ -64,6 +75,7 @@ const useRankingTable = (currentRanking: DJ[], dj: DJ | undefined, previousRanki
       );
   
       // Anima para o ranking atual após 2.5 segundos
+      let t2: ReturnType<typeof setTimeout> | undefined;
       const t1 = setTimeout(() => {
         setDisplayedRanking([...currentRanking].sort((a, b) => {
           if (a.ranking === 0 && b.ranking === 0) return 0;
@@ -72,14 +84,17 @@ const useRankingTable = (currentRanking: DJ[], dj: DJ | undefined, previousRanki
           return a.ranking - b.ranking; // ordena normalmente
         }));
   
-        const t2 = setTimeout(() => {
-          setUpdatedDJId(Number(dj?.id));
-        }, 200);
-  
-        return () => clearTimeout(t2);
+        if (currentDJRankingChanged && currentDJId !== undefined) {
+          t2 = setTimeout(() => {
+            setUpdatedDJId(Number(currentDJId));
+          }, 200);
+        }
       }, 2500);
   
-      return () => clearTimeout(t1);
+      return () => {
+        clearTimeout(t1);
+        if (t2) clearTimeout(t2);
+      };
     }, [currentRanking, previousRanking, dj?.id]); // Adicione as dependências necessárias
 
     // Animação de pontos

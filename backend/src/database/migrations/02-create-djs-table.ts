@@ -37,6 +37,13 @@ export default {
         type: DataTypes.INTEGER, // Tipo inteiro
         allowNull: false // Não pode ser nulo
       },
+      // Coluna que indica se o DJ é o dono da pista
+      isOwner: {
+        type: DataTypes.BOOLEAN, // Tipo booleano
+        allowNull: false, // Não pode ser nulo
+        defaultValue: false, // Valor padrão
+        field: 'is_owner' // Nome da coluna no banco de dados
+      },
       // Coluna de id da pista
       trackId: {
         type: DataTypes.INTEGER, // Tipo inteiro

@@ -3,7 +3,7 @@ import { Button, Card, Col, Container, Form, Image, Row, Spinner } from 'react-b
 import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { charactersPaths, horizontalLogo, logo } from '../assets/images/characterPath';
-import { saveDJ } from '../redux/actions';
+import { saveToken } from '../redux/actions';
 import { RootState } from '../redux/store';
 import useDJ from '../utils/useDJ';
 
@@ -84,7 +84,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
 
       // Se o status for igual a 201
       if (dj?.status === 201) {
-        dispatch(saveDJ(dj.data.token)); // Salva o token do DJ no Redux
+        dispatch(saveToken(dj.data.token)); // Salva o token do DJ no Redux
         navigate(`/track/${trackId}`); // Redireciona o usuário para à pista
         // Se o status for igual a 400
       } else if (dj?.status === 400) {
@@ -135,7 +135,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
         {/* Componente de popup de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
+          onHide={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
       </Suspense>
       { /* Verifica se está carregando */ }
@@ -319,7 +319,7 @@ const CreateDJ: React.FC<CreateDJProps> = ({ token, trackId }) => {
 
 // Mapeia o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token // Token do DJ
+  token: state.reducer.token // Token do DJ
 });
 
 const CreateDJConnected = connect(mapStateToProps)(CreateDJ); // Conecta o componente ao Redux

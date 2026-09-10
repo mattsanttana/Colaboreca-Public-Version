@@ -1,4 +1,4 @@
-import { SAVE_DJ } from '../actions';
+import { SAVE_TOKEN } from '../actions';
 
 interface Action {
   type: string;
@@ -13,12 +13,12 @@ const INITIAL_STATE: State = {
   token: ''
 };
 
-const djReducer = (
+const reducer = (
   state: State = INITIAL_STATE,
   action: Action
 ): State => {
   switch (action.type) {
-    case SAVE_DJ:
+    case SAVE_TOKEN:
       return {
         ...state,
         token: action.token || ''
@@ -28,4 +28,4 @@ const djReducer = (
   }
 }
 
-export default djReducer;
+export default reducer;

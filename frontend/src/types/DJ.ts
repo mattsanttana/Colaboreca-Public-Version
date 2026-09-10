@@ -12,4 +12,5 @@ export type DJPlayingNow = {
   djId: number;
   addedBy: string;
   characterPath: string;
+  addedByApp: boolean;
 };

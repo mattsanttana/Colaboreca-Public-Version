@@ -5,7 +5,6 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import Header from './Header';
 import Menu from './Menu';
-import TrackInfoPopup from './TrackInfoPopup';
 import { logo } from '../assets/images/characterPath';
 import { RootState } from '../redux/store'
 import useFetchPlaybackData from '../utils/useFetchPlaybackData';
@@ -23,25 +22,24 @@ const VotePopup = lazy(() => import('./VotePopup'));
 
 // Define as propriedades esperadas pelo componente Queue
 type Props = {
-  djToken: string; // Token do DJ, usado para autenticação
-  trackToken: string; // Token da pista, usado para autenticação
+  token: string; // Token do DJ, usado para autenticação
 };
 
 // Define o tipo de dados que serão passados para o componente Queue
-const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
+const Queue: React.FC<Props> = ({ token }) => {
   const [ currentTrackIndex, setCurrentTrackIndex ] = useState<number>(0); // Para controlar o índice da música atual
   const sliderRef = useRef<Slider | null>(null); // Referência para o slider
 
   // Hook personalizado para buscar dados da pista
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
-    setShowTrackInfoPopup, setTrackName, showRankingChangePopup, showTrackInfoPopup, trackId, trackName
-  } = useFetchTrackData(djToken);
+    setTrackName, showRankingChangePopup, trackId, trackName
+  } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(djToken)
+  } = useFetchPlaybackData(token)
   
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu() // Hook personalizado para lidar com o menu
 
@@ -60,31 +58,23 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
         {/* Componentes de popups de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
+          onHide={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
         />
         { /* Popup de alteração de ranking */ }
         <RankingChangePopup
           dj={ dj } // Envia o DJ atual como prop
           currentRanking={ djs } // Envia o ranking atual como prop
-          handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+          onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
           previousRanking={ previousRanking } // Envia o ranking anterior como prop
-          showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+          show={ showRankingChangePopup } // Envia o estado do popup como prop
           trackName={ trackName } // Nome da pista
-        />
-        { /* Popup de informações da pista */ }
-        <TrackInfoPopup
-          setShow={ setShowTrackInfoPopup } // Função para definir o estado do popup
-          setTrackName={ setTrackName } // Função para definir o nome da pista
-          show={ showTrackInfoPopup } // Estado do popup de informações da pista
-          trackName={ trackName } // Nome da pista
-          trackToken={ trackToken } // Token da pista
         />
         { /* popup de votação */ }
         <VotePopup
           djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
-          handleClose={ () => setShowVotePopup(false) } // Função para fechar o popup
+          onHide={ () => setShowVotePopup(false) } // Função para fechar o popup
           playingNow={ playingNow } // Envia o estado de reprodução como prop
-          showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+          show={ showVotePopup } // Envia o estado do popup como prop
         />
       </Suspense>
       { /* Verifica se está carregando */ }
@@ -108,11 +98,13 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
-            previousRanking={ globalPreviousRanking } // Envia o ranking anterior global como prop
-            setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
+            setTrackName={ setTrackName }
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
+            token={ token } // Envia o token do DJ como prop
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
-            trackId={ trackId } // Envia o ID da pista atual
+            trackId={ trackId } // Envia o ID da pista como prop
+            trackName={ trackName } // Envia o nome da pista como prop
           />
           <Row>
             { /* Menu para o menu lateral, visível apenas em telas grandes */ }
@@ -197,7 +189,7 @@ const Queue: React.FC<Props> = ({ djToken, trackToken }) => {
 
 // Mapeia o estado global para as propriedades do componente Queue
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token, // Token do DJ, usado para autenticação
+  token: state.reducer.token, // Token do DJ, usado para autenticação
 });
 
 const QueueConnected = connect(mapStateToProps)(Queue); // Conecta o componente Queue ao estado global usando Redux

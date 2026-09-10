@@ -7,7 +7,7 @@ import PopupMessageData from '../types/PopupMessageData';
 // Props para o componente EditOrDeleteDJPopup
 interface Props {
   dj: DJ | undefined;
-  djToken: string;
+  token: string;
   editedCharacterPath: string;
   setEditedCharacterPath: (characterPath: string) => void;
   setShow: (show: boolean) => void; // Função para definir o estado do popup
@@ -19,7 +19,7 @@ interface Props {
 
 // Componente de popup para editar ou excluir DJ
 const EditOrDeleteDJPopup: React.FC<Props> = ({
-  dj, djToken, editedCharacterPath, setEditedCharacterPath, setPopupMessageData,
+  dj, token, editedCharacterPath, setEditedCharacterPath, setPopupMessageData,
   setShowCharacterPopup, setShow, setShowDeleteConfirmation, show,
 }) => {
   const [editedName, setEditedName] = useState<string>(''); // Novo nome do DJ
@@ -75,7 +75,7 @@ const EditOrDeleteDJPopup: React.FC<Props> = ({
       return; // Retorna para evitar continuar o processo de salvamento
     }
 
-    const response = await djActions.updateDJ(editedName, editedCharacterPath, djToken); // Chama a ação para atualizar o DJ com os novos dados e o token fornecido
+    const response = await djActions.updateDJ(editedName, editedCharacterPath, token); // Chama a ação para atualizar o DJ com os novos dados e o token fornecido
 
     // Verifica a resposta da atualização do DJ foi bem-sucedida
     if (response?.status === 200) {

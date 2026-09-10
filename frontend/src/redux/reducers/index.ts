@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
-import djReducer from './djReducer';
+import reducer from './reducer';
 
-const rootReducer = combineReducers({ djReducer });
+const rootReducer = combineReducers({ reducer });
 
 export default rootReducer;

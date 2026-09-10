@@ -25,8 +25,10 @@ export default class TrackService {
   ) { }
 
   // Método para criar uma pista
-  async createTrack(data: { trackName: string, code: string }) {
-    const { trackName, code } = data; // Receber os dados da pista
+  async createTrack(data: { trackName: string, djName: string, characterPath: string, code: string }) {
+    const transaction = await this.sequelize.transaction(); // Iniciar uma transação
+
+    const { trackName, djName, characterPath, code } = data; // Receber os dados da pista
 
     try {
       const spotifyToken = await SpotifyActions.getAccessToken(code); // Obter o token de acesso do Spotify
@@ -62,14 +64,23 @@ export default class TrackService {
         trackWithSameId = await this.trackModel.findOne({ id });
       }
 
-      const track = await this.trackModel.create(id, trackName, spotifyToken); // Criar a pista
-
-      const token = JWT.sign({ id: track.id }); // Gerar um token para a pista
-
+      const track = await this.trackModel.create(id, trackName, spotifyToken, { transaction }); // Criar a pista
 
       if (!track) {
-        return { status: 'ERROR', data: { message: 'An error occurred' } }; // Se a pista não for criada, retorne uma mensagem de erro
+        await transaction.rollback(); // Se a pista não for criada, rollback a transação e retorne uma mensagem de erro
+        return { status: 'ERROR', data: { message: 'An error occurred' } };
       }
+
+      const dj = await this.djModel.create({ djName, characterPath, trackId: track.id, isOwner: true }, { transaction }); // Criar o DJ
+
+      if (!dj) {
+        await transaction.rollback(); // Se o DJ não for criado, rollback a transação e retorne uma mensagem de erro
+        return { status: 'ERROR', data: { message: 'An error occurred' } };
+      }
+
+      const token = JWT.sign({ id: dj.id, trackId: track.id }); // Gerar um token para a pista
+
+      await transaction.commit(); // Commitar a transação
 
       return { status: 'CREATED', data: { id, trackName, token } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {
@@ -115,7 +126,7 @@ export default class TrackService {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
-      const track = await this.trackModel.findOne({ id: decoded.id }); // Buscar a pista pelo ID
+      const track = await this.trackModel.findOne({ id: decoded.trackId }); // Buscar a pista pelo ID
 
       // Se a pista não for encontrada, retorne uma mensagem de pista não encontrada
       if (!track) {
@@ -146,7 +157,7 @@ export default class TrackService {
       }
 
       // Se o ID do token for diferente do ID da pista, retorne uma mensagem de erro
-      if (decoded.id !== id) {
+      if (decoded.trackId !== id) {
         return { status: 'UNAUTHORIZED', data: { message: 'Unauthorized' } };
       }
 
@@ -175,7 +186,7 @@ export default class TrackService {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
-      const track = await this.trackModel.findOne({ id: decoded.id }); // Buscar a pista pelo ID
+      const track = await this.trackModel.findOne({ id: decoded.trackId }); // Buscar a pista pelo ID
 
       // Se a pista não for encontrada, retorne uma mensagem de pista não encontrada
       if (!track) {
@@ -195,16 +206,16 @@ export default class TrackService {
         return { status: 'INVALID_DATA', data: { message: 'No fields updated' } };
       }
 
-      const response = await this.trackModel.update(updatedFields as { trackName: string, updatedAt: Date }, { id: decoded.id }); // Atualizar a pista
+      const response = await this.trackModel.update(updatedFields as { trackName: string, updatedAt: Date }, { id: decoded.trackId }); // Atualizar a pista
 
       // Se a pista não for atualizada, retorne uma mensagem de erro
       if (response[0] === 0) {
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
-      const trackUpdated = await this.trackModel.findOne({ id: decoded.id }); // Buscar a pista atualizada
+      const trackUpdated = await this.trackModel.findOne({ id: decoded.trackId }); // Buscar a pista atualizada
 
-      io.to(`track_${decoded.id}`).emit('track updated', { trackName: trackUpdated?.trackName }); // Emitir um evento de pista atualizada
+      io.to(`track_${decoded.trackId}`).emit('track updated', { trackName: trackUpdated?.trackName }); // Emitir um evento de pista atualizada
 
       return { status: 'OK', data: { message: 'Track updated' } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {
@@ -232,14 +243,15 @@ export default class TrackService {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
-      const track = await this.trackModel.findOne({ id: decoded.id }); // Buscar a pista pelo ID
+      const track = await this.trackModel.findOne({ id: decoded.trackId }, { transaction }); // Buscar a pista pelo ID
 
       // Se a pista não for encontrada, retorne uma mensagem de pista não encontrada
       if (!track) {
+        await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
-      const trackId = decoded.id; // Pegar o ID da pista
+      const trackId = decoded.trackId; // Pegar o ID da pista
 
       // Deletar entradas relacionadas nas tabelas Chat, DJ, Message, Music, Vote e a própria pista
       await Promise.all([
@@ -251,10 +263,9 @@ export default class TrackService {
         this.trackModel.delete({ id: trackId }, { transaction })
       ]);
 
-
-      io.to(`track_${decoded.id}`).emit('track deleted', { trackId: decoded.id }); // Emitir um evento de pista deletada
-
       await transaction.commit(); // Commitar a transação
+
+      io.to(`track_${decoded.trackId}`).emit('track deleted', { trackId: decoded.trackId }); // Emitir um evento de pista deletada
 
       return { status: 'OK', data: { message: 'Track deleted' } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {
@@ -279,7 +290,12 @@ export default class TrackService {
         updatedAt: {
           [Op.lt]: new Date(new Date().getTime() - 1000 * 60 * 60 * 6)
         }
-      });
+      }, { transaction });
+
+      if (tracksToDelete.length === 0) {
+        await transaction.commit();
+        return { status: 'OK', data: { message: 'No tracks to delete' } }; // Retornar uma mensagem de sucesso com o status correspondente
+      }
 
       // Se não houver pistas para deletar, retorne uma mensagem de erro
       for (const track of tracksToDelete) {
@@ -295,10 +311,10 @@ export default class TrackService {
           this.trackModel.delete({ id: trackId }, { transaction }) // Deletar a pista
         ]);
 
+        await transaction.commit(); // Commitar a transação
+
         io.to(`track_${trackId}`).emit('track deleted', { trackId }); // Emitir um evento de pista deletada
       }
-
-      await transaction.commit(); // Commitar a transação
 
       return { status: 'OK', data: { message: `${tracksToDelete.length} tracks deleted` } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {
@@ -326,6 +342,25 @@ export default class TrackService {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
+      const track = await this.trackModel.findOne({ id: decoded.trackId }); // Buscar a pista pelo ID
+
+      // Se a pista não for encontrada, retorne uma mensagem de pista não encontrada
+      if (!track) {
+        return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      }
+
+      const dj = await this.djModel.findOne({ id }); // Buscar o DJ pelo ID
+
+      // Se o DJ não for encontrado, retorne uma mensagem de DJ não encontrado
+      if (!dj) {
+        return { status: 'NOT_FOUND', data: { message: 'DJ not found' } };
+      }
+
+      // Se o DJ for o dono da pista, retorne uma mensagem de erro
+      if (dj.trackId !== decoded.trackId) {
+        return { status: 'FORBIDDEN', data: { message: 'You do not have permission to delete this DJ.' } };
+      }
+
       const response = await this.djModel.delete({ id }); // Deletar o DJ
 
       // Se o DJ não for deletado, retorne uma mensagem de erro
@@ -333,7 +368,7 @@ export default class TrackService {
         return { status: 'ERROR', data: { message: 'An error occurred' } };
       }
 
-      io.to(`track_${decoded.id}`).emit('dj deleted', { id }); // Emitir um evento de DJ deletado
+      io.to(`track_${decoded.trackId}`).emit('dj deleted', { id }); // Emitir um evento de DJ deletado
 
       return { status: 'OK', data: { message: 'DJ deleted' } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {

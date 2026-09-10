@@ -1,268 +1,127 @@
-import React from 'react';
-import { Button, Container, Modal } from 'react-bootstrap';
-import { FiCopy } from 'react-icons/fi';
-import {
-  EmailIcon, EmailShareButton, FacebookIcon, FacebookShareButton, LinkedinIcon, LinkedinShareButton, RedditIcon, RedditShareButton, TelegramIcon,
-  TelegramShareButton, TumblrIcon, TumblrShareButton, TwitterIcon, TwitterShareButton, WhatsappIcon, WhatsappShareButton
-} from 'react-share';
+import { lazy, Suspense, useCallback, useState } from 'react';
+import { Button, Card, Col, Container, Image, Modal, Row, Spinner } from 'react-bootstrap';
+import QRCode from 'qrcode-generator';
+
+// Componentes que não precisam ser carregados inicialmente
+const ShareTrackOptions = lazy(() => import('./ShareTrackOptions'));
 
 // Props recebidas
-interface SharePopupProps {
-  handleClose: () => void; // Função para fechar o modal
-  show: boolean; // Estado de visibilidade do modal
-  trackId: string; // ID da pista a ser compartilhada
+interface Props {
+  onHide: () => void; // Função para abrir o popup
+  show: boolean; // Estado de visibilidade do popup
+  trackId: string | undefined; // ID da pista a ser compartilhada
 }
 
-const shareUrl = (trackId: string) => `http://localhost:5173/enter-track/${ trackId }`; // URL de compartilhamento da pista
-const shareText = 'Clique no link e venha discotecar comigo!'; // Texto de compartilhamento
+// Componente ShareTrackPopup que é responsável por gerar e compartilhar o QR Code da pista e o link de compartilhamento
+const ShareTrackPopup: React.FC<Props> = ({ onHide, show, trackId }) => {
+  const [showShareTrackOptions, setShowShareTrackOptions] = useState(false); // Estado para controlar a visibilidade do popup de compartilhamento
 
-// Componente SharePopup
-const SharePopup: React.FC<SharePopupProps> = ({ handleClose, show, trackId }) => (
-  <Modal
-    centered // Centraliza o modal na tela
-    className='custom-modal' // Classes personalizadas para o modal
-    onHide={ handleClose } // Função chamada ao fechar o modal
-    show={ show } // Estado de visibilidade do modal
-  >
-    <Modal.Header
-      closeButton // Botão de fechar o modal
-      style={{ borderBottom: 'none' }} // Estilo do cabeçalho do modal
+  // Função para gerar o QR Code da pista
+  const generateQRCode = useCallback(() => {
+    const qr = QRCode(0, 'M'); // Cria uma instância do QR Code com nível de correção 'M'
+    qr.addData(`http://localhost:5173/enter-track/${ trackId }`); // Adiciona a URL da pista ao QR Code
+    qr.make(); // Gera o QR Code
+
+    const canvas = document.createElement('canvas'); // Cria um elemento canvas para desenhar o QR Code
+    const context = canvas.getContext('2d'); // Obtém o contexto 2D do canvas
+
+    // Define o tamanho do canvas com base no número de módulos do QR Code
+    if (context) {
+      const squareSize = 6; // Define o tamanho de cada quadrado do QR Code
+      canvas.width = qr.getModuleCount() * squareSize; // Define a largura do canvas
+      canvas.height = qr.getModuleCount() * squareSize; // Define a altura do canvas
+
+      // Desenha o QR Code no canvas
+      for (let row = 0; row < qr.getModuleCount(); row++) {
+        // Percorre cada linha do QR Code
+        for (let col = 0; col < qr.getModuleCount(); col++) {
+          // Percorre cada coluna do QR Code
+          if (qr.isDark(row, col)) {
+            context.fillRect(col * squareSize, row * squareSize, squareSize, squareSize); // Desenha um quadrado preto se o módulo for escuro
+          }
+        }
+      }
+    }
+
+    const dataURL = canvas.toDataURL('image/png'); // Converte o canvas em uma URL de dados (data URL) no formato PNG
+
+    return <Image src={ dataURL } alt='QR Code' className='img-fluid rounded' />;
+  }, [trackId]);
+
+  // Renderiza o componente ShareTrack
+  return (
+    /* Modal para compartilhar a pista ou mostrar detalhes da pista */
+    <Modal
+      className='custom-modal' // Classe personalizada para o modal
+      onHide={ onHide } // Chama a função para fechar o modal
+      show={ show } // Controla a visibilidade do modal
+      size='lg' // Tamanho do modal
     >
-      <Modal.Title>Compartilhar pista</Modal.Title> {/* Título do modal */}
-    </Modal.Header>
-    { /* Corpo do modal com os botões de compartilhamento */ }
-    <Modal.Body>
-      <Container
-        className='d-flex flex-row justify-content-start align-items-center gap-3' // Classes para layout flexível
-        // Estilo do container para permitir rolagem horizontal
-        style={{
-          overflowX: 'auto', // Permite rolagem horizontal
-          paddingBottom: '10px', // Preenchimento inferior para evitar que o conteúdo fique colado na borda
-          whiteSpace: 'nowrap', // Impede que o conteúdo quebre em várias linhas
-          width: '100%', // ocupa toda a largura
-          minHeight: '100%', // ocupa toda a altura
-          height: '100%', // ocupa toda a altura
-        }}
+      <Suspense fallback={ <Spinner /> }>
+        <ShareTrackOptions
+          show={ showShareTrackOptions }
+          onHide={ () => setShowShareTrackOptions(false) }
+          trackId={ trackId || '' }
+        />
+      </Suspense>
+      { /* Cabeçalho do modal */ }
+      <Modal.Header
+        className='custom-modal-header' // Classe personalizada para o cabeçalho do modal
+        closeButton  // Botão para fechar o modal
       >
-        { /* Botão para copiar o link da pista */ }
-        <div className='d-flex flex-column align-items-center'>
-          <Button
-            onClick={() => { navigator.clipboard.writeText(shareUrl(trackId)) }} // Copia o link para a área de transferência
-            // Estilo do botão de copiar link
-            style={{
-              alignItems: 'center', // Alinha os itens no centro
-              backgroundColor: '#a8dadc', // Cor de fundo do botão
-              borderRadius: '50%', // Bordas arredondadas
-              display: 'flex', // Exibe como flexbox
-              height: '54px', // Altura do botão
-              justifyContent: 'center', // Justifica o conteúdo no centro
-              padding: 0, // Remove o preenchimento
-              width: '54px', // Largura do botão
-            }}
-            title='Copiar link'
-            variant='outline-dark'
+        { /* Título do modal */ }
+        <Modal.Title>
+          Compartilhar Pista
+        </Modal.Title>
+      </Modal.Header>
+      { /* Corpo do modal */ }
+      <Modal.Body>
+        <Container>
+          {/* Card que exibe o QR Code e o PIN da pista */}
+          <Card
+            className='text-center text-light'
+            style={{ boxShadow: '0 0 0 0.5px #ffffff', padding: '0' }}
           >
-            { /* Ícone de copiar com tamanho 32px */ }
-            <FiCopy size={ 32 } />
-          </Button>
-          { /* Texto abaixo do botão de copiar link */ }
-          <span
-            // Estilo do texto abaixo do botão de copiar link
-            style={{
-              fontSize: 12, // Tamanho da fonte
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            Copiar link
-          </span>
-        </div>
-        { /* Botão para compartilhar no WhatsApp */ }
-        <div className='d-flex flex-column align-items-center'>
-          <WhatsappShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do WhatsApp */ }
-            <WhatsappIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </WhatsappShareButton>
-          { /* Texto abaixo do ícone do WhatsApp */ }
-          <span
-            // Estilo do texto abaixo do ícone do WhatsApp
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            WhatsApp
-          </span>
-        </div>
-        { /* Botão para compartilhar no Facebook */ }
-        <div className='d-flex flex-column align-items-center'>
-          <FacebookShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do Facebook */ }
-            <FacebookIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </FacebookShareButton>
-          { /* Texto abaixo do ícone do Facebook */ }
-          <span
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            Facebook
-          </span>
-        </div>
-        { /* Botão para compartilhar no Twitter */ }
-        <div className='d-flex flex-column align-items-center'>
-          <TwitterShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do Twitter */ }
-            <TwitterIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </TwitterShareButton>
-          { /* Texto abaixo do ícone do Twitter */ }
-          <span
-            // Estilo do texto abaixo do ícone do Twitter
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            X
-          </span>
-        </div>
-        { /* Botão para compartilhar no Tumblr */ }
-        <div className='d-flex flex-column align-items-center'>
-          <TumblrShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do Tumblr */ }
-            <TumblrIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </TumblrShareButton>
-          { /* Texto abaixo do ícone do Tumblr */ }
-          <span
-            // Estilo do texto abaixo do ícone do Tumblr
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4  // Espaçamento superior
-            }}
-          >
-            Tumblr
-          </span>
-        </div>
-        { /* Botão para compartilhar no LinkedIn */ }
-        <div className='d-flex flex-column align-items-center'>
-          <LinkedinShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do LinkedIn */ }
-            <LinkedinIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </LinkedinShareButton>
-          { /* Texto abaixo do ícone do LinkedIn */ }
-          <span
-            // Estilo do texto abaixo do ícone do LinkedIn
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            LinkedIn
-          </span>
-        </div>
-        { /* Botão para compartilhar por e-mail */ }
-        <div className='d-flex flex-column align-items-center'>
-          <EmailShareButton
-            body={ shareText } // Texto do corpo do e-mail
-            subject='Essa é o link para minha pista no Colaboreca' // Assunto do e-mail
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do e-mail */ }
-            <EmailIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </EmailShareButton>
-          { /* Texto abaixo do ícone do e-mail */ }
-          <span
-            // Estilo do texto abaixo do ícone do e-mail
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            E-mail
-          </span>
-        </div>
-        { /* Botão para compartilhar no Reddit */ }
-        <div className='d-flex flex-column align-items-center'>
-          <RedditShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do Reddit */ }
-            <RedditIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </RedditShareButton>
-          { /* Texto abaixo do ícone do Reddit */ }
-          <span
-            // Estilo do texto abaixo do ícone do Reddit
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            Reddit
-          </span>
-        </div>
-        { /* Botão para compartilhar no Telegram */ }
-        <div className='d-flex flex-column align-items-center'>
-          <TelegramShareButton
-            title={ shareText } // Texto a ser compartilhado
-            url={ shareUrl(trackId) } // URL a ser compartilhada
-          >
-            { /* Ícone do Telegram */ }
-            <TelegramIcon
-              round // Arredonda o ícone
-              size={ 48 } // Tamanho do ícone
-            />
-          </TelegramShareButton>
-          { /* Texto abaixo do ícone do Telegram */ }
-          <span
-            // Estilo do texto abaixo do ícone do Telegram
-            style={{
-              fontSize: 12, // Tamanho da fonte do texto abaixo do ícone
-              marginTop: 4 // Espaçamento superior
-            }}
-          >
-            Telegram
-          </span>
-        </div>
-      </Container>
-    </Modal.Body>
-  </Modal>
-);
+            <Card.Body>
+              {/* Linha que centraliza o conteúdo do card */}
+              <Row className='w-100 justify-content-center align-items-center m-0'>
+                <Col xs={12} className='d-flex flex-column justify-content-center align-items-center' style={{ color: '#fff4c2' }}>
+                  <h3 className='mb-4'>O PIN da sua pista é:</h3>
+                  <h1 className='track-id' style={{ letterSpacing: '2px', margin: 0 }}>
+                    { trackId ? `${trackId.slice(0, 3)} ${trackId.slice(3, 6)}` : '' }
+                  </h1>
+                  <div
+                    style={{
+                      backgroundColor: '#fff4c2', // Cor de fundo
+                      height: '200px',
+                      marginTop: '20px',
+                      width: '200px',
+                      borderRadius: '12px', // Ajuste o valor para mais ou menos arredondado
+                      padding: '10px', // Espaço interno entre a borda e o QR Code
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div className='mb-3' style={{ marginTop: '13px' }}>{ generateQRCode() }</div>
+                  </div>
+                </Col>
+              </Row>
+              { /* Botão para compartilhar a pista */ }
+              <Container className='d-flex justify-content-center align-items-center gap-2 mt-3'>
+                <Button 
+                  className='primary-button'
+                  onClick={() => setShowShareTrackOptions(true)}
+                >
+                  Compartilhar
+                </Button>
+              </Container>
+            </Card.Body>
+          </Card>
+        </Container>
+      </Modal.Body>
+    </Modal>
+  );
+};
 
-export default SharePopup; // Exporta o componente SharePopup
+export default ShareTrackPopup; // Exporta o compontente ShareTrack

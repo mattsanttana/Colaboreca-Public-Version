@@ -12,7 +12,7 @@ const ExpelDJConfirmationPopup = lazy(() => import('./ExpelDJConfirmationPopup')
 // Props para o componente RankingTable
 interface Props {
   currentRanking: DJ[]; // Ranking atual
-  dj?: DJ, // DJ atual (opcional)
+  dj?: DJ, // DJ atual
   previousRanking: DJ[]; // Ranking anterior
   trackToken?: string; // Token da pista
 }
@@ -27,6 +27,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
     filteredRanking, points, pointDirection, updatedDJId, springs, confirmExpelDJ, handleExpelDJ, formatScore
   } = useRankingTable(currentRanking, dj, previousRanking, trackToken);
 
+
   return (
     <Container className='table-responsive'>
       { /* Carregaento preguiçoso para componentes menos importantes */ }
@@ -34,8 +35,8 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
         { /* Modal de confirmação para expulsar DJ */ }
         <ExpelDJConfirmationPopup
           confirmExpelDJ={ confirmExpelDJ } // Função para confirmar expulsão
-          setShowConfirmModal={ setShowConfirmModal } // Função para controlar exibição do modal
-          showConfirmModal={ showConfirmModal } // Estado de exibição do modal
+          onHide={ () => setShowConfirmModal(false) } // Função para controlar exibição do modal
+          show={ showConfirmModal } // Estado de exibição do modal
         />
       </Suspense>
       
@@ -81,13 +82,13 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
         }}
       >
         { /* Mapeia o ranking filtrado para exibir cada DJ */ }
-        { filteredRanking.map((dj, index) => (
+        { filteredRanking.map((rankingDJ, index) => (
           // Linha animada para cada DJ
           <animated.div
-            key={ dj.id }
+            key={ rankingDJ.id }
             ref={ el => rowRefs.current[index] = el } // Referência para medir altura da linha
-            id={ `dj-${ dj.id }` } // ID para scroll
-            className={ `ranking-row d-flex align-items-center mb-2 p-2 rounded ${ dj.id === updatedDJId ? 'highlighted' : '' }` } // Classe para destacar DJ atualizado
+            id={ `dj-${ rankingDJ.id }` } // ID para scroll
+            className={ `ranking-row d-flex align-items-center mb-2 p-2 rounded ${ rankingDJ.id === updatedDJId ? 'highlighted' : '' }` } // Classe para destacar DJ atualizado
             style={{
               position: 'absolute',
               top: 0,
@@ -100,7 +101,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
               cursor: 'pointer',
             }}
             // Navega para o perfil do DJ ao clicar na linha
-            onClick={() => navigate( `/track/profile/${ trackId }/${ dj.id }` )}
+            onClick={() => navigate( `/track/profile/${ trackId }/${ rankingDJ.id }` )}
           >
             {/* Posição */}
             <Container className='flex-shrink-0' style={{ width: '50px', textAlign: 'center' }}>
@@ -111,15 +112,15 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
                   height: '32px',
                   borderRadius: '50%',
                   background:
-                    dj.ranking === 1
+                    rankingDJ.ranking === 1
                       ? '#FFD700' // Ouro
-                      : dj.ranking === 2
+                      : rankingDJ.ranking === 2
                       ? '#C0C0C0' // Prata
-                      : dj.ranking === 3
+                      : rankingDJ.ranking === 3
                       ? '#CD7F32' // Bronze
                       : '#222', // Padrão
                   color:
-                    dj.ranking === 1 || dj.ranking === 2 || dj.ranking === 3
+                    rankingDJ.ranking === 1 || rankingDJ.ranking === 2 || rankingDJ.ranking === 3
                       ? '#000' // Preto para medalhas
                       : '#fff', // Branco para os outros
                   fontWeight: 'bold',
@@ -127,16 +128,16 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
                   fontFamily: '"Bebas Neue", Oswald, Arial, sans-serif',
                   border: '2px solid #444',
                   boxShadow:
-                    dj.ranking === 1
+                    rankingDJ.ranking === 1
                       ? '0 0 8px #FFD700' // Brilho dourado
-                      : dj.ranking === 2
+                      : rankingDJ.ranking === 2
                       ? '0 0 8px #C0C0C0' // Brilho prateado
-                      : dj.ranking === 3
+                      : rankingDJ.ranking === 3
                       ? '0 0 8px #CD7F32' // Brilho bronze
                       : 'none', // Sem brilho
                 }}
               >
-                { dj.ranking === 0 ? '—' : dj.ranking } { /* Mostra travessão se ranking for 0 */ }
+                { rankingDJ.ranking === 0 ? '—' : rankingDJ.ranking } { /* Mostra travessão se ranking for 0 */ }
               </span>
             </Container>
 
@@ -145,27 +146,27 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
               {/* Avatar */}
               <div className='flex-shrink-0 mx-2'>
                 <Image
-                  alt={ `Personagem do DJ ${ dj.djName }` }
-                  src={ dj.characterPath }
+                  alt={ `Personagem do DJ ${ rankingDJ.djName }` }
+                  src={ rankingDJ.characterPath }
                   className='img-thumbnail'
                   style={{
                     width: '50px',
                     height: '50px',
                     backgroundColor: '#1d1d1d',
                     border:
-                      dj.ranking === 1
+                      rankingDJ.ranking === 1
                         ? '2px solid #FFD700' // Ouro
-                        : dj.ranking === 2
+                        : rankingDJ.ranking === 2
                         ? '2px solid #C0C0C0' // Prata
-                        : dj.ranking === 3
+                        : rankingDJ.ranking === 3
                         ? '2px solid #CD7F32' // Bronze
                         : '1px solid #444', // Padrão
                     boxShadow:
-                      dj.ranking === 1
+                      rankingDJ.ranking === 1
                         ? '0 0 10px #FFD700' // Brilho dourado
-                        : dj.ranking === 2
+                        : rankingDJ.ranking === 2
                         ? '0 0 10px #C0C0C0' // Brilho prateado
-                        : dj.ranking === 3
+                        : rankingDJ.ranking === 3
                         ? '0 0 10px #CD7F32' // Brilho bronze
                         : 'none'
                   }}
@@ -174,7 +175,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
               
               {/* Nome */}
               <div className='text-light'>
-                { dj.djName }
+                { rankingDJ.djName }
               </div>
             </div>
             
@@ -182,19 +183,19 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
             <div
               // Classe condicional para indicar aumento ou diminuição de pontos
               className={ `flex-shrink-0 text-light ${
-                pointDirection[dj.id] === 'up' ? 'points-up' : pointDirection[dj.id] === 'down' ? 'points-down' : ''
+                pointDirection[rankingDJ.id] === 'up' ? 'points-up' : pointDirection[rankingDJ.id] === 'down' ? 'points-down' : ''
               }` }
             >
               <span className='d-flex align-items-center'>
-                { formatScore(points[dj.id] !== undefined ? points[dj.id] : dj.score) } { /* Formata e exibe a pontuação */ }
+                { formatScore(points[rankingDJ.id] !== undefined ? points[rankingDJ.id] : rankingDJ.score) } { /* Formata e exibe a pontuação */ }
                 <FaStar className='ms-2 points-icon' /> { /* Ícone de estrela */ }
-                { pointDirection[dj.id] === 'up' && <FaArrowUp className='ms-2 point-arrow up' /> } { /* Ícone de seta para cima se pontos aumentaram */ }
-                { pointDirection[dj.id] === 'down' && <FaArrowDown className='ms-2 point-arrow down' /> } { /* Ícone de seta para baixo se pontos diminuíram */ }
+                { pointDirection[rankingDJ.id] === 'up' && <FaArrowUp className='ms-2 point-arrow up' /> } { /* Ícone de seta para cima se pontos aumentaram */ }
+                { pointDirection[rankingDJ.id] === 'down' && <FaArrowDown className='ms-2 point-arrow down' /> } { /* Ícone de seta para baixo se pontos diminuíram */ }
               </span>
             </div>
             
             {/* Botão de expulsão */}
-            { dj.isOwner && (
+            { dj?.isOwner && dj.id !== rankingDJ.id && (
               <div className='flex-shrink-0 ms-3'>
                 <Button variant='danger' size='sm' title='Expulsar DJ' onClick={() => handleExpelDJ(dj)}>
                   <FaUserSlash /> { /* Ícone de expulsão */ }

@@ -6,5 +6,6 @@ export interface IDJ extends Identifiable {
   characterPath: string; // Caminho da imagem do personagem
   score: number; // Pontuação do DJ
   ranking: number; // Ranking do DJ
+  isOwner: boolean; // Indica se o DJ é o dono da pista
   trackId: number; // ID da pista
 }

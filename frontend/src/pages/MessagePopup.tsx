@@ -6,16 +6,16 @@ import PopupMessageData from '../types/PopupMessageData';
 // Props do componente MessagePopup
 interface Props {
   data: PopupMessageData;
-  handleClose: () => void;
+  onHide: () => void;
 }
 
 // Componente do popup de mensagem
-const MessagePopup: React.FC<Props> = ({ data, handleClose }) => {
+const MessagePopup: React.FC<Props> = ({ data, onHide }) => {
   const navigate = useNavigate(); // Hook para navegação
 
   // Função para fechar o popup e redirecionar, se necessário
   const handleClosePopup = () => {
-    handleClose(); // Fecha o popup
+    onHide(); // Fecha o popup
     // Se houver uma URL para redirecionar, navega para ela
     if (data.redirectTo) {
       navigate(data.redirectTo);

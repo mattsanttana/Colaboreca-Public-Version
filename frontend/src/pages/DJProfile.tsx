@@ -18,32 +18,30 @@ import useDJProfile from '../utils/useDJProfile';
 // Componentes que não precisam ser carregados inicialmente
 const MessagePopup = lazy (() => import('./MessagePopup'));
 const RankingChangePopup = lazy (() => import('./RankingChangePopup'));
-const TrackInfoPopup = lazy(() => import('./TrackInfoPopup'));
 const VotePopup = lazy(() => import('./VotePopup'));
 
 // Props recebidas pelo redux
 interface Props {
-  djToken: string; // Token do DJ
-  trackToken: string; // Token da pista
+  token: string; // Token do DJ
 }
 
 // Componente principal da página de perfil do DJ
-const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
+const DJProfile: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados da pista
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
-    showTrackInfoPopup, setTrackName, showRankingChangePopup, trackName, setShowTrackInfoPopup, trackId
-  } = useFetchTrackData(djToken);
+    setTrackName, showRankingChangePopup, trackName, trackId
+  } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(djToken)
+  } = useFetchPlaybackData(token)
 
   const { 
     addedMusics, djProfile, editedCharacterPath, isProfileOwner, setShowDJInfoPopup, setEditedCharacterPath, setShowCharacterPopup,
     setShowDeleteConfirmation, showCharacterPopup, showDeleteConfirmation, showDJInfoPopup
-  } = useDJProfile(djToken, setPopupMessageData)
+  } = useDJProfile(token, setPopupMessageData)
   
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu() // Hook personalizado para lidar com o menu
 
@@ -66,7 +64,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         { /* Componente de popup de confirmação de exclusão */ }
         <DeleteConfirmationPopup
           dj={ dj } // DJ logado
-          djToken={ djToken } // Token do DJ logado
+          token={ token } // Token do DJ logado
           onHide={ () => setShowDeleteConfirmation(false) } // Função para fechar o popup
           setPopupMessageData={ setPopupMessageData } // Função para definir os dados do popup de mensagem
           show={ showDeleteConfirmation } // Estado para exibir o popup de confirmação
@@ -74,7 +72,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         { /* Componente de popup para editar ou excluir o DJ */ }
         <EditOrDeleteDJPopup
           dj={ dj } // DJ logado
-          djToken={ djToken } // Token do DJ logado
+          token={ token } // Token do DJ logado
           editedCharacterPath={ editedCharacterPath } // Caminho do personagem editado
           setShow={ setShowDJInfoPopup } // Estado para mostrar o popup
           setEditedCharacterPath={ setEditedCharacterPath } // Função para definiri o personagem escolhido
@@ -86,31 +84,23 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
         {/* Componentes de popups de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
+          onHide={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
         />
         { /* Popup de alteração de ranking */ }
         <RankingChangePopup
-          showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+          show={ showRankingChangePopup } // Envia o estado do popup como prop
           dj={ dj } // Envia o DJ atual como prop
           previousRanking={ previousRanking } // Envia o ranking anterior como prop
           currentRanking={ djs } // Envia o ranking atual como prop
-          handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+          onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
           trackName={ trackName } // Nome da pista
-        />
-        { /* Popup de informações da pista */ }
-        <TrackInfoPopup
-          trackToken={ trackToken } // Token da pista
-          trackName={ trackName } // Nome da pista
-          setTrackName={ setTrackName } // Função para definir o nome da pista
-          show={ showTrackInfoPopup } // Estado do popup de informações da pista
-          setShow={ setShowTrackInfoPopup } // Função para definir o estado do popup
         />
         { /* popup de votação */ }
         <VotePopup
           djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
-          handleClose={ () => setShowVotePopup(false) }  // Função para fechar o popup
+          onHide={ () => setShowVotePopup(false) }  // Função para fechar o popup
           playingNow={ playingNow } // Envia o estado de reprodução como prop
-          showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+          show={ showVotePopup } // Envia o estado do popup como prop
         />
       </Suspense>
       { /* Verifica se está carregando */ }
@@ -135,10 +125,12 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
-            setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            setTrackName={ setTrackName }
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
+            token={ token } // Envia o token do DJ como prop
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
             trackId={ trackId } // Envia o ID da pista como prop
+            trackName={ trackName } // Envia o nome da pista como prop
           />
           <Row>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
@@ -193,7 +185,7 @@ const DJProfile: React.FC<Props> = ({ djToken, trackToken }) => {
   }
 
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token
+  token: state.reducer.token
 });
 
 const DJProfileConnected = connect(mapStateToProps)(DJProfile);

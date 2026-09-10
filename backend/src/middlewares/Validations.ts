@@ -94,18 +94,24 @@ export default class Validations {
 
   // Método para validar os dados necessários para criar uma pista
   static async validateCreateTrack(req: Request, res: Response, next: NextFunction) {
-    const { trackName, code } = req.body; // Pega o nome da pista e o código
+    const { trackName, djName, characterPath, code } = req.body; // Pega o nome da pista, o nome do DJ e o código
 
     // Se algum dos parâmetros estiver faltando, retorna um erro e o status correspondente
-    if (!trackName || !code) {
+    if (!trackName || !djName || !characterPath || !code) {
       return res.status(400).json({ message: 'Missing parameters' });
     }
 
-    const { error } = trackNameSchema.validate({ trackName }); // Valida o nome da pista
+    const { error: djNameError } = djNameSchema.validate({ djName }); // Valida o nome do DJ
+    const { error: trackNameError } = trackNameSchema.validate({ trackName }); // Valida o nome da pista
+
+    // Se houver um erro no nome do DJ, retorna um erro e o status correspondente
+    if (djNameError) {
+      return res.status(400).json({ message: djNameError.details[0].message });
+    }
 
     // Se houver um erro, retorna um erro e o status correspondente
-    if (error) {
-      return res.status(400).json({ message: error.details[0].message });
+    if (trackNameError) {
+      return res.status(400).json({ message: trackNameError.details[0].message });
     }
 
     next(); // Se tudo estiver correto, chama o próximo middleware

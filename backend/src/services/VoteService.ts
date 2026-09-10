@@ -94,6 +94,11 @@ export default class VoteService {
 
       const dj = await this.djModel.findOne({ id: decoded.id }); // Busca o DJ
 
+      // Se o DJ não for encontrado, retorna uma mensagem de erro
+      if (!dj) {
+        return { status: 'UNAUTHORIZED', data: { message: 'DJ not found' } }; // Retorna uma mensagem de erro
+      }
+
       const music = await this.playbackService.findDJAddedCurrentMusic(decoded.trackId); // Busca a música atual
 
       // Se a música não for encontrada, retorna uma mensagem de erro
@@ -105,7 +110,7 @@ export default class VoteService {
       }
 
       // Verifica se a música contém o musicId (ou se não ela foi adicionada pelo aplicativo)
-      if ('musicId' in music.data) {
+      if ('addedByApp' in music.data && !music.data.addedByApp) {
         const response = await this.voteModel.findOne({ djId: decoded.id, musicId: music.data.musicId }); // Busca o voto do DJ
 
         // Se o voto não for encontrado, retorna uma mensagem de que o DJ ainda não votou

@@ -6,8 +6,8 @@ import { PersistPartial } from 'redux-persist/es/persistReducer';
 import storage from 'redux-persist/lib/storage'
 import rootReducer from './reducers';
 
-export type RootState = {
-  djReducer: { token: string };
+export type RootState = { 
+  reducer: { token: string };
 } & PersistPartial;
 
 const persistConfig = {

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { Col, Container, Image, Row, Spinner } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -17,19 +17,16 @@ import useQueue from '../utils/useQueue';
 // Componentes que não precisam ser carregados inicialmente
 const MessagePopup = lazy(() => import('./MessagePopup'));
 const RankingChangePopup = lazy(() => import('./RankingChangePopup'));
-const TrackInfoPopup = lazy(() => import('./TrackInfoPopup'));
 const VotePopup = lazy(() => import('./VotePopup'));
 
 // Props recebidas pelo redux
 interface Props {
-  djToken: string; // Token do DJ
-  trackToken: string; // Token da pista
+  token: string; // Token do DJ
 }
 
 // Componente principal da página de pista
-const Track: React.FC<Props> = ({ djToken, trackToken }) => {
+const Track: React.FC<Props> = ({ token }) => {
   const { trackId } = useParams(); // Pega o ID da pista da URL
-  const [ showTrackInfoPopup, setShowTrackInfoPopup ] = useState(false); // Estado responsável por controlar o popup de informações da pista
 
   const navigate = useNavigate(); // Hook para navegação
 
@@ -37,13 +34,13 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData,
     setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
-  } = useFetchTrackData(djToken);
+  } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reproduçãos
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup, initialVoteCounts,
     pulsingVote, revealPulse, cardVisible, revealedVotes, hidePulse, displayVoteCounts
-  } = useFetchPlaybackData(djToken);
+  } = useFetchPlaybackData(token);
 
   const { queue, isLoadingQueue } = useQueue(playingNow)
 
@@ -63,31 +60,23 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
         {/* Popup de mensagem */ }
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
-        />
-        { /* Popup de informações da pista */ }
-        <TrackInfoPopup
-          setShow={ setShowTrackInfoPopup } // Função para definir o estado do popup
-          setTrackName={ setTrackName } // Função para definir o nome da pista
-          show={ showTrackInfoPopup } // Estado do popup de informações da pista
-          trackName={ trackName } // Nome da pista
-          trackToken={ trackToken } // Token da pista
+          onHide={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
         />
           { /* Popup de alteração de ranking */ }
           <RankingChangePopup
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
-            handleClose={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
+            onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
             previousRanking={ previousRanking } // Envia o ranking anterior como prop
-            showRankingChangePopup={ showRankingChangePopup } // Envia o estado do popup como prop
+            show={ showRankingChangePopup } // Envia o estado do popup como prop
             trackName={ trackName } // Nome da pista'
           />
           { /* Popup de votação */ }
           <VotePopup
             djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
-            handleClose={ () => setShowVotePopup(false) } // Função para fechar o popup
+            onHide={ () => setShowVotePopup(false) } // Função para fechar o popup
             playingNow={ playingNow } // Envia o estado de reprodução como prop
-            showVotePopup={ showVotePopup } // Envia o estado do popup como prop
+            show={ showVotePopup } // Envia o estado do popup como prop
           />
       </Suspense>
       { /* Verifica se está carregando */ }
@@ -113,10 +102,12 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
-            setShowTrackInfoPopup={ setShowTrackInfoPopup } // Função para abrir o popup de informações da pista
+            setTrackName={ setTrackName }
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
+            token={ token } // Envia o token do DJ como prop
             toggleMenu={ setIsMenuOpen } // Função para alternar o estado do menu
             trackId={ trackId } // Envia o ID da pista como prop
+            trackName={ trackName } // Envia o nome da pista como prop
           />
           <Row>
           { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
@@ -190,7 +181,7 @@ const Track: React.FC<Props> = ({ djToken, trackToken }) => {
 
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  djToken: state.djReducer.token, // Token do DJ
+  token: state.reducer.token, // Token do DJ
 });
 
 const TrackConnected = connect(mapStateToProps)(Track); // Conecta o componente ao Redux

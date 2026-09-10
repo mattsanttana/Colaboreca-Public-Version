@@ -1,27 +1,33 @@
-import { useCallback , useEffect, useState, useRef } from 'react';
-import { Button, Container, Image, Modal, Navbar } from 'react-bootstrap';
-import { FaBars, FaShareAlt } from 'react-icons/fa';
+import { useCallback , useEffect, useState, useRef, lazy, Suspense } from 'react';
+import { Button, Container, Image, Navbar, Spinner } from 'react-bootstrap';
+import { FaBars, FaCog, FaShareAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Menu from './Menu';
-import ShareTrack from './ShareTrack';
 import { horizontalLogo } from '../assets/images/characterPath';
 import { DJ } from '../types/DJ';
+
+// Componentes que não precisam ser carregados inicialmente
+const ShareTrackPopup = lazy(() => import('./ShareTrackPopup'));
+const TrackSettingsPopup = lazy(() => import('./TrackSettingsPopup'));
 
 // Props recebidas
 interface Props {
   currentRanking: DJ[]; // Ranking atual
   dj: DJ | undefined; // DJ logado (opcional porque o header também serve pra donos de pistas que não são DJs)
   isSlideMenuOpen?: boolean; // Estado do menu deslizante (opcional porque dispositivos não móveis não têm menu deslizante)
-  previousRanking: DJ[]; // Ranking anterior
-  setShowTrackInfoPopup: (isOpen: boolean) => void; // Função para abrir/fechar o modal com as informações da pista
+  previousRanking: DJ[]; // Ranking anteriorsetShowTrackInfoPopup: (isOpen: boolean) => void; // Função para abrir/fechar o modal com as informações da pista
+  setTrackName: (name: string) => void; // Função para definir o nome da pista
   showVotePopup?: boolean; // Indica se o popup de votação está aberto (opcional porque não é usado em todos os casos)
+  token: string; // Token do DJ
   toggleMenu?: (isOpen: boolean) => void; // Função para alternar o menu (opcional porque dispositivos não móveis não têm menu deslizante)
   trackId: string | undefined; // ID da pista atual (necessário para redirecionar corretamente)
+  trackName: string; // Nome da pista atual (necessário para exibir corretamente no modal de configurações)
 }
 
 // Componente Header que é responsável por exibir o cabeçalho da aplicação, incluindo o menu lateral e o botão de compartilhar
-const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previousRanking, setShowTrackInfoPopup, showVotePopup, toggleMenu, trackId }) => {
-  const [showPopup, setShowPopup] = useState(false); // Estado para controlar a exibição do modal de compartilhamento
+const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previousRanking, setTrackName, showVotePopup, toggleMenu, token, trackId, trackName }) => {
+  const [showShareTrackPopup, setShowShareTrackPopup] = useState(false); // Estado para controlar a exibição do modal de compartilhamento
+  const [showTrackSettingsPopup, setShowTrackSettingsPopup] = useState(false); // Estado para controlar a exibição do modal de configurações da pista
   
   const menuRef = useRef<HTMLDivElement>(null); // Referência para o menu deslizante
   const navigate = useNavigate(); // Hook para navegação entre páginas
@@ -61,6 +67,22 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
     <Container
       className='text-center text-light' // Classe para centralizar o texto e definir a cor do texto
     >
+      <Suspense fallback={ <Spinner /> }>
+       { /* Modal para compartilhar a pista ou mostrar detalhes da pista */ }
+       <ShareTrackPopup
+          show={ showShareTrackPopup }
+          onHide={ () => setShowShareTrackPopup(false) }
+          trackId={ trackId || '' }
+        />
+        { /* Modal para configurações da pista */ }
+        <TrackSettingsPopup
+          show={ showTrackSettingsPopup }
+          onHide={ () => setShowTrackSettingsPopup(false) }
+          token={ token }
+          trackName={ trackName }
+          setTrackName={ setTrackName }
+        />
+      </Suspense>
       {/* Menu deslizante */}
       <Container
         className={ `slide-menu ${ isSlideMenuOpen ? 'open' : '' }` } // Controla visibilidade do menu
@@ -73,7 +95,7 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
           left: 0, // Posição à esquerda
           position: 'fixed', // Posição fixa
           top: 0, // Posição no topo
-          transform: isSlideMenuOpen && !showPopup && !showVotePopup ? 'translateX(0)' : 'translateX(-100%)', // Transição para mostrar/ocultar o menu
+          transform: isSlideMenuOpen && !showShareTrackPopup && !showVotePopup ? 'translateX(0)' : 'translateX(-100%)', // Transição para mostrar/ocultar o menu
           transition: 'transform 0.3s ease', // Transição suave
           width: '250px', // Largura do menu
           zIndex: 2000, // Z-index para sobreposição
@@ -156,7 +178,7 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
         >
           <Container
             className='d-flex align-items-center justify-content-end' // Classe para justificar o conteúdo à direita
-            onClick={ () => setShowPopup(true) } // Chama a função para abrir o modal
+            onClick={ () => setShowShareTrackPopup(true) } // Chama a função para abrir o modal
             // Estilo do botão
             style={{
               cursor: 'pointer', // Cursor de ponteiro ao passar o mouse
@@ -166,34 +188,28 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
             <FaShareAlt style={{ fontSize: '1.5rem' }} />
           </Container>
         </Container>
-      </Navbar>
-      { /* Modal para compartilhar a pista ou mostrar detalhes da pista */ }
-      <Modal
-        className='custom-modal' // Classe personalizada para o modal
-        onHide={ () => setShowPopup(false) } // Chama a função para fechar o modal
-        show={ showPopup } // Controla a visibilidade do modal
-        size='lg' // Tamanho do modal
-      >
-        { /* Cabeçalho do modal */ }
-        <Modal.Header
-          className='custom-modal-header' // Classe personalizada para o cabeçalho do modal
-          closeButton  // Botão para fechar o modal
+        { /* Botão de configurações da pista */ }
+        <Container
+          style={{ 
+            alignItems: 'center',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            width: 60,
+          }}
         >
-          { /* Título do modal */ }
-          <Modal.Title>
-            Compartilhar Pista
-          </Modal.Title>
-        </Modal.Header>
-        { /* Corpo do modal */ }
-        <Modal.Body>
-          { /* Componente de compartilhamento ou detalhes da pista */ }
-          <ShareTrack
-            pageType={ 'track' } // Tipo da página (detalhes ou compartilhamento)
-            setShowPopup={ setShowTrackInfoPopup } // Função para abrir/fechar o modal
-            trackId={ trackId } // ID da pista
-          />
-        </Modal.Body>
-      </Modal>
+          <Container
+            className='d-flex align-items-center justify-content-end' // Classe para justificar o conteúdo à direita
+            onClick={ () => setShowTrackSettingsPopup(true) } // Chama a função para abrir o modal de configurações
+            // Estilo do botão
+            style={{
+              cursor: 'pointer', // Cursor de ponteiro ao passar o mouse
+              width: '50px', // Largura do botão
+            }}
+          > 
+            <FaCog style={{ fontSize: '1.5rem' }} />
+          </Container>
+        </Container>
+      </Navbar>
     </Container>
   );
 }

@@ -7,6 +7,7 @@ import JWT from '../utils/JWT';
 import PlaybackActions from '../utils/PlaybackActions';
 import { getSocket } from '../utils/socketIO';
 import SpotifyActions from '../utils/SpotifyActions';
+import { IMusic } from '../interfaces/musics/IMusic';
 
 // Essa classe contém toda a lógica de negócio relacionada à reprodução de músicas
 export default class PlaybackService {
@@ -189,7 +190,7 @@ export default class PlaybackService {
         return { status: 'NOT_FOUND', data: { message: 'DJ or Track not found' } };
       }
 
-      const musicsAddedByDJ = track.colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.djId === djId); // Filtrar as músicas que foram adicionadas pelo DJ
+      const musicsAddedByDJ = track.colaborecaQueue.filter((colaborecaTrack: IMusic) => colaborecaTrack.djId === djId); // Filtrar as músicas que foram adicionadas pelo DJ
 
       // Se a fila do Spotify ou do Colaboreca não forem encontradas, retornar um erro
       if (!musicsAddedByDJ) {

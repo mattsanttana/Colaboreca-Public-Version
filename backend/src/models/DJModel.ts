@@ -6,12 +6,12 @@ export default class DJModel {
   private djModel = SequelizeDJ; // Instância do modelo de DJ
 
   // Método para criar um DJ
-  async create(djName: string, characterPath: string, trackId: number, options?: { transaction: Transaction }) {
+  async create(data: { djName: string, characterPath: string, trackId: number, isOwner?: boolean }, options?: { transaction: Transaction }) {
     // Verifica se existem opções de transação e cria um DJ
     const response = options ?
-      await this.djModel.create({ djName, characterPath, trackId }, options) :
-        await this.djModel.create({ djName, characterPath, trackId });
-    return response.get(); // Retorna o DJ criado
+      await this.djModel.create(data, { ...options }) :
+        await this.djModel.create(data);
+    return response; // Retorna a resposta
   }
 
   // Método para buscar todos os DJs

@@ -15,14 +15,14 @@ const MessagePopup = lazy(() => import('./MessagePopup'));
 // Props recebidas
 interface Props {
   djPlayingNow: DJPlayingNow | null; // DJ que está tocando
-  handleClose: () => void; // Função para abrir/fechar o popup de votação
+  onHide: () => void; // Função para abrir/fechar o popup de votação
   playingNow: PlayingNow | null; // Música que está tocando
-  showVotePopup: boolean; // Estado que controla se o popup de votação está aberto
+  show: boolean; // Estado que controla se o popup de votação está aberto
   token: string; // Token do DJ
 }
 
 // Componente principal do popup de votação
-const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playingNow, token }) => {
+const Vote: React.FC<Props> = ({ djPlayingNow, onHide, show, playingNow, token }) => {
   const [isSubmitting, setIsSubmitting] = useState(false); // Estado que controla se o voto está sendo enviado
   const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false }); // Mensagem do popup
   const [vote, setVote] = useState(2); // Estado que controla o voto selecionado (0 a 4)
@@ -31,7 +31,7 @@ const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playi
 
   useEffect(() => {
     if (!playingNow || !playingNow?.is_playing) {
-      handleClose();
+      onHide();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playingNow]); // Fecha o popup se a música parar de tocar
@@ -44,7 +44,7 @@ const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playi
 
     try {
       await voteActions.vote(token, playingNow?.item.uri, voteOptions[vote]); // Envia o voto usando o hook personalizado
-      handleClose(); // Fecha o popup após enviar o voto
+      onHide(); // Fecha o popup após enviar o voto
     } catch (error) {
       setPopupMessageData({
         message: 'Erro ao enviar o voto. Tente novamente mais tarde.', // Mensagem de erro
@@ -63,12 +63,12 @@ const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playi
       <Suspense fallback={ <Spinner /> }>
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
+          onHide={ () => setPopupMessageData({ ...popupMessageData, show: false }) } // Função para fechar o popup
         />
       </Suspense>
       <Modal
         className='custom-modal' // Classe personalizada para o modal
-        show={ showVotePopup } // Estado do popup de votação
+        show={ show } // Estado do popup de votação
         dialogClassName='vote-modal' /* adiciona classe específica pro modal */
       >
         { /* Cabeçalho do modal */ }
@@ -144,7 +144,7 @@ const Vote: React.FC<Props> = ({ djPlayingNow, handleClose, showVotePopup, playi
 
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token, // Token do DJ
+  token: state.reducer.token, // Token do DJ
 });
 
 const VotePopup = connect(mapStateToProps)(Vote); // Conecta o componente ao Redux

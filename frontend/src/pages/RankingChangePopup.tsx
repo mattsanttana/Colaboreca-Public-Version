@@ -7,18 +7,18 @@ import RankingTable from './RankingTable';
 interface Props {
   currentRanking: DJ[]; // Ranking atual
   dj: DJ | undefined; // DJ atual
-  handleClose: () => void; // Função para fechar o popup
+  onHide: () => void; // Função para fechar o popup
   previousRanking: DJ[]; // Ranking anterior
-  showRankingChangePopup: boolean; // Estado para controlar a exibição do popup
+  show: boolean; // Estado para controlar a exibição do popup
   trackName: string; // Nome da pista
 }
 
 // Componente principal do popup de animação de alteração de ranking
-const RankingChangePopup: React.FC<Props> = ({ currentRanking, dj, handleClose, previousRanking, showRankingChangePopup, trackName }) => (
+const RankingChangePopup: React.FC<Props> = ({ currentRanking, dj, onHide, previousRanking, show, trackName }) => (
   <Modal
     className='custom-modal custom-modal-header' // Classe personalizada
-    onHide={ handleClose } // Função para fechar o popup
-    show={ showRankingChangePopup } // Estado para mostrar o popup
+    onHide={ onHide } // Função para fechar o popup
+    show={ show } // Estado para mostrar o popup
   >
     <Modal.Header
       closeButton // Botão de fechar

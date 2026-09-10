@@ -4,7 +4,7 @@ import { connect, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { horizontalLogo, charactersPaths, logo } from '../assets/images/characterPath';
 import { RootState } from '../redux/store';
-import { saveDJ } from '../redux/actions';
+import { saveToken } from '../redux/actions';
 import useTrack from '../utils/useTrack'
 
 const CharactersSelectPopup = lazy(() => import('./CharactersSelectPopup')); // Componente que não precisa ser carregado inicialmente
@@ -29,19 +29,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
   const dispatch = useDispatch(); // Hook para despachar ações do Redux
   const navigate = useNavigate(); // Hook para navegar entre páginas
   const trackActions = useTrack(); // Hook personalizado pra lidar com as ações relacionadas à pista
-  const characterRef = useRef<HTMLImageElement>(null); // Referência para o avatar do DJ
-
-  // UseEffect responsável por monitorar a entrada de nome da pista e verificar se o comprimento é valido
-  useEffect(() => {
-    // Se o comprimento for maior que 3 e menor que 32 o botão é habilitado
-    if (trackName.length >= 3 && trackName.length <= 32  && djName.length >= 3 && djName.length <= 16) {
-      setButtonDisabled(false);
-      // Caso contrário o botão é desabilitado
-    } else {
-      setButtonDisabled(true);
-    }
-  }
-  , [trackName, djName]);
+  const characterRef = useRef<HTMLImageElement>(null); // Referência para o avatar do DJ  
 
   // UseEffect responsável por verificar se uma pista já foi criada neste dispositivo
   useEffect(() => {
@@ -59,6 +47,19 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+
+  // UseEffect responsável por monitorar a entrada de nome da pista e verificar se o comprimento é valido
+  useEffect(() => {
+    // Se o comprimento for maior que 3 e menor que 32 o botão é habilitado
+    if (trackName.length >= 3 && trackName.length <= 32  && djName.length >= 3 && djName.length <= 16) {
+      setButtonDisabled(false);
+      // Caso contrário o botão é desabilitado
+    } else {
+      setButtonDisabled(true);
+    }
+  }
+  , [trackName, djName]);
 
   // Funçao responsável por capturar a mudança na entrada
   const handleChangeTrackName = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +79,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
       const track = await trackActions.createTrack(trackName, djName, characterPath, code); // Chama a função de criar a pista
       // Caso retorne o status 201
       if (track?.status === 201) {
-        dispatch(saveDJ(track.data.token)); // Dispacha a ação de salvar o token do DJ no redux
+        dispatch(saveToken(track.data.token)); // Dispacha a ação de salvar o token do DJ no redux
         navigate(`/track/${ track.data.id }`); // Redireciona o usuário pra pista
         // Caso o status seja igual a 401
       } else if (track?.status === 401) {
@@ -130,7 +131,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
         {/* Componente de popup de mensagem */}
         <MessagePopup
           data={ popupMessageData } // Dados da mensagem
-          handleClose={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
+          onHide={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
       </Suspense>
       { /* Verifica se está carregando */ }
@@ -541,7 +542,7 @@ const CreateTrack: React.FC<Props> = ({ code, token }) => {
 
 // Função para mapear o estado do Redux para as props do componente
 const mapStateToProps = (state: RootState) => ({
-  token: state.djReducer.token // Token da pista
+  token: state.reducer.token // Token da pista
 });
 
 const CreateTrackConnected = connect(mapStateToProps)(CreateTrack); // Conecta o componente ao Redux
