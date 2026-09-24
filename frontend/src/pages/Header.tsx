@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Menu from './Menu';
 import { horizontalLogo } from '../assets/images/characterPath';
 import { DJ } from '../types/DJ';
+import { Settings } from '../types/Settings';
 
 // Componentes que não precisam ser carregados inicialmente
 const ShareTrackPopup = lazy(() => import('./ShareTrackPopup'));
@@ -15,7 +16,10 @@ interface Props {
   currentRanking: DJ[]; // Ranking atual
   dj: DJ | undefined; // DJ logado (opcional porque o header também serve pra donos de pistas que não são DJs)
   isSlideMenuOpen?: boolean; // Estado do menu deslizante (opcional porque dispositivos não móveis não têm menu deslizante)
+  onSettingsChange?: (settings: Settings) => void; // Atualiza as configurações no componente pai
+  refreshTrackSettings?: () => Promise<void>; // Busca as configurações atuais no banco
   previousRanking: DJ[]; // Ranking anteriorsetShowTrackInfoPopup: (isOpen: boolean) => void; // Função para abrir/fechar o modal com as informações da pista
+  queueSettings?: Settings; // Configurações persistidas da pista
   setTrackName: (name: string) => void; // Função para definir o nome da pista
   showVotePopup?: boolean; // Indica se o popup de votação está aberto (opcional porque não é usado em todos os casos)
   token: string; // Token do DJ
@@ -25,7 +29,7 @@ interface Props {
 }
 
 // Componente Header que é responsável por exibir o cabeçalho da aplicação, incluindo o menu lateral e o botão de compartilhar
-const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previousRanking, setTrackName, showVotePopup, toggleMenu, token, trackId, trackName }) => {
+const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, onSettingsChange, previousRanking, queueSettings, refreshTrackSettings, setTrackName, showVotePopup, toggleMenu, token, trackId, trackName }) => {
   const [showShareTrackPopup, setShowShareTrackPopup] = useState(false); // Estado para controlar a exibição do modal de compartilhamento
   const [showTrackSettingsPopup, setShowTrackSettingsPopup] = useState(false); // Estado para controlar a exibição do modal de configurações da pista
   
@@ -62,6 +66,11 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
     }
   };
 
+  const openTrackSettings = async () => {
+    await refreshTrackSettings?.();
+    setShowTrackSettingsPopup(true);
+  };
+
   return (
     // Container principal do cabeçalho
     <Container
@@ -76,6 +85,8 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
         />
         { /* Modal para configurações da pista */ }
         <TrackSettingsPopup
+          queueSettings={ queueSettings }
+          onSettingsChange={ onSettingsChange }
           show={ showTrackSettingsPopup }
           onHide={ () => setShowTrackSettingsPopup(false) }
           token={ token }
@@ -199,7 +210,7 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, previous
         >
           <Container
             className='d-flex align-items-center justify-content-end' // Classe para justificar o conteúdo à direita
-            onClick={ () => setShowTrackSettingsPopup(true) } // Chama a função para abrir o modal de configurações
+            onClick={ openTrackSettings } // Busca as configurações atuais antes de abrir o popup
             // Estilo do botão
             style={{
               cursor: 'pointer', // Cursor de ponteiro ao passar o mouse

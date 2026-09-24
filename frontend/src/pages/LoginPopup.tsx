@@ -1,13 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Button, Col, Container, Image, OverlayTrigger, Tooltip, Row } from 'react-bootstrap';
+import { Button, Col, Container, Image, Modal, OverlayTrigger, Tooltip, Row } from 'react-bootstrap';
 import { FaQuestionCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import CreateTrackConnected from './CreateTrack';
 import { logo } from '../assets/images/characterPath';
 
-// Página de login
-const Login = () => {
+interface Props {
+  onHide?: () => void;
+  show?: boolean;
+}
+
+// Popup de login e callback da autenticação
+const LoginPopup: React.FC<Props> = ({ onHide, show = true }) => {
   const [code, setCode] = useState(''); // Armazena o código de autenticação
   const [phase, setPhase] = useState(1); // Controla a fase do login (1: tela de login, 2: tela de criação de pista)
+  const navigate = useNavigate();
+
+  const handleHide = () => {
+    if (onHide) {
+      onHide();
+    } else {
+      navigate('/');
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search); // Pega os parâmetros da URL
@@ -25,41 +40,42 @@ const Login = () => {
     window.location.href = 'http://localhost:3001/tracks/login'; // URL do backend para autenticação
   };
 
-  return (
-    // Se a fase for 1, exibe a tela de login
-    phase === 1 ? (
-      <Container
-        className='d-flex align-items-center justify-content-center vh-100 text-light' // Classe para centralizar o conteúdo
+  return phase === 1 ? (
+    <Modal centered className='custom-modal' dialogClassName='login-popup-dialog' onHide={ handleHide } show={ show }>
+      <Modal.Header className='custom-modal-header' closeButton>
+        <Modal.Title>Entrar no Colaboreca</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className='py-2'>
+        <Container
+        className='d-flex align-items-center justify-content-center text-light' // Classe para centralizar o conteúdo
       >
         <Row
-          className='w-100' // Classe para ocupar toda a largura
+          className='w-100 g-3' // Classe para ocupar toda a largura
         >
           <Col
             className='d-flex justify-content-center align-items-center' // Classe para centralizar o conteúdo
-            md={ 6 } // Largura da coluna
+            xs={ 4 } md={ 5 } // Largura da coluna
           >
             { /* Logo do aplicativo */ }
             <Image
               alt='Logo do aplicativo' // Texto alternativo
               className='img-fluid shadow-lg logo' // Classe para estilização
               src={ logo } // Caminho da imagem
-              style={{ maxWidth: '350px' }} // Estilo para definir a largura máxima
+              style={{ maxWidth: '100px' }} // Estilo para definir a largura máxima
             />
           </Col>
           <Col
             className='d-flex flex-column justify-content-center align-items-center text-center' // Classe para centralizar o conteúdo
-            md={ 6 } // Largura da coluna
+            xs={ 8 } md={ 7 } // Largura da coluna
           >
             { /* Título da página */ }
-            <h1
-              className='login-title' // Classe para estilização
-            >
+            <h1 className='login-title' style={{ color: '#fff4c2', fontSize: '1.35rem', margin: 0, textAlign: 'center' }}>
                 Escolha uma forma de fazer login
             </h1>
-            <Container>
+            <Container className='px-0'>
               { /* Botão para login com Spotify Premium */ }
               <Button
-                className='menu-button menu-button-spotify mt-3' // Classe para estilização
+                className='menu-button menu-button-spotify mt-2' // Classe para estilização
                 onClick={ handleClick } // Função chamada ao clicar no botão
                 variant='primary' // Cor do botão
               >
@@ -92,21 +108,19 @@ const Login = () => {
             <Button
               className='menu-button mt-3' // Classe para estilização
               disabled={ true } // Botão desabilitado
-              style={{ marginTop: '20%' }} // Estilo para definir a margem superior
+              style={{ marginTop: '0.75rem' }} // Estilo para definir a margem superior
               variant='secondary' // Cor do botão
             >
               Entrar com YT Music (Em breve)
             </Button>
           </Col>
         </Row>
-      </Container>
-    // Se a fase for 2, exibe a tela de criação de pista
-    ) : (
-      <CreateTrackConnected
-        code={ code } // Código de autenticação
-      />
-    )
+        </Container>
+      </Modal.Body>
+    </Modal>
+  ) : (
+    <CreateTrackConnected code={ code } />
   );
 };
 
-export default Login;
+export default LoginPopup;

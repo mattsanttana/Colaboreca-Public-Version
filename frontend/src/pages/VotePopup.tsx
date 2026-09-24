@@ -58,7 +58,7 @@ const Vote: React.FC<Props> = ({ djPlayingNow, onHide, show, playingNow, token }
   
   // Renderiza o componente
   return (
-    <Container>
+    <Container className='px-0'>
       { /* Caso o popup tenha que ser aberto e ainda não tiver carregado renderizar um spinner */ }
       <Suspense fallback={ <Spinner /> }>
         <MessagePopup
@@ -67,12 +67,14 @@ const Vote: React.FC<Props> = ({ djPlayingNow, onHide, show, playingNow, token }
         />
       </Suspense>
       <Modal
+        centered
         className='custom-modal' // Classe personalizada para o modal
+        onHide={ onHide }
         show={ show } // Estado do popup de votação
         dialogClassName='vote-modal' /* adiciona classe específica pro modal */
       >
         { /* Cabeçalho do modal */ }
-        <Modal.Header className='custom-modal-header'> {/* Classe personalizada para o cabeçalho do modal */ }
+        <Modal.Header className='custom-modal-header' closeButton> {/* Classe personalizada para o cabeçalho do modal */ }
           { /* Ícone de ajuda com informações sobre os votos */ }
           <OverlayTrigger
             overlay={
@@ -95,12 +97,13 @@ const Vote: React.FC<Props> = ({ djPlayingNow, onHide, show, playingNow, token }
             placement='bottom-start' // Posição do tooltip
           >
             <div
-              className='ms-2' // Classe para adicionar margem
-              // Estilo para posicionar o ícone de ajuda
+              aria-label='Como funcionam os votos?'
+              className='ms-2'
+              // Estilos para posicionar o ícone de ajuda
               style={{
-                marginTop: '5%', // Margem superior
-                position: 'absolute', // Posição absoluta
-                right: 40 // Distância da direita
+                alignItems: 'center',
+                display: 'flex',
+                marginLeft: 'auto',
               }}
             >
               { /* Ícone de ajuda */ }
@@ -112,10 +115,10 @@ const Vote: React.FC<Props> = ({ djPlayingNow, onHide, show, playingNow, token }
               />
             </div>
           </OverlayTrigger>
-          <Modal.Title>O que você acha da música que <strong>{ djPlayingNow?.addedBy }</strong> está tocando?</Modal.Title> {/* Título do modal */}
+          <Modal.Title className='me-3'>O que você acha da música que <strong>{ djPlayingNow?.addedBy }</strong> está tocando?</Modal.Title> {/* Título do modal */}
         </Modal.Header>
         { /* Corpo do modal */ }
-        <Modal.Body>
+        <Modal.Body className='modal-modal-body'>
           { /* Renderiza a mesa de discotecagem com informações do DJ e da música */ }
           <DJTable
             djPlayingNow={ djPlayingNow } // DJ que está tocando
@@ -128,11 +131,12 @@ const Vote: React.FC<Props> = ({ djPlayingNow, onHide, show, playingNow, token }
           />
         </Modal.Body>
         { /* Rodapé do modal */ }
-        <Modal.Footer style={{ borderTop: 'none' }}>
+        <Modal.Footer className='justify-content-center border-0'>
           <Button
+            className='primary-button w-100'
             disabled={ isSubmitting } // Desabilita o botão se o estado de envio for verdadeiro
             onClick={ handleVoteSubmit } // Função para enviar o voto
-            className='primary-button' // Classe personalizada para o botão
+            style={{ maxWidth: '300px' }}
           >
             { isSubmitting ? <Spinner animation='border' size='sm' /> : 'Enviar Voto' } { /* Caso o voto esteja sendo enviado renderiza um spinner no botão */ }
           </Button>

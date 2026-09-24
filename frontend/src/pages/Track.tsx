@@ -33,7 +33,7 @@ const Track: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados da pista
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData,
-    setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackName
+    queueSettings, refreshTrackSettings, setShowRankingChangePopup, setQueueSettings, setTrackName, showRankingChangePopup, trackName
   } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reproduçãos
@@ -102,6 +102,9 @@ const Track: React.FC<Props> = ({ token }) => {
             dj={ dj } // Envia o DJ atual como prop
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
+            queueSettings={ queueSettings }
+            onSettingsChange={ setQueueSettings }
+            refreshTrackSettings={ refreshTrackSettings }
             setTrackName={ setTrackName }
             showVotePopup={ showVotePopup } // Envia o estado do popup de votação
             token={ token } // Envia o token do DJ como prop

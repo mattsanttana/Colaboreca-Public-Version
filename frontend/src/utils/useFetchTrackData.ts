@@ -4,12 +4,14 @@ import useTrack from './useTrack';
 import { DJ } from '../types/DJ';
 import { io } from 'socket.io-client';
 import { useParams } from 'react-router-dom';
+import { Settings } from '../types/Settings';
 
 const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
 
 const useFetchTrackData = (djToken: string) => {
   const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [trackName, setTrackName] = useState(''); // Nome da pista
+  const [queueSettings, setQueueSettings] = useState<Settings>(); // Configurações persistidas da pista
   const [dj, setDJ] = useState<DJ>(); // DJ atual
   const [djs, setDJs] = useState<DJ[]>([]); // Lista de DJs
   const [globalPreviousRanking, setGlobalPreviousRanking] = useState<DJ[]>([]); // Para animações
@@ -20,6 +22,21 @@ const useFetchTrackData = (djToken: string) => {
 
   const djActions = useDJ(); // Ações do DJ
   const trackActions = useTrack(); // Ações da pista
+
+  const refreshTrackSettings = async () => {
+    if (!trackId) return;
+
+    const fetchedTrack = await trackActions.getTrackById(Number(trackId));
+
+    if (fetchedTrack?.status === 200) {
+      setTrackName(fetchedTrack.data.trackName);
+      setQueueSettings({
+        queueOpen: fetchedTrack.data.queueOpen,
+        maxSongsPerDJ: fetchedTrack.data.maxSongsPerDJ,
+        veryBadVotesToSkip: fetchedTrack.data.veryBadVotesToSkip,
+      });
+    }
+  };
 
   // UseEffect para buscar dados iniciais
   useEffect(() => {
@@ -46,6 +63,11 @@ const useFetchTrackData = (djToken: string) => {
           // Verifica se a pista existe
           if (fetchedTrack?.status === 200) {
             setTrackName(fetchedTrack?.data.trackName); // Define o nome da pista
+            setQueueSettings({
+              queueOpen: fetchedTrack.data.queueOpen,
+              maxSongsPerDJ: fetchedTrack.data.maxSongsPerDJ,
+              veryBadVotesToSkip: fetchedTrack.data.veryBadVotesToSkip,
+            });
             setDJs(fetchedDJData?.data.djs); // Define a lista de DJs
             setDJ(fetchedDJData?.data.dj); // Define o DJ atual
           } else {
@@ -75,8 +97,18 @@ const useFetchTrackData = (djToken: string) => {
       }
 
       // Socket que recebe as atualizações feitas no nome da pista
-      const handleTrackUpdated = (updatedTrack: { trackName: string }) => { 
+      const handleTrackUpdated = (updatedTrack: {
+        trackName: string;
+        queueOpen: boolean;
+        maxSongsPerDJ: number;
+        veryBadVotesToSkip: number;
+      }) => {
         setTrackName(updatedTrack.trackName); // Atualiza o nome da pista
+        setQueueSettings({
+          queueOpen: updatedTrack.queueOpen,
+          maxSongsPerDJ: updatedTrack.maxSongsPerDJ,
+          veryBadVotesToSkip: updatedTrack.veryBadVotesToSkip,
+        });
       }
 
       // Socket que recebe a informação de que a pista foi deletada
@@ -167,9 +199,12 @@ const useFetchTrackData = (djToken: string) => {
     globalPreviousRanking,
     popupMessageData, // Dados do popup de mensagem
     previousRanking, // Ranking anterior
+    refreshTrackSettings,
+    setQueueSettings,
     setPopupMessageData, // Função para definir os dados do popup de mensagem
     setShowRankingChangePopup, // Função para definir o estado do popup de mudança de ranking
     setShowTrackInfoPopup, // Função para definir o estado do popup de informações da pista
+    queueSettings,
     setTrackName, // Função para definir o nome da pista
     showRankingChangePopup, // Estado do popup de mudança de ranking
     showTrackInfoPopup, // Estado do popup de informações da pista

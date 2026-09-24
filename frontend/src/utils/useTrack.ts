@@ -1,10 +1,24 @@
 const useTrack = () => {
-  const createTrack = async (trackName: string, djName: string, characterPath: string, code: string) => {
+  const createTrack = async (
+    trackName: string,
+    djName: string,
+    characterPath: string,
+    code: string,
+    queueSettings?: { queueOpen: boolean; maxSongsPerDJ: number; veryBadVotesToSkip: number }
+  ) => {
     try {
       const response = await fetch('http://localhost:3001/tracks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackName, djName, characterPath, code }),
+        body: JSON.stringify({
+          trackName,
+          djName,
+          characterPath,
+          code,
+          queueOpen: queueSettings?.queueOpen ?? true,
+          maxSongsPerDJ: queueSettings?.maxSongsPerDJ ?? 3,
+          veryBadVotesToSkip: queueSettings?.veryBadVotesToSkip ?? 0,
+        }),
       });
 
       const data = await response.json();
@@ -93,15 +107,19 @@ const useTrack = () => {
     }
   }
 
-  const updateTrack = async (trackName: string, token: string) => {
+  const updateTrack = async (
+    data: string | { trackName: string; queueOpen: boolean; maxSongsPerDJ: number; veryBadVotesToSkip: number },
+    token: string
+  ) => {
     try {
+      const trackData = typeof data === 'string' ? { trackName: data } : data;
       const response = await fetch(`http://localhost:3001/tracks`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${ token }`
         },
-        body: JSON.stringify({ trackName }),
+        body: JSON.stringify(trackData),
       });
 
       return {

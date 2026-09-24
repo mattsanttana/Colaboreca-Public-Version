@@ -93,7 +93,12 @@ const usePlayback = () => {
         body: JSON.stringify({ cover, name, artists, musicURI })
       });
 
-      return response;
+      const data = await response.json();
+
+      return {
+        data,
+        status: response.status,
+      };
     } catch (error) {
       console.error(error);
     }

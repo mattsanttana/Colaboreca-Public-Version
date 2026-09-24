@@ -1,54 +1,74 @@
-import { useNavigate } from 'react-router-dom';
-import { Button, Col, Container, Image, Row } from 'react-bootstrap';
-import { logo } from '../assets/images/characterPath';
+import { Button, Container, Image } from 'react-bootstrap';
+import { horizontalLogo } from '../assets/images/characterPath';
+import { useState } from 'react';
+import EnterTrack from './EnterTrack';
+import Login from './LoginPopup';
 
 // Página inicial
 const Home = () => {
-  const navigate = useNavigate(); // Hook para navegação entre páginas
+  const [showLogin, setShowLogin] = useState(false);
+  const [showEnterTrack, setShowEnterTrack] = useState(false);
 
   return (
-    <Container
-      className='d-flex align-items-center justify-content-center vh-100 text-light' // Classes para centralizar o conteúdo
-    >
-      <Row
-        className='w-100' // Largura da linha
+    <>
+      <Container
+        className='d-flex flex-column align-items-center justify-content-center gradient-border'
+        style={{
+          width: '100%',
+          maxWidth: '500px',
+          minHeight: '100dvh',
+          padding: '1rem',
+          boxSizing: 'border-box',
+        }}
       >
-        <Col
-          className='d-flex justify-content-center align-items-center' // Classes para centralizar o conteúdo
-          md={ 6 } // Largura da coluna
+        <Image
+          alt='Logo horizontal do Colaboreca'
+          className='img-fluid shadow-lg mb-4'
+          src={ horizontalLogo }
+          style={{ maxWidth: '190px' }}
+        />
+        <h1
+          style={{
+            color: '#fff4c2',
+            fontSize: '2.1rem',
+            fontWeight: 'bold',
+            marginBottom: '0.75rem',
+            textAlign: 'center',
+            textShadow: '0 0 10px rgba(255, 244, 194, 0.22), 0 0 24px rgba(76, 201, 240, 0.12)',
+          }}
         >
-          {/* Logo do aplicativo */}
-          <Image 
-            alt='Logo do aplicativo' // Texto alternativo
-            className='img-fluid shadow-lg logo'  // Class para estilização
-            src={ logo } // Caminho da imagem
-            style={{ maxWidth: '350px' }} // Estilo para definir a largura máxima
-          />
-        </Col>
-        <Col
-          className='d-flex flex-column justify-content-center align-items-center' // Classes para centralizar o conteúdo
-          md={ 6 } // Largura da coluna
+          Comece sua experiência
+        </h1>
+        <p
+          style={{
+            color: '#a8dadc',
+            marginBottom: '1.5rem',
+            maxWidth: '300px',
+            textAlign: 'center',
+          }}
         >
-            {/* Título da página */}
-            <h1 className='login-title'>Crie ou entre numa pista para começar</h1>
-            {/* Botões de navegação */}
-            <Button 
-              className='menu-button'  // Classe para estilização
-              onClick={() => navigate('/login')} // Navegação para a página de login
-              variant='primary' // Cor do botão
-            >
-              Criar Uma Pista
-            </Button>
-            <Button 
-              className='menu-button' // Classe para estilização
-              onClick={() => navigate('/enter-track')} // Navegação para a página de entrar numa pista
-              variant='secondary' // Cor do botão
-            >
-              Entrar Numa Pista
-            </Button>
-        </Col>
-      </Row>
-    </Container>
+          Crie uma pista ou entre em uma que já está acontecendo.
+        </p>
+        <div className='d-flex flex-column gap-3' style={{ width: '100%', maxWidth: '300px' }}>
+          <Button
+            className='primary-button w-100'
+            onClick={ () => setShowLogin(true) }
+            variant='primary'
+          >
+            Criar uma pista
+          </Button>
+          <Button
+            className='w-100'
+            onClick={ () => setShowEnterTrack(true) }
+            variant='outline-light'
+          >
+            Entrar numa pista
+          </Button>
+        </div>
+      </Container>
+      <Login onHide={ () => setShowLogin(false) } show={ showLogin } />
+      <EnterTrack onHide={ () => setShowEnterTrack(false) } show={ showEnterTrack } />
+    </>
   );
 };
 

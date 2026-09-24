@@ -16,17 +16,19 @@ interface Props {
 // Componente principal do popup de animação de alteração de ranking
 const RankingChangePopup: React.FC<Props> = ({ currentRanking, dj, onHide, previousRanking, show, trackName }) => (
   <Modal
-    className='custom-modal custom-modal-header' // Classe personalizada
+    centered
+    className='custom-modal ranking-change-modal' // Classe personalizada
     onHide={ onHide } // Função para fechar o popup
     show={ show } // Estado para mostrar o popup
   >
     <Modal.Header
+      className='custom-modal-header'
       closeButton // Botão de fechar
-      style={{ borderBottom: 'none' }} // Estilo do cabeçalho
     >
       <Modal.Title>Você subiu no ranque!</Modal.Title>
     </Modal.Header>
     <Modal.Body
+      className='modal-modal-body'
       // Estilo do corpo do modal
       style={{
         maxHeight: '70vh', // Altura máxima do modal
@@ -45,7 +47,7 @@ const RankingChangePopup: React.FC<Props> = ({ currentRanking, dj, onHide, previ
         previousRanking={ previousRanking } // Ranking anterior
       />
     </Modal.Body>
-    <Modal.Footer style={{ borderTop: 'none' }} />
+    <Modal.Footer className='border-0 p-1' />
   </Modal>
 );
 

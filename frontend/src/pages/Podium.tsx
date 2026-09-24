@@ -32,7 +32,6 @@ const Podium: React.FC<Props> = ({ dj, djs , trackName }) => {
         // Estilo do card
         style={{
           boxShadow: '0 0 0 0.5px #ffffff', // Sombra do card
-          top: '60px', // Distância do topo
         }}
       >
         <Card.Header

@@ -56,17 +56,13 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
           ) : null }
           { /* Campo de entrada para busca de DJs */ }
           <FormControl
-            className='search-input'
+            className='custom-input'
             type='text'
             placeholder='Buscar DJ'
             value={ search } // Valor do campo de busca
             onChange={e => setSearch(e.target.value)} // Atualiza o estado da busca ao digitar
             style={{
               paddingLeft: '2rem', // espaço pro ícone
-              backgroundColor: '#212529',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
               paddingRight: '2rem' // espaço pro ícone não cobrir texto
             }}
           />

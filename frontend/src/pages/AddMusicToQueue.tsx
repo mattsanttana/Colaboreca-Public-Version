@@ -30,7 +30,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados da pista
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
-    setTrackName, showRankingChangePopup, trackId, trackName
+    queueSettings, refreshTrackSettings, setQueueSettings, setTrackName, showRankingChangePopup, trackId, trackName
   } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reprodução
@@ -108,6 +108,9 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           <Header
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
+            onSettingsChange={ setQueueSettings }
+            queueSettings={ queueSettings }
+            refreshTrackSettings={ refreshTrackSettings }
             isSlideMenuOpen={ isMenuOpen } // Envia o estado do menu como prop (se o popup de votação estiver aberto, o menu não pode ser aberto)
             previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
             setTrackName={ setTrackName }
@@ -154,7 +157,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                 >
                   { /* Campo de pesquisa para buscar músicas */ }
                   <Form.Control
-                    className='my-3 search-input' // Classe para o campo de pesquisa
+                    className='my-3 custom-input' // Classe para o campo de pesquisa
                     placeholder='Que música você quer adicionar à fila?' // Placeholder do campo de pesquisa
                     onChange={ handleChange } // Função chamada ao alterar o valor do campo de pesquisa
                     // Estilo para o campo de pesquisa
@@ -174,6 +177,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
                     isDebouncing={ isDebouncing } // Estado de debouncing para evitar chamadas excessivas
                     memoizedSearchResults={ memoizedSearchResults } // Resultados da pesquisa de músicas
                     memoizedTopTracksInBrazil={ memoizedTopTracksInBrazil } // Músicas mais populares no Brasil
+                    queueOpen={ queueSettings?.queueOpen ?? true }
                   />
                 </Card.Body>
               </Card>

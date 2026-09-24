@@ -293,13 +293,18 @@ export default class PlaybackService {
         return { status: 'CONFLICT', data: { message: 'Music is already in queue or currently playing' } };
       }
 
-      // Verificar se o DJ já tem 3 músicas na fila que ainda não foram tocadas
+      if (track.queueOpen === false) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'Queue is closed' } };
+      }
+
+      // Verificar se o limite de músicas por DJ foi atingido
       const djMusicCount = await this.musicModel.count({ djId: dj.id, trackId, pointsApllied: false }, { transaction });
 
-      // Se o DJ já tiver 3 músicas na fila que ainda não foram tocadas, retornar um erro
-      if (djMusicCount >= 3) {
+      // Se o DJ já tiver o limite de músicas na fila que ainda não foram tocadas, retornar um erro
+      if (track.maxSongsPerDJ !== 0 && djMusicCount >= track.maxSongsPerDJ) {
         await transaction.rollback();
-        return { status: 'UNAUTHORIZED', data: { message: 'DJ already has 3 songs in the queue' } };
+        return { status: 'UNAUTHORIZED', data: { message: 'DJ already has the maximum number of songs in the queue' } };
       }
 
       const addedToQueue = await SpotifyActions.addTrackToQueue(spotifyToken, musicURI); // Adicionar a música à fila do Spotify

@@ -8,9 +8,10 @@ interface Props {
   isDebouncing: boolean; // Indica se está em estado de debouncing
   memoizedSearchResults: Music[]; // Resultados da pesquisa de músicas
   memoizedTopTracksInBrazil: Music[]; // Músicas mais populares no Brasil
+  queueOpen: boolean; // Indica se a fila está aberta
 }
 
-const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSearchResults, memoizedTopTracksInBrazil }) => {
+const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSearchResults, memoizedTopTracksInBrazil, queueOpen }) => {
   // Função para renderizar as músicas em um grid
   const renderTracks = (tracks: Music[]) => (
     // Mapeia as músicas e cria um Card para cada uma
@@ -76,7 +77,37 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
 
   // Se houver resultados de pesquisa, renderiza as músicas pesquisadas
   return (
-    <>
+    <div style={{ minHeight: '75vh', position: 'relative' }}>
+      { queueOpen === false && (
+        <div
+          aria-live='polite'
+          style={{
+            backgroundColor: 'rgba(45, 45, 45, 0.78)',
+            inset: 0,
+            minHeight: '75vh',
+            position: 'absolute',
+            zIndex: 1050,
+          }}
+        >
+          <div
+            style={{
+              alignItems: 'center',
+              color: '#f2f2f2',
+              display: 'flex',
+              height: '75vh',
+              justifyContent: 'center',
+              padding: '2rem',
+              position: 'sticky',
+              textAlign: 'center',
+              top: '4rem',
+            }}
+          >
+            <span style={{ fontSize: '1rem', opacity: 0.9 }}>
+              A fila está fechada pelo dono da pista.
+            </span>
+          </div>
+        </div>
+      )}
       { memoizedSearchResults.length > 0 ? (
         <>
           <h1>Resultados da busca:</h1>
@@ -88,7 +119,7 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
           { renderTracks(memoizedTopTracksInBrazil) }
         </>
       )}
-    </>
+    </div>
   );
 };
 

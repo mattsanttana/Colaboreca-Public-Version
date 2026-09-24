@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useState  } from 'react';
-import { Button, Col, Container, Form, Image, Row, Spinner } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
-import CreateDJ from './CreateDJ'
+import { Button, Col, Container, Form, Image, Modal, OverlayTrigger, Row, Spinner, Tooltip } from 'react-bootstrap';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FaSignInAlt } from 'react-icons/fa';
 import MessagePopup from './MessagePopup';
 import { logo } from '../assets/images/characterPath';
 import useDJ from '../utils/useDJ';
@@ -11,19 +11,29 @@ import { connect } from 'react-redux';
 
 interface Props {
   token: string; // Token do DJ, opcional
+  onHide?: () => void;
+  show?: boolean;
 }
 
 // Página de entrar numa pista
-const EnterTrack: React.FC<Props> = ({ token }) => {
+const EnterTrack: React.FC<Props> = ({ onHide, show = true, token }) => {
   const { trackIdParam } = useParams(); // Pega o ID da pista da URL
+  const navigate = useNavigate();
   const [buttonDisabled, setButtonDisabled] = useState(true); // Estado responsável por habilitar/desabilitar botão
-  const [phase, setPhase] = useState(1); // Estado responsável por aramazenar a fase que o usuário está (entrar ou criar o dj)
   // Estado responsável por armazenar os dados do popup de mensagem
   const [popupMessageData, setPopupMessageData] = useState({ message: '', redirectTo: '', show: false });
   const [trackId, setTrackId] = useState(''); // Estado responsável por armazenar o id da pista
 
   const djActions = useDJ(); // Hook personalizado para lidar com as ações relacionadas ao DJ
   const trackActions = useTrack(); // Hook personalzido para lidar com as ações relacioandas à pista
+
+  const handleHide = () => {
+    if (onHide) {
+      onHide();
+    } else {
+      navigate('/');
+    }
+  };
 
   // Função callback responsávle por validar a entrada do id da pista
   const inputValidation = useCallback(() => {
@@ -36,7 +46,6 @@ const EnterTrack: React.FC<Props> = ({ token }) => {
   useEffect(() => {
     if (trackIdParam) {
       setTrackId(formatTrackId(trackIdParam));
-      setPhase(2);
     }
 
     inputValidation();
@@ -83,7 +92,10 @@ const EnterTrack: React.FC<Props> = ({ token }) => {
       const response = await trackActions.enterTrack(Number(cleanedTrackId)); // Chama a função responsável por entrar na pista
       // Caso haja resposta e o status for igual a 200
       if (response && response.status === 200) {
-        setPhase(2); // Muda a fase para 2
+        if (onHide) {
+          onHide();
+        }
+        navigate(`/create-dj/${cleanedTrackId}`);
         //Caso haja respista e o status for igual a 404
       } else if (response && response.status === 404) {
         // Rendeeriza o popup de mensagem informando que uma pista com aquele id não foi encontrada
@@ -123,77 +135,75 @@ const EnterTrack: React.FC<Props> = ({ token }) => {
           onHide={() => setPopupMessageData({ ...popupMessageData, show: false })} // Função para fechar o popup
         />
       </Suspense>
-      <Container
-        className='d-flex align-items-center justify-content-center vh-100' // Classes para centralizar o conteúdo vertical e horizontalmente
-      >
+      <Modal centered className='custom-modal' dialogClassName='login-popup-dialog' onHide={ handleHide } show={ show }>
+          <Modal.Header className='custom-modal-header' closeButton>
+            <Modal.Title>Entrar numa pista</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className='py-3'>
         <Row
           className='justify-content-center' // Classes para centralizar o conteúdo
         >
           <Container
             className='d-flex flex-column align-items-center' // Classes para centralizar o conteúdo
           >
-            <Col
-              className='text-center mb-5' // Classes para centralizar o conteúdo
-            >
-              { /* Caso a fase seja um renderiza a página de entrar numa pista */ }
-              { phase === 1 ? (
-                <>
+            <Col className='text-center'>
+              <>
                   { /* Lodo do aplicativo */ }
                   <Image
                     alt='Logo do aplicativo' // Texto alternativo
-                    className='img-fluid shadow-lg mb-5' // Classes do Bootstrap para estilização
+                    className='img-fluid shadow-lg mb-4' // Classes do Bootstrap para estilização
                     src={ logo } // Caminho da imagem
-                    style={{ maxWidth: '300px' }} // Estilo inline para definir a largura máxima
+                    style={{ maxWidth: '120px' }} // Estilo inline para definir a largura máxima
                   />
                   <Form.Group
-                    className='mb-3' // Classe do Bootstrap para margem inferior
-                    style={{ maxWidth: '500px'}} // Estilo inline para definir a largura máxima
+                    className='mb-3 d-flex flex-column gap-3' // Classes do Bootstrap para espaçamento e organização
+                    style={{ maxWidth: '400px'}} // Estilo inline para definir a largura máxima
                   >
+                    <h1 className='login-title mb-0' style={{ color: '#fff4c2', fontSize: '1.35rem', margin: 0, textAlign: 'center' }}>
+                      Digite o id da pista
+                    </h1>
                     { /* Entrada do id da pista */ }
-                    <Form.Control
-                      autoComplete='off' // Desabilita o autocomplete do navegador
-                      className='text-center custom-input' // Classe personalizada para estilização
-                      inputMode='numeric' // Especifica que o teclado numérico deve ser exibido
-                      name='trackId' // Nome do campo
-                      onChange={ handleChange } // Função chamada ao mudar o valor do campo
-                      onKeyDown={ handleKeyDown } // Função chamada ao apertar uma tecla
-                      placeholder='Pin da Pista' // Texto placeholder
-                      // Estilo da entrada
-                      style={{
-                        height: '50px', // Altura do campo
-                        fontSize: '1.2rem', // Tamanho da fonte
-                        marginBottom: '20px', // Margem inferior
-                        textAlign: 'center' // Alinhamento do texto
-                      }}
-                      type='text' // Tipo do campo
-                      value={ trackId } // Valor do campo
-                    />
-                    <Button
-                      disabled={ buttonDisabled } // Desabilita o botão caso o estado buttonDisabled seja true
-                      onClick={ handleClick } // Função chamada ao clicar no botão
-                      // Estilo do botão
-                      style={{
-                        height: '50px', // Altura do botão
-                        fontSize: '1.2rem', // Tamanho da fonte
-                        marginTop: '10px', // Margem superior
-                        width: '100%' // Largura do botão
-                      }}
-                      variant='primary' // Cor do botão
-                    >
-                      Entrar
-                    </Button>
+                    <div className='d-flex align-items-center gap-2' style={{ marginLeft: '50px' }}>
+                      <Form.Control
+                        autoComplete="off"
+                        className="text-center custom-input flex-grow-1"
+                        maxLength={ 7 }
+                        onChange={handleChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ex: 000 000 🔥"
+                        style={{
+                          minWidth: 0,
+                          zIndex: 1, // Garante que o input esteja acima de outros elementos
+                          position: "relative", // Evita que estilos herdados causem problemas
+                        }}
+                        type="text"
+                        value={trackId}
+                      />
+                      <OverlayTrigger
+                        overlay={<Tooltip>Entrar na pista</Tooltip>}
+                        placement='top'
+                      >
+                        <span className='d-block'>
+                        <Button
+                          aria-label='Entrar na pista'
+                          className='d-flex align-items-center justify-content-center flex-shrink-0'
+                          disabled={ buttonDisabled } // Desabilita o botão caso o estado buttonDisabled seja true
+                          onClick={ handleClick } // Função chamada ao clicar no botão
+                          style={{ width: '48px', height: '42px' }}
+                          variant='outline-warning' // Mantém o botão alinhado à moldura dourada do modal
+                        >
+                          <FaSignInAlt aria-hidden='true' />
+                        </Button>
+                        </span>
+                      </OverlayTrigger>
+                    </div>
                   </Form.Group>
-                </>
-              ) : (
-                // Caso a fase seja 2 renderiza a página de criar o dj
-                <CreateDJ
-                  trackId={ trackId.replace(/\s/g, '') } // Passa o id da pista sem espaços como propriedade
-                />
-              )}
+              </>
             </Col>
           </Container>
         </Row>
-      </Container>
+          </Modal.Body>
+        </Modal>
     </>
   );
 };

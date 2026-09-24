@@ -1,5 +1,5 @@
-import React from 'react';
-import { Container, Nav, Row } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Button, Container, Modal, Nav, Row } from 'react-bootstrap';
 import { FaChartLine, FaComments, FaHome, FaList, FaMusic, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { DJ } from '../types/DJ';
@@ -16,6 +16,12 @@ type Props = {
 // Componente Menu que é responsável por exibir o menu lateral da aplicação
 const Menu: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackId }) => {
   const navigate = useNavigate(); // Hook para navegação entre páginas
+  const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
+
+  const handleHomeNavigation = () => {
+    setShowHomeConfirmation(false);
+    navigate('/');
+  };
 
   // Renderiza o componente
   return (
@@ -95,13 +101,34 @@ const Menu: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackId })
             { /* Link para pagina incial do app */ }
             <Nav.Link
               className='d-flex menu-link-bright' // Classe para estilizar o link
-              onClick={ () => navigate('/') } // Redireciona para a página inicial do app
+              onClick={ () => setShowHomeConfirmation(true) } // Abre a confirmação antes de redirecionar
             >
               <FaSignOutAlt className='me-2' />Página inicial { /* Ícone de página inicial */ }
             </Nav.Link>
           </Nav.Item>
         </Nav>
       </Container>
+      <Modal
+        centered
+        className='custom-modal'
+        onHide={ () => setShowHomeConfirmation(false) }
+        show={ showHomeConfirmation }
+      >
+        <Modal.Header className='custom-modal-header' closeButton>
+          <Modal.Title>Confirmar redirecionamento</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Tem certeza que deseja ser redirecionado para a tela inicial?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant='secondary' onClick={ () => setShowHomeConfirmation(false) }>
+            Cancelar
+          </Button>
+          <Button className='primary-button' onClick={ handleHomeNavigation }>
+            Confirmar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </aside>
   );
 };

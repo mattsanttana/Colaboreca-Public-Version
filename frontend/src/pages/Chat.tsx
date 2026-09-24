@@ -703,7 +703,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                     onChange={handleChange}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
-                    className="my-3 search-input"
+                    className="my-3 custom-input"
                     style={{ 
                       textAlign: 'center', 
                       backgroundColor: '#000000',
@@ -1093,7 +1093,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                             as="textarea"
                             rows={1}
                             placeholder="Digite sua mensagem"
-                            className="my-3 search-input"
+                            className="my-3 custom-input"
                             value={message}
                             onChange={handleChangeMessageInput}
                             onInput={(e) => {
@@ -1124,7 +1124,7 @@ const Chat: React.FC<Props> = ({ token }) => {
                           variant="primary"
                           className="my-3"
                           onClick={() => {
-                            const textareaElement = document.querySelector('.search-input') as HTMLTextAreaElement;
+                            const textareaElement = document.querySelector('.custom-input') as HTMLTextAreaElement;
                             handleSubmitMessage(selectedChat, message, messageToReply, textareaElement);
                           }}
                           style={{

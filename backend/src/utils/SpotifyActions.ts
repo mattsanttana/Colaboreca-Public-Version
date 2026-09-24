@@ -283,4 +283,29 @@ export default class SpotifyActions {
       }
     }
   }
+
+  // Método para pular a música atual
+  static async skipTrack(token: string) {
+    try {
+      const response = await axios.put('https://api.spotify.com/v1/me/player/next', null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status !== 204) {
+        console.log('Error response from Spotify:', response.data);
+        return;
+      }
+
+      return response;
+    } catch (error) {
+      console.error(error);
+      if (error instanceof Error) {
+        return { status: 'ERROR', data: { message: error.message } };
+      } else {
+        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      }
+    }
+  }
 }

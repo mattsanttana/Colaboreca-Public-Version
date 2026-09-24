@@ -11,10 +11,10 @@ export default class TrackModel {
   private musicModel = SequelizeMusic; // Instância do modelo de pista
 
   // Método para criar uma pista
-  async create(id: number, trackName: string, spotifyToken: string, options?: { transaction: Transaction }) {
+  async create(id: number, trackName: string, spotifyToken: string, queueOpen: boolean, maxSongsPerDJ: number, veryBadVotesToSkip: number, options?: { transaction: Transaction }) {
     // Cria uma pista
     const response = await this.trackModel.create(
-      {id, trackName, spotifyToken, createdAt: new Date(), updatedAt: new Date() }, options
+      { id, trackName, spotifyToken, queueOpen, maxSongsPerDJ, veryBadVotesToSkip, createdAt: new Date(), updatedAt: new Date() }, options
     );
     return response.get(); // Retorna a pista criada
   }
@@ -34,35 +34,35 @@ export default class TrackModel {
       }],
       ...options
     }) : await this.trackModel.findAll({
-        where,
-        include: [{
-          model: this.djModel,
-          as: 'djs',
-        },
-        {
-          model: this.musicModel,
-          as: 'colaborecaQueue',
-        }]
-      }) : options ? await this.trackModel.findAll({
-        include: [{
-          model: this.djModel,
-          as: 'djs',
-        },
-        {
-          model: this.musicModel,
-          as: 'colaborecaQueue',
-        }],
-        ...options
-      }) : await this.trackModel.findAll({
-        include: [{
-          model: this.djModel,
-          as: 'djs',
-        },
-        {
-          model: this.musicModel,
-          as: 'colaborecaQueue',
-        }]
-      });
+      where,
+      include: [{
+        model: this.djModel,
+        as: 'djs',
+      },
+      {
+        model: this.musicModel,
+        as: 'colaborecaQueue',
+      }]
+    }) : options ? await this.trackModel.findAll({
+      include: [{
+        model: this.djModel,
+        as: 'djs',
+      },
+      {
+        model: this.musicModel,
+        as: 'colaborecaQueue',
+      }],
+      ...options
+    }) : await this.trackModel.findAll({
+      include: [{
+        model: this.djModel,
+        as: 'djs',
+      },
+      {
+        model: this.musicModel,
+        as: 'colaborecaQueue',
+      }]
+    });
     return response.map((track) => track.toJSON()) as ITrackQueueData[]; // Retorna as pistas encontradas
   }
 
@@ -78,26 +78,37 @@ export default class TrackModel {
       {
         model: this.musicModel,
         as: 'colaborecaQueue',
-      }], ...options }) : await this.trackModel.findOne({
-        where,
-        include: [{
-          model: this.djModel,
-          as: 'djs',
-        },
-        {
-          model: this.musicModel,
-          as: 'colaborecaQueue',
-        }]
-      });
+      }], ...options
+    }) : await this.trackModel.findOne({
+      where,
+      include: [{
+        model: this.djModel,
+        as: 'djs',
+      },
+      {
+        model: this.musicModel,
+        as: 'colaborecaQueue',
+      }]
+    });
     return response?.toJSON() as ITrackQueueData; // Retorna a pista encontrada
   }
 
   // Método para atualizar uma pista
-  async update(data: { trackName?: string; updatedAt?: Date; }, where: WhereOptions, options?: { transaction: Transaction }) {
+  async update(
+    data: {
+      trackName?: string;
+      queueOpen?: boolean;
+      maxSongsPerDJ?: number;
+      veryBadVotesToSkip?: number;
+      updatedAt?: Date;
+    },
+    where: WhereOptions,
+    options?: { transaction: Transaction }
+  ) {
     // Atualiza uma pista
     const response = options ?
       await this.trackModel.update(data, { where, ...options }) :
-        await this.trackModel.update(data, { where });
+      await this.trackModel.update(data, { where });
     return response; // Retorna a resposta
   }
 

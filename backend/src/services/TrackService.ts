@@ -25,10 +25,10 @@ export default class TrackService {
   ) { }
 
   // Método para criar uma pista
-  async createTrack(data: { trackName: string, djName: string, characterPath: string, code: string }) {
+  async createTrack(data: { trackName: string, djName: string, characterPath: string, code: string, queueOpen: boolean, maxSongsPerDJ: number, veryBadVotesToSkip: number }) {
     const transaction = await this.sequelize.transaction(); // Iniciar uma transação
 
-    const { trackName, djName, characterPath, code } = data; // Receber os dados da pista
+    const { trackName, djName, characterPath, code, queueOpen, maxSongsPerDJ, veryBadVotesToSkip } = data; // Receber os dados da pista
 
     try {
       const spotifyToken = await SpotifyActions.getAccessToken(code); // Obter o token de acesso do Spotify
@@ -64,7 +64,7 @@ export default class TrackService {
         trackWithSameId = await this.trackModel.findOne({ id });
       }
 
-      const track = await this.trackModel.create(id, trackName, spotifyToken, { transaction }); // Criar a pista
+      const track = await this.trackModel.create(id, trackName, spotifyToken, queueOpen, maxSongsPerDJ, veryBadVotesToSkip, { transaction }); // Criar a pista
 
       if (!track) {
         await transaction.rollback(); // Se a pista não for criada, rollback a transação e retorne uma mensagem de erro
@@ -174,8 +174,9 @@ export default class TrackService {
   }
 
   // Método para atualizar uma pista
-  async updateTrack(trackName: string, authorization: string) {
+  async updateTrack(data: { trackName: string, queueOpen: boolean, maxSongsPerDJ: number, veryBadVotesToSkip: number }, authorization: string) {
     const io = getSocket(); // Obter a instância do Socket.IO
+    const { trackName, queueOpen, maxSongsPerDJ, veryBadVotesToSkip } = data; // Receber os dados da pista
 
     try {
       const token = authorization.split(' ')[1]; // Obter o token do cabeçalho de autorização
@@ -194,11 +195,28 @@ export default class TrackService {
       }
 
       // Inicializar os campos atualizados
-      const updatedFields: Partial<{ trackName: string, updatedAt: Date }> = {};
+      const updatedFields: Partial<{
+        trackName: string;
+        queueOpen: boolean;
+        maxSongsPerDJ: number;
+        veryBadVotesToSkip: number;
+        updatedAt: Date;
+      }> = {};
       if (trackName !== undefined && trackName !== track.trackName) {
-        // Se o nome da pista for diferente do nome atual, atualize o nome da pista e a data de atualização
-        updatedFields['trackName'] = trackName;
-        updatedFields['updatedAt'] = new Date();
+        updatedFields.trackName = trackName;
+      }
+      if (queueOpen !== undefined && queueOpen !== track.queueOpen) {
+        updatedFields.queueOpen = queueOpen;
+      }
+      if (maxSongsPerDJ !== undefined && maxSongsPerDJ !== track.maxSongsPerDJ) {
+        updatedFields.maxSongsPerDJ = maxSongsPerDJ;
+      }
+      if (veryBadVotesToSkip !== undefined && veryBadVotesToSkip !== track.veryBadVotesToSkip) {
+        updatedFields.veryBadVotesToSkip = veryBadVotesToSkip;
+      }
+
+      if (Object.keys(updatedFields).length > 0) {
+        updatedFields.updatedAt = new Date();
       }
 
       // Se nenhum campo for atualizado, retorne uma mensagem de erro
@@ -206,7 +224,10 @@ export default class TrackService {
         return { status: 'INVALID_DATA', data: { message: 'No fields updated' } };
       }
 
-      const response = await this.trackModel.update(updatedFields as { trackName: string, updatedAt: Date }, { id: decoded.trackId }); // Atualizar a pista
+      const response = await this.trackModel.update(
+        updatedFields,
+        { id: decoded.trackId }
+      ); // Atualizar a pista
 
       // Se a pista não for atualizada, retorne uma mensagem de erro
       if (response[0] === 0) {
@@ -215,7 +236,7 @@ export default class TrackService {
 
       const trackUpdated = await this.trackModel.findOne({ id: decoded.trackId }); // Buscar a pista atualizada
 
-      io.to(`track_${decoded.trackId}`).emit('track updated', { trackName: trackUpdated?.trackName }); // Emitir um evento de pista atualizada
+      io.to(`track_${decoded.trackId}`).emit('track updated', trackUpdated); // Emitir um evento de pista atualizada
 
       return { status: 'OK', data: { message: 'Track updated' } }; // Retornar uma mensagem de sucesso com o status correspondente
     } catch (error) {

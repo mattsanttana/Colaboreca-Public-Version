@@ -169,6 +169,24 @@ export default class VoteService {
         return { status: 'ERROR', data: { message: 'An error occurred' } };
       }
 
+      const track = await this.trackModel.findOne({ id: decoded.trackId });
+      const veryBadVotesToSkip = track?.veryBadVotesToSkip ?? 0;
+
+      if (vote === 'very_bad' && veryBadVotesToSkip > 0) {
+        const veryBadVotes = await this.voteModel.findAll({
+          musicId: music.id,
+          vote: 'very_bad',
+        });
+
+        if (veryBadVotes.length >= veryBadVotesToSkip && track) {
+          const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken);
+
+          if (spotifyToken) {
+            await SpotifyActions.skipTrack(spotifyToken);
+          }
+        }
+      }
+
       io.to(`track_${decoded.trackId}`).emit('new vote', response); // Emite um evento de novo voto
 
       return { status: 'OK', data: response }; // Retorna o voto criado

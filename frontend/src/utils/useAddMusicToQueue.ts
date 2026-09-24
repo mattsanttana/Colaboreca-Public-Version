@@ -107,9 +107,15 @@ const useAddMusicToQueue = (
           return;
         }
 
-        if (addMusic?.status === 401) {
+        if (addMusic?.status === 401 && addMusic.data?.message === 'Queue is closed') {
           setPopupMessageData({
-            message: 'Você já tem 3 músicas na fila, por favor, aguarde até que uma seja tocada.',
+            message: 'A fila foi fechada pelo dono da pista. Não é possível adicionar novas músicas no momento.',
+            redirectTo: '',
+            show: true
+          });
+        } else if (addMusic?.status === 401) {
+          setPopupMessageData({
+            message: 'Você atingiu o limite de músicas na fila. Aguarde até que uma seja tocada.',
             redirectTo: '',
             show: true
           });

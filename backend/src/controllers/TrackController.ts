@@ -57,11 +57,11 @@ export default class TrackController {
     res.status(mapStatusHTTP(response.status)).json(response.data); // Retorna a resposta e o status correspondente
   }
 
-  // Método para atualizar o nome da pista
+  // Método para atualizar os dados da pista
   async updateTrack(req: Request, res: Response) {
-    const { trackName } = req.body; // Pega o nome da pista
+    const data = req.body; // Pega os dados da pista
     const authorization = req.headers.authorization; // Pega o token de autorização
-    const response = await this.trackService.updateTrack(trackName, authorization as string); // Chama o serviço de pista para atualizar o nome da pista
+    const response = await this.trackService.updateTrack(data, authorization as string); // Chama o serviço de pista para atualizar os dados da pista
     res.status(mapStatusHTTP(response.status)).json(response.data); // Retorna a resposta e o status correspondente
   }
 
