@@ -1505,6 +1505,86 @@ animated.div {
   /* não atrapalha clique */
 }
 
+.dj-profile-page {
+  margin-top: 1rem;
+  padding: 0 1rem 1rem;
+  background: #080912cc;
+}
+
+.dj-profile-card,
+.dj-added-musics {
+  background-color: #2e30594d !important;
+  border-radius: 10px;
+}
+
+.dj-profile-card {
+  padding: 1.5rem 1rem;
+}
+
+.dj-added-musics {
+  margin-top: 1.5rem;
+  color: #fff4c2;
+}
+
+.dj-music-filter-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0 1rem;
+}
+
+.dj-music-filter {
+  width: 140px;
+  border: 1px solid #fff4c266;
+  background-color: #2e3059 !important;
+  color: #fff4c2 !important;
+}
+
+.dj-music-filter:focus {
+  border-color: #ffb703;
+  box-shadow: 0 0 0 0.2rem #ffb70333;
+}
+
+.dj-music-filter option {
+  background: #2e3059;
+  color: #fff4c2;
+}
+
+.dj-added-musics-body {
+  height: 45vh;
+  overflow: auto;
+}
+
+.dj-added-musics-title {
+  margin: 1rem 0;
+  color: #ffda6a;
+}
+
+.dj-music-table {
+  --bs-table-color: #fff4c2;
+  --bs-table-bg: transparent;
+  --bs-table-border-color: #fff4c233;
+  margin-bottom: 0;
+}
+
+.dj-music-table > :not(caption) > * > * {
+  background-color: transparent;
+  border-bottom-color: #fff4c233;
+  color: #fff4c2;
+  vertical-align: middle;
+}
+
+.dj-music-table img {
+  border: 1px solid #ffda6a88;
+  border-radius: 6px;
+}
+
+.dj-music-empty {
+  margin: 3rem 1rem;
+  color: #fff4c2;
+}
+
 .card-hover:hover {
   background-color: #5052884d !important;
   /* exemplo: cor mais opaca no hover */

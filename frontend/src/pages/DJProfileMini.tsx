@@ -25,11 +25,12 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking })
           src={ dj?.characterPath }
           style={{
             backgroundColor: '#2e30594D',
-            border: '2px solid #000',
+            border: '3px solid #ffda6a',
             height: '230px',
             width: '230px',
             objectFit: 'cover',
             objectPosition: 'center',
+            boxShadow: '0 0 24px #ffb70344',
           }}
         />
         {/* Rank dentro da imagem */}
@@ -53,7 +54,7 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking })
             fontWeight: 'bold',
             fontSize: '1.5rem',
             fontFamily: '"Bebas Neue", Oswald, Arial, sans-serif',
-            border: '2px solid #444',
+            border: '2px solid #fff4c2',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -80,7 +81,7 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking })
           style={{
             fontSize: '1.2rem',
             fontWeight: '600',
-            color: '#ccc', // cor clarinha pra combinar com o fundo
+            color: '#fff4c2',
             textTransform: 'uppercase',
             letterSpacing: '1px',
           }}

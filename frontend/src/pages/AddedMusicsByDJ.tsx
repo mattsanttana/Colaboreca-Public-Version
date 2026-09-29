@@ -26,21 +26,15 @@ const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
 
   // Renderiza o componente DJProfile
   return (
-    <Card>
+    <Card className='gradient-border dj-added-musics'>
       { /* Formulário para filtrar as músicas adicionadas pelo DJ */ }
       <Container
         // Estilo do container para o filtro de músicas
-        style={{
-          display: 'flex', // Exibe o container como flex
-          justifyContent: 'flex-end', // Alinha o conteúdo à direita
-          alignItems: 'center', // Alinha o conteúdo verticalmente ao centro
-          marginTop: '20px' // Margem superior
-        }}
+        className='dj-music-filter-container'
       >
         <Form.Select
-          className='text-light' // Classe para aplicar cor ao texto
+          className='text-light dj-music-filter' // Classe para aplicar cor ao texto
           onChange={ e => setAddedMusicsFilter(e.target.value as 'all' | 'played' | 'not played') } // Função para atualizar o filtro quando o valor mudar
-          style={{ backgroundColor: '#000000', width: '140px' }} // Cor e largura do seletor
           value={ addedMusicsFilter } // Valor selecionado do filtro
         >
           <option value='all'>Todas</option> { /* Opção para renderizar todas as músicas adicionadas pelo DJ */ }
@@ -49,14 +43,14 @@ const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
         </Form.Select>
       </Container>
       { /* Renderiza o card com as músicas adicionadas pelo DJ */ }
-      <Card.Body style={{ height: '45vh', overflow: 'auto' }}>
+      <Card.Body className='dj-added-musics-body'>
         { /* Título do card */ }
-        <Card.Title className='mt-4 text-light' style={{ margin: '10px' }}>Músicas adicionadas:</Card.Title>
+        <Card.Title className='dj-added-musics-title'>Músicas adicionadas:</Card.Title>
         { /* Verifica se há músicas adicionadas pelo DJ */ }
         { addedMusics.length > 0 ? (
           // Se houver, renderiza a tabela com as músicas
           <Container className='table-responsive'>
-            <Table className='text-light'>
+            <Table className='text-light dj-music-table'>
               <thead>
                 <tr>
                   <th
@@ -108,7 +102,7 @@ const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
           </Container>
         ) : (
           <Container>
-            <h4 className='text-light' style={{ margin: '100px' }}>A lista está vazia</h4> { /* Mensagem exibida quando não há músicas adicionadas pelo DJ */ }
+            <h4 className='text-light dj-music-empty'>A lista está vazia</h4> { /* Mensagem exibida quando não há músicas adicionadas pelo DJ */ }
           </Container>
         )}
       </Card.Body>

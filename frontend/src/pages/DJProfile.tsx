@@ -118,7 +118,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
         </Container>
         // Se não estiver carregando, renderiza o conteúdo principal
       ) : (
-        <Container>
+        <Container className='gradient-border dj-profile-page'>
           { /* Renderiza o cabeçalho com as informações do DJ e o estado do menu */ }
           <Header
             currentRanking={ djs } // Envia o ranking atual como prop
@@ -156,8 +156,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               md={ 12 }  lg={ 12 }  xl={ 12 } xxl={ 9 }
             >
               <Card
-                className='text-center' // Estilo de texto centralizado
-                style={{ backgroundColor: 'transparent', padding: '0' }} // Cor e preenchimento do card
+                className='text-center gradient-border dj-profile-card' // Estilo de texto centralizado
               >
                 { /* Renderiza o mini perfil do DJ */ }
                 <DJProfileMini
@@ -170,7 +169,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                     <Container className='d-flex justify-content-center align-items-center mt-4'>
                       <Button 
                         onClick={ () => setShowDJInfoPopup(true) } // Função para abrir o popup de informações do DJ
-                        variant='primary'  // Estilo do botão
+                        className='primary-button'
                       >
                         Editar/Excluir DJ
                       </Button>
