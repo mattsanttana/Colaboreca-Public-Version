@@ -1475,10 +1475,31 @@ animated.div {
   animation: enter-card var(--anim-enter-duration, 600ms) cubic-bezier(.22, .9, .35, 1) both;
 }
 
+.vote-items {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vote-unavailable {
+  flex: 1 0 100%;
+  margin: 0;
+  padding: 12px 16px;
+  color: #fff4c2;
+  font-size: 0.95rem;
+}
+
 @media (max-width: 480px) {
-  .vote-footer {
+  .vote-items {
     gap: 8px;
     padding: 0 8px;
+  }
+
+  .vote-unavailable {
+    padding: 10px 8px;
+    font-size: 0.85rem;
   }
 }
 

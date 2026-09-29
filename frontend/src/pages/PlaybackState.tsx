@@ -53,6 +53,7 @@ const PlaybackState: React.FC<Props> = ({
 }) => {
   
   const counts = displayVoteCounts ?? votes ?? { very_good: 0, good: 0, normal: 0, bad: 0, very_bad: 0 };
+  const isSpotifyAddedTrack = Boolean(djPlayingNow?.addedByApp);
 
   // Renderiza o componente PlaybackState
   return (
@@ -80,28 +81,45 @@ const PlaybackState: React.FC<Props> = ({
             className='vote-footer'
             variants={ voteFooterVariants }
             initial='hidden'
-            animate={ cardVisible ? 'visible' : 'hidden' }
+            animate={ cardVisible || isSpotifyAddedTrack ? 'visible' : 'hidden' }
           >
-            { voteItems.map(({ type, icon, label }) => (
-              <motion.div className='vote-item' key={ type } variants={ voteItemVariants }>
-                <span className='vote-icon'>{ icon }</span>
-                <span className='vote-count' style={{ display: 'inline-grid', minWidth: '1.5ch' }}>
-                  <AnimatePresence initial={ false }>
-                    <motion.span
-                      key={ counts[type] }
-                      style={{ gridArea: '1 / 1' }}
-                      initial={{ opacity: 0, y: 6, scale: 0.8 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.9 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                    >
-                      { counts[type] }
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-                <span className='vote-label'>{ label }</span>
-              </motion.div>
-            )) }
+            <AnimatePresence mode='wait' initial={ false }>
+              { isSpotifyAddedTrack ? (
+                <motion.p
+                  key='spotify-added-note'
+                  className='vote-unavailable'
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Esta música não está na disputa de votos porque foi adicionada diretamente pelo Spotify.
+                </motion.p>
+              ) : (
+                <motion.div key='vote-counts' className='vote-items' variants={ voteFooterVariants }>
+                  { voteItems.map(({ type, icon, label }) => (
+                    <motion.div className='vote-item' key={ type } variants={ voteItemVariants }>
+                      <span className='vote-icon'>{ icon }</span>
+                      <span className='vote-count' style={{ display: 'inline-grid', minWidth: '1.5ch' }}>
+                        <AnimatePresence initial={ false }>
+                          <motion.span
+                            key={ counts[type] }
+                            style={{ gridArea: '1 / 1' }}
+                            initial={{ opacity: 0, y: 6, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                          >
+                            { counts[type] }
+                          </motion.span>
+                        </AnimatePresence>
+                      </span>
+                      <span className='vote-label'>{ label }</span>
+                    </motion.div>
+                  )) }
+                </motion.div>
+              ) }
+            </AnimatePresence>
           </motion.div>
         </Card.Body>
       </Card>
