@@ -101,7 +101,7 @@ const EditOrDeleteDJPopup: React.FC<Props> = ({
 
   return (
     <Modal
-      className='custom-modal' // Classe personalizada para o modal
+      className='custom-modal edit-dj-popup' // Classe personalizada para o modal
       onHide={ handleClosePopup } // Função chamada ao fechar o modal
       show={ show } // Estado que controla se o modal está visível
     >
@@ -130,6 +130,7 @@ const EditOrDeleteDJPopup: React.FC<Props> = ({
         <Form>
           { /* Container para a imagem do personagem com tooltip */ }
           <Container
+            className='dj-avatar-picker'
             onClick={ () => setShowCharacterPopup(true) } // Função chamada ao clicar na imagem do personagem
             onMouseEnter={ () => setShowTooltip(true) } // Função chamada ao passar o mouse sobre a imagem
             onMouseLeave={ () => setShowTooltip(false) } // Função chamada ao retirar o mouse da imagem
@@ -143,29 +144,14 @@ const EditOrDeleteDJPopup: React.FC<Props> = ({
             { /* Imagem do personagem editado */ }
             <Image
               alt={ editedName } // Texto alternativo para a imagem
-              className='mb-3' // Classe para margem inferior
+              className='mb-3 dj-avatar-preview' // Classe para margem inferior
               src={ editedCharacterPath } // Caminho da imagem do personagem editado
-              // Estilo para a imagem do personagem
-              style={{
-                borderRadius: '50%', // Bordas arredondadas para formato circular
-                width: '200px' // Largura da imagem
-              }}
             />
             { /* Tooltip que aparece ao passar o mouse sobre a imagem */ }
             { showTooltip && (
               <Container
+                className='dj-avatar-tooltip'
                 // Estilo para o tooltip
-                style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)', // Cor de fundo semitransparente
-                  borderRadius: '40%', // Bordas arredondadas
-                  color: 'white', // Cor do texto
-                  left: '50%', // Posiciona o tooltip no centro horizontalmente
-                  padding: '5px 10px', // Preenchimento interno do tooltip
-                  position: 'absolute', // Posição absoluta para o tooltip
-                  top: '50%', // Posiciona o tooltip no centro verticalmente
-                  transform: 'translate(-50%, -50%)', // Transforma para centralizar o tooltip
-                  width: 'fit-content', // Largura do tooltip ajustada ao conteúdo
-                }}
               >
                 Alterar Avatar
               </Container>
@@ -175,21 +161,16 @@ const EditOrDeleteDJPopup: React.FC<Props> = ({
           <Form.Group className='mb-3'>
             { /* Rótulo para o campo de entrada */ }
             <Form.Control
-              className='text-centert' // Classe para centralizar o texto no campo de entrada
+              className='custom-input dj-name-input text-center' // Aplica o estilo do app ao campo e centraliza o texto
               type='text' // Tipo do campo de entrada
               onChange={ e => setEditedName(e.target.value) } // Função chamada ao alterar o valor do campo
               onKeyDown={ handleClosePopup } // Função chamada ao pressionar uma tecla dentro do campo
-              // Estilo para o campo de entrada
-              style={{
-                backgroundColor: 'black', // Cor de fundo preta
-                color: 'white', // Cor do texto branca
-                textAlign: 'center' // Alinha o texto no centro
-              }}
               value={ editedName } // Valor do campo de entrada
             />
           </Form.Group>
           { /* Botões para salvar alterações e excluir DJ */ }
           <Button
+            className='primary-button'
             disabled={ isButtonDisabled } // Desabilita o botão se isButtonDisabled for true
             onClick={ handleSaveChanges } // Função chamada ao clicar no botão
             type='submit' // Tipo do botão como submit
@@ -198,7 +179,7 @@ const EditOrDeleteDJPopup: React.FC<Props> = ({
             Salvar
           </Button>
           <Button
-            className='ms-2' // Classe para adicionar margem à esquerda
+            className='danger-button ms-2' // Estilo de ação destrutiva com espaçamento
             onClick={ () => setShowDeleteConfirmation(true) } // Função chamada ao clicar no botão
             variant='danger' // Variante do botão como perigosa (vermelha)
           >
