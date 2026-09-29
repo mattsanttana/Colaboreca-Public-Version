@@ -48,6 +48,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   // Renderiza o componente DJProfile
   return (
     <Container
+      className='dj-profile-screen'
       onTouchStart={ handleTouchStart } // Adiciona o evento de toque inicial
       onTouchMove={ handleTouchMove } // Adiciona o evento de movimento do toque
       onTouchEnd={ handleTouchEnd } // Adiciona o evento de toque final
@@ -135,7 +136,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
             trackId={ trackId } // Envia o ID da pista como prop
             trackName={ trackName } // Envia o nome da pista como prop
           />
-          <Row>
+          <Row className='dj-profile-content-row'>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
             <Col
               className='d-none d-xxl-block' // Esconde a coluna em telas menores que xxl
@@ -151,7 +152,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
             </Col>
             { /* Renderiza a coluna principal com as informações do DJ */ }
             <Col 
-              className='py-4' // Adiciona padding vertical
+              className='py-4 dj-profile-main-column' // Adiciona padding vertical
               // Largura para diferentes tamanhos de tela
               md={ 12 }  lg={ 12 }  xl={ 12 } xxl={ 9 }
             >
@@ -166,7 +167,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                 />
                   { /* Caso o usuário seja o dono do perfil e não seja o dono da pista, exibe o botão para editar/excluir DJ */ }
                   { isProfileOwner && (
-                    <Container className='d-flex justify-content-center align-items-center mt-4'>
+                    <Container className='d-flex justify-content-center align-items-center mt-4 dj-profile-edit-action'>
                       <Button 
                         onClick={ () => setShowDJInfoPopup(true) } // Função para abrir o popup de informações do DJ
                         className='primary-button'
@@ -176,7 +177,9 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                     </Container>
                   )}
                   { /*Renderiza o componente de músicas adicionadas pelo DJ */ }
-                  <AddedMusicsByDJ addedMusics={ addedMusics } />
+                  <div className='dj-added-musics-slot'>
+                    <AddedMusicsByDJ addedMusics={ addedMusics } />
+                  </div>
                 </Card>
               </Col>
             </Row>

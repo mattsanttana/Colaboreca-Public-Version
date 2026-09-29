@@ -1506,9 +1506,40 @@ animated.div {
 }
 
 .dj-profile-page {
-  margin-top: 1rem;
-  padding: 0 1rem 1rem;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0 1rem 0.5rem;
   background: #080912cc;
+  overflow: hidden;
+}
+
+.dj-profile-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.dj-profile-page > .container {
+  flex: 0 0 auto;
+}
+
+.dj-profile-content-row {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dj-profile-main-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .dj-profile-card,
@@ -1518,12 +1549,49 @@ animated.div {
 }
 
 .dj-profile-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   padding: 1.5rem 1rem;
+  overflow: hidden;
+}
+
+.dj-profile-avatar-wrapper,
+.dj-profile-mini,
+.dj-profile-edit-action {
+  flex: 0 0 auto;
+}
+
+.dj-profile-avatar-wrapper {
+  position: relative;
+  width: clamp(160px, 28vh, 250px);
+  height: clamp(160px, 28vh, 250px);
+}
+
+.dj-profile-avatar-wrapper .profile-avatar {
+  width: clamp(150px, 26vh, 230px);
+  height: clamp(150px, 26vh, 230px);
+}
+
+.dj-profile-edit-action {
+  margin-top: 0.75rem !important;
+}
+
+.dj-added-musics-slot {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.75rem;
 }
 
 .dj-added-musics {
-  margin-top: 1.5rem;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   color: #fff4c2;
+  overflow: hidden;
 }
 
 .dj-music-filter-container {
@@ -1552,7 +1620,8 @@ animated.div {
 }
 
 .dj-added-musics-body {
-  height: 45vh;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 

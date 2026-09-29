@@ -16,9 +16,9 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking })
   if (!dj) return null;
   
   return (
-    <Col className='d-flex flex-column align-items-center'>
+    <Col className='d-flex flex-column align-items-center dj-profile-mini'>
       {/* Wrapper para posicionar rank sobre a imagem */}
-      <div style={{ position: 'relative', width: '250px', height: '250px' }}>
+      <div className='dj-profile-avatar-wrapper'>
         <Image
           alt={ `Personagem do DJ ${ dj?.djName }` }
           className='img-fluid rounded-circle mb-3 profile-avatar'
@@ -26,8 +26,6 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking })
           style={{
             backgroundColor: '#2e30594D',
             border: '3px solid #ffda6a',
-            height: '230px',
-            width: '230px',
             objectFit: 'cover',
             objectPosition: 'center',
             boxShadow: '0 0 24px #ffb70344',
