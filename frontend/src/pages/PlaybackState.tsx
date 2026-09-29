@@ -1,25 +1,55 @@
 import { Card, Container } from 'react-bootstrap';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { DJPlayingNow } from '../types/DJ';
 import PlayingNow from '../types/PlayingNow';
 import DJTable from './DJTable';
 
+const voteItems = [
+  { type: 'very_bad', icon: '🤢', label: 'Ninguém merece' },
+  { type: 'bad', icon: '😒', label: 'Ruim' },
+  { type: 'normal', icon: '😐', label: 'Tanto faz' },
+  { type: 'good', icon: '😎', label: 'Boa' },
+  { type: 'very_good', icon: '👑', label: 'Hino' },
+] as const;
+
+const voteFooterVariants: Variants = {
+  hidden: {
+    transition: {
+      staggerChildren: 0.08,
+      staggerDirection: -1,
+    },
+  },
+  visible: {
+    transition: {
+      delayChildren: 0.12,
+      staggerChildren: 0.13,
+    },
+  },
+};
+
+const voteItemVariants: Variants = {
+  hidden: { opacity: 0, y: 10, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 360, damping: 24 },
+  },
+};
+
 // Props recebidas
 type Props = {
   djPlayingNow: DJPlayingNow | null; // DJ que está tocando a música atual
-  pulsingVote: string | null; // Voto pulsante
   playingNow: PlayingNow | null; // Música que está tocando atualmente
   trackName: string; // Nome da pista
   votes: { very_good: number; good: number; normal: number; bad: number; very_bad: number }; // Contadores de votos iniciais
-  revealPulse: string | null;
   cardVisible: boolean;
-  revealedVotes: Record<string, boolean>;
-  hidePulse?: string | null;
   displayVoteCounts?: { very_good: number; good: number; normal: number; bad: number; very_bad: number };
 };
 
 // Componente PlaybackState responsável por exibir o estado de reprodução atual
 const PlaybackState: React.FC<Props> = ({
-  djPlayingNow, playingNow, pulsingVote, trackName, votes, revealPulse, cardVisible, revealedVotes, hidePulse, displayVoteCounts
+  djPlayingNow, playingNow, trackName, votes, cardVisible, displayVoteCounts
 }) => {
   
   const counts = displayVoteCounts ?? votes ?? { very_good: 0, good: 0, normal: 0, bad: 0, very_bad: 0 };
@@ -46,33 +76,33 @@ const PlaybackState: React.FC<Props> = ({
             trackName={ trackName } // Nome da pista
           />
           {/* Rodapé com contadores de votos estilizado como post */}
-          <div className='vote-footer'>
-            <div className={`vote-item ${ revealedVotes['very_bad'] ? 'revealed' : '' } ${ (pulsingVote === 'very_bad' || revealPulse === 'very_bad') ? 'pulse' : '' } ${ hidePulse === 'very_bad' ? 'hiding' : '' }` }>
-              <span className='vote-icon'>🤢</span>
-              <span className='vote-count'>{ counts.very_bad }</span>
-              <span className='vote-label'>Ninguém merece</span>
-            </div>
-            <div className={`vote-item ${ revealedVotes['bad'] ? 'revealed' : '' } ${ (pulsingVote === 'bad' || revealPulse === 'bad') ? 'pulse' : '' } ${ hidePulse === 'bad' ? 'hiding' : '' }` }>
-              <span className='vote-icon'>😒</span>
-              <span className='vote-count'>{ counts.bad }</span>
-              <span className='vote-label'>Ruim</span>
-            </div>
-            <div className={`vote-item ${ revealedVotes['normal'] ? 'revealed' : '' } ${ (pulsingVote === 'normal' || revealPulse === 'normal') ? 'pulse' : '' } ${ hidePulse === 'normal' ? 'hiding' : '' }` }>
-              <span className='vote-icon'>😐</span>
-              <span className='vote-count'>{ counts.normal }</span>
-              <span className='vote-label'>Tanto faz</span>
-            </div>
-            <div className={`vote-item ${ revealedVotes['good'] ? 'revealed' : '' } ${ (pulsingVote === 'good' || revealPulse === 'good') ? 'pulse' : '' } ${ hidePulse === 'good' ? 'hiding' : '' }` }>
-              <span className='vote-icon'>😎</span>
-              <span className='vote-count'>{ counts.good }</span>
-              <span className='vote-label'>Boa</span>
-            </div>
-            <div className={`vote-item ${ revealedVotes['very_good'] ? 'revealed' : '' } ${ (pulsingVote === 'very_good' || revealPulse === 'very_good') ? 'pulse' : '' } ${ hidePulse === 'very_good' ? 'hiding' : '' }` }>
-              <span className='vote-icon'>👑</span>
-              <span className='vote-count'>{ counts.very_good }</span>
-              <span className='vote-label'>Hino</span>
-            </div>
-          </div>
+          <motion.div
+            className='vote-footer'
+            variants={ voteFooterVariants }
+            initial='hidden'
+            animate={ cardVisible ? 'visible' : 'hidden' }
+          >
+            { voteItems.map(({ type, icon, label }) => (
+              <motion.div className='vote-item' key={ type } variants={ voteItemVariants }>
+                <span className='vote-icon'>{ icon }</span>
+                <span className='vote-count' style={{ display: 'inline-grid', minWidth: '1.5ch' }}>
+                  <AnimatePresence initial={ false }>
+                    <motion.span
+                      key={ counts[type] }
+                      style={{ gridArea: '1 / 1' }}
+                      initial={{ opacity: 0, y: 6, scale: 0.8 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    >
+                      { counts[type] }
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
+                <span className='vote-label'>{ label }</span>
+              </motion.div>
+            )) }
+          </motion.div>
         </Card.Body>
       </Card>
     </Container>

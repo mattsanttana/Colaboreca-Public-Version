@@ -1424,7 +1424,7 @@ animated.div {
 
 .vote-footer {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
   background: #2e30594D;
@@ -1440,7 +1440,6 @@ animated.div {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  transition: transform 0.2s, color 0.2s;
   flex: 0 1 auto;
   /* tira o flex: 1 anterior para não ocupar espaço igual */
   text-align: center;
@@ -1476,109 +1475,10 @@ animated.div {
   animation: enter-card var(--anim-enter-duration, 600ms) cubic-bezier(.22, .9, .35, 1) both;
 }
 
-/* Footer aparece após o card com delay */
-.vote-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 300ms ease, transform 300ms ease;
-}
-
-.playback-card.enter .vote-footer {
-  opacity: 1;
-  transform: none;
-  transition-delay: 220ms;
-}
-
-/* itens começam invisíveis e surgem com reveal ou pulse */
-.vote-item {
-  opacity: 0;
-  transform: translateY(8px) scale(.98);
-  transition: opacity 220ms ease, transform 220ms ease;
-  text-align: center;
-  min-width: 56px;
-}
-
-.vote-item.revealed {
-  opacity: 1;
-  transform: none;
-  animation: reveal-pop var(--anim-reveal-duration, 800ms) cubic-bezier(.22, .9, .35, 1) both;
-}
-
-.vote-item.pulse {
-  opacity: 1;
-  transform: none;
-  animation: pulse-vote 600ms ease-in-out;
-}
-
-/* animação de entrada rápida do item (usada na sequência) */
-@keyframes reveal-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(8px) scale(.98);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.vote-item.pulse {
-  /* pulse também garante visibilidade */
-  animation-name: pulse-vote;
-}
-
-.vote-item.pulse.reveal,
-.vote-item.pulse {
-  animation-duration: 600ms;
-}
-
-/* pulse effect */
-@keyframes pulse-vote {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.18);
-    filter: drop-shadow(0 0 8px #ffb70366);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* quando entra o reveal (aparece um por um) */
-.vote-item.pulse {
-  /* já usado para pulsar */
-  animation-fill-mode: both;
-}
-
-/* quando quer separação visual no mobile, etc. – não altera lógica */
 @media (max-width: 480px) {
   .vote-footer {
     gap: 8px;
     padding: 0 8px;
-  }
-}
-
-.vote-item.hiding {
-  animation: hide-pop var(--anim-reveal-duration, 800ms) cubic-bezier(.22, .9, .35, 1) both;
-}
-
-@keyframes hide-pop {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(8px) scale(.98);
   }
 }
 

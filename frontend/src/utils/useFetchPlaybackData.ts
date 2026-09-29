@@ -22,20 +22,13 @@ const useFetchPlaybackData = (djToken: string) => {
   const [showVotePopup, setShowVotePopup] = useState<boolean>(false); // Estado do popup de votação
   const [queue, setQueue] = useState<Music[]>([]); // Fila de músicas
   const [isLoading, setIsLoading] = useState(true); // Estado de carregamento
-  const [pulsingVote, setPulsingVote] = useState<string | null>(null);
-  const [previousVoteCounts, setPreviousVoteCounts] = useState(initialVoteCounts);
-  const [revealPulse, setRevealPulse] = useState<string | null>(null);
-  const [cardVisible, setCardVisible] = useState(false);
-  const [revealedVotes, setRevealedVotes] = useState<Record<string, boolean>>({});
-  const [hidePulse, setHidePulse] = useState<string | null>(null);
 
   const playbackActions = usePlayback(); // Ações de reprodução
   const voteActions = useVote(); // Ações de votação
   const interval = useRef<number | null>(null); // Ref para o intervalo de atualização
-  const prevDjRef = useRef<boolean>(false);
-  const timersRefVotes = useRef<number[]>([]);
-  const voteOrder = ['very_bad','bad','normal','good','very_good'] as const;
   const clearAnimRef = useRef<number | null>(null);
+
+  const cardVisible = Boolean(djPlayingNow?.addedBy && !djPlayingNow.addedByApp);
 
   // anima contagem para zero (degradação número a número)
   const animateCountsToZero = (startCounts?: typeof initialVoteCounts) => {
@@ -83,92 +76,6 @@ const useFetchPlaybackData = (djToken: string) => {
       }
     };
   }, []);
-
-  useEffect(() => {
-    const isPlayingDJ = Boolean(djPlayingNow?.addedBy);
-    // entrada: monta card e revela votos em sequência
-    if (isPlayingDJ && !djPlayingNow?.addedByApp && !prevDjRef.current) {
-      setCardVisible(true);
-      timersRefVotes.current.forEach(clearTimeout);
-      timersRefVotes.current = [];
-
-      const startDelay = 600; // espera o card aparecer
-
-      const pulseMs = Number(
-        (getComputedStyle(document.documentElement).getPropertyValue('--anim-pulse-duration') || '500ms')
-          .trim()
-          .replace('ms', '')
-      ) || 500;
-      const gap = 180;
-      const step = pulseMs + gap;
-
-      voteOrder.forEach((v, idx) => {
-        const revealAt = startDelay + idx * step;
-        const t = window.setTimeout(() => {
-          setRevealPulse(v);
-          const t2 = window.setTimeout(() => {
-            setRevealPulse(null);
-            setRevealedVotes(prev => ({ ...prev, [v]: true }));
-          }, pulseMs);
-          timersRefVotes.current.push(t2);
-        }, revealAt);
-        timersRefVotes.current.push(t);
-      });
-
-    // saída: esconde votos em sequência inversa e depois fecha o card
-    } else if (!isPlayingDJ && prevDjRef.current) {
-      timersRefVotes.current.forEach(clearTimeout);
-      timersRefVotes.current = [];
-
-      const pulseMs = Number(
-        (getComputedStyle(document.documentElement).getPropertyValue('--anim-pulse-duration') || '200ms')
-          .trim()
-          .replace('ms', '')
-      ) || 200;
-      const gap = 50;
-      const step = pulseMs + gap;
-      const startDelay = 80; // pequeno atraso antes de começar a esconder
-
-      voteOrder.slice().reverse().forEach((v, idx) => {
-        const hideAt = startDelay + idx * step;
-        const t = window.setTimeout(() => {
-          setHidePulse(v);
-          const t2 = window.setTimeout(() => {
-            setHidePulse(null);
-            setRevealedVotes(prev => {
-              const next = { ...prev };
-              delete next[v];
-              return next;
-            });
-          }, pulseMs);
-          timersRefVotes.current.push(t2);
-        }, hideAt);
-        timersRefVotes.current.push(t);
-      });
-
-      // depois de toda sequência, fechar o card
-      const finishAt = startDelay + voteOrder.length * step + 120;
-      const tFinish = window.setTimeout(() => {
-        setCardVisible(false);
-        setRevealPulse(null);
-        setHidePulse(null);
-        timersRefVotes.current.forEach(clearTimeout);
-        timersRefVotes.current = [];
-      }, finishAt);
-      timersRefVotes.current.push(tFinish);
-    }
-
-    prevDjRef.current = isPlayingDJ;
-    return () => {
-      timersRefVotes.current.forEach(clearTimeout);
-      timersRefVotes.current = [];
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [djPlayingNow?.addedBy]);
-
-  useEffect(() => {
-    if (revealPulse) setRevealedVotes(prev => ({ ...prev, [revealPulse]: true }));
-  }, [revealPulse]);
 
   // UseEffect para buscar dados relacionados à música atual, votação e fila de reprodução
   useEffect(() => {
@@ -256,27 +163,6 @@ const useFetchPlaybackData = (djToken: string) => {
     }
   }, [voteCounts]);
 
-  // Detectar novo voto e adicionar pulso
-  useEffect(() => {
-    Object.keys(voteCounts).forEach((voteType) => {
-      if (voteCounts[voteType as keyof typeof voteCounts] > previousVoteCounts[voteType as keyof typeof previousVoteCounts]) {
-        // Novo voto detectado
-        setPulsingVote(voteType);
-
-        // Remover o pulso após 600ms (duração da animação)
-        const timer = setTimeout(() => {
-          setPulsingVote(null);
-        }, 600);
-
-        return () => clearTimeout(timer);
-      }
-    });
-
-    // Atualizar contagem anterior
-    setPreviousVoteCounts(voteCounts);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [votes]);
-
   // UseEffect para lidar com eventos do socket
   useEffect(() => {
     // Verifica se o socket está conectado e se o DJ existe
@@ -328,16 +214,12 @@ const useFetchPlaybackData = (djToken: string) => {
   return {
     playingNow,
     initialVoteCounts,
-    pulsingVote,
     djPlayingNow,
     showVotePopup,
     setShowVotePopup,
     queue,
     isLoading,
-    revealPulse,
     cardVisible,
-    revealedVotes,
-    hidePulse,
     displayVoteCounts,
   };
 };

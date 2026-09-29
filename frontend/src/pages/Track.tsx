@@ -39,7 +39,7 @@ const Track: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados de reproduçãos
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup, initialVoteCounts,
-    pulsingVote, revealPulse, cardVisible, revealedVotes, hidePulse, displayVoteCounts
+    cardVisible, displayVoteCounts
   } = useFetchPlaybackData(token);
 
   const { queue, isLoadingQueue } = useQueue(playingNow)
@@ -138,12 +138,8 @@ const Track: React.FC<Props> = ({ token }) => {
                 djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
                 votes={ initialVoteCounts } // Envia os votos da música atual como prop
                 playingNow={ playingNow } // Envia o estado de reprodução como prop
-                pulsingVote={ pulsingVote } // Envia o evento de pulsação do voto como prop
                 trackName={ trackName } // Envia o nom da pista como prop
-                revealPulse={ revealPulse } // Envia o voto que deve pulsar no momento como prop
                 cardVisible={ cardVisible } // Envia se o card do DJ está visível como prop
-                revealedVotes={ revealedVotes } // Envia os votos que já foram revelados como prop
-                hidePulse={ hidePulse } // Envia a função para esconder a pulsação dos votos como prop
                 displayVoteCounts={ displayVoteCounts } // Envia os contadores de votos personalizados como prop
               />
             </Col>
