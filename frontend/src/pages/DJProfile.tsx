@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Button, Card, Col, Container, Image, Row, Spinner } from 'react-bootstrap';
+import { Card, Col, Container, Image, Row, Spinner } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import DJProfileMini from './DJProfileMini';
 import Header from './Header';
@@ -163,19 +163,10 @@ const DJProfile: React.FC<Props> = ({ token }) => {
                 <DJProfileMini
                   currentRanking={ djs }
                   dj={ djProfile } // Envia o perfil do DJ como prop
+                  onEdit={ () => setShowDJInfoPopup(true) }
                   previousRanking={ globalPreviousRanking }
+                  showEditButton={ isProfileOwner }
                 />
-                  { /* Caso o usuário seja o dono do perfil e não seja o dono da pista, exibe o botão para editar/excluir DJ */ }
-                  { isProfileOwner && (
-                    <Container className='d-flex justify-content-center align-items-center mt-4 dj-profile-edit-action'>
-                      <Button 
-                        onClick={ () => setShowDJInfoPopup(true) } // Função para abrir o popup de informações do DJ
-                        className='primary-button'
-                      >
-                        Editar/Excluir DJ
-                      </Button>
-                    </Container>
-                  )}
                   { /*Renderiza o componente de músicas adicionadas pelo DJ */ }
                   <div className='dj-added-musics-slot'>
                     <AddedMusicsByDJ addedMusics={ addedMusics } />

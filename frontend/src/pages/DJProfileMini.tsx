@@ -1,16 +1,19 @@
 import React from 'react';
-import { Image, Col } from 'react-bootstrap';
+import { Image, Col, Button } from 'react-bootstrap';
 import { DJ } from '../types/DJ';
 import { FaArrowDown, FaArrowUp, FaStar } from 'react-icons/fa';
+import { BsPencilFill } from 'react-icons/bs';
 import useRankingTable from '../utils/useRankingTable';
 
 type Props = {
   currentRanking: DJ[]; // Ranking atual
   dj: DJ | undefined; // DJ logado (pode ser undefined se o usuário não for um DJ)
+  onEdit?: () => void;
   previousRanking: DJ[]; // Ranking anterior
+  showEditButton?: boolean;
 };
 
-const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking }) => {
+const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, onEdit, previousRanking, showEditButton = false }) => {
   const { points, pointDirection, formatScore } = useRankingTable(currentRanking, dj, previousRanking );
 
   if (!dj) return null;
@@ -19,6 +22,17 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, previousRanking })
     <Col className='d-flex flex-column align-items-center dj-profile-mini'>
       {/* Wrapper para posicionar rank sobre a imagem */}
       <div className='dj-profile-avatar-wrapper'>
+        { showEditButton && onEdit && (
+          <Button
+            aria-label='Editar perfil do DJ'
+            className='dj-profile-edit-icon'
+            onClick={ onEdit }
+            title='Editar perfil'
+            type='button'
+          >
+            <BsPencilFill aria-hidden='true' />
+          </Button>
+        ) }
         <Image
           alt={ `Personagem do DJ ${ dj?.djName }` }
           className='img-fluid rounded-circle mb-3 profile-avatar'
