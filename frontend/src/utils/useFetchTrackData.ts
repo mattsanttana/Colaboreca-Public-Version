@@ -2,15 +2,14 @@ import { useEffect, useState } from 'react';
 import useDJ from './useDJ';
 import useTrack from './useTrack';
 import { DJ } from '../types/DJ';
-import { io } from 'socket.io-client';
 import { useParams } from 'react-router-dom';
 import { Settings } from '../types/Settings';
-
-const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
+import socket from './socket';
 
 const useFetchTrackData = (djToken: string) => {
   const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [trackName, setTrackName] = useState(''); // Nome da pista
+  const [ownerDJId, setOwnerDJId] = useState<number | null>(null);
   const [queueSettings, setQueueSettings] = useState<Settings>(); // Configurações persistidas da pista
   const [dj, setDJ] = useState<DJ>(); // DJ atual
   const [djs, setDJs] = useState<DJ[]>([]); // Lista de DJs
@@ -30,6 +29,7 @@ const useFetchTrackData = (djToken: string) => {
 
     if (fetchedTrack?.status === 200) {
       setTrackName(fetchedTrack.data.trackName);
+      setOwnerDJId(fetchedTrack.data.ownerDjId ?? null);
       setQueueSettings({
         queueOpen: fetchedTrack.data.queueOpen,
         maxSongsPerDJ: fetchedTrack.data.maxSongsPerDJ,
@@ -63,12 +63,13 @@ const useFetchTrackData = (djToken: string) => {
           // Verifica se a pista existe
           if (fetchedTrack?.status === 200) {
             setTrackName(fetchedTrack?.data.trackName); // Define o nome da pista
+            setOwnerDJId(fetchedTrack.data.ownerDjId ?? null);
             setQueueSettings({
               queueOpen: fetchedTrack.data.queueOpen,
               maxSongsPerDJ: fetchedTrack.data.maxSongsPerDJ,
               veryBadVotesToSkip: fetchedTrack.data.veryBadVotesToSkip,
             });
-            setDJs(fetchedDJData?.data.djs); // Define a lista de DJs
+            setDJs(fetchedDJData?.data.djs ?? []); // Define a lista de DJs
             setDJ(fetchedDJData?.data.dj); // Define o DJ atual
           } else {
             // Caso a pista não exista, exibe um popup de erro
@@ -196,6 +197,7 @@ const useFetchTrackData = (djToken: string) => {
   return {
     dj, // DJ atual
     djs, // Lista de DJs
+    ownerDJId,
     globalPreviousRanking,
     popupMessageData, // Dados do popup de mensagem
     previousRanking, // Ranking anterior

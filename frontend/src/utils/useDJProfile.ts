@@ -5,6 +5,7 @@ import useDJ from './useDJ';
 import PopupMessageData from '../types/PopupMessageData';
 import { DJMusic } from '../types/SpotifySearchResponse';
 import { DJ } from '../types/DJ';
+import socket from './socket';
 
 const useDJProfile = (djToken: string, setPopupMessageData: (data: PopupMessageData) => void) => {
   const { djId, trackId, } = useParams(); // Pega o ID da pista e do DJ da URL
@@ -47,8 +48,25 @@ const useDJProfile = (djToken: string, setPopupMessageData: (data: PopupMessageD
           }
         }
       }
+
+      const handleMusicPointsApplied = async (data: { trackId: number; djId: number }) => {
+        if (Number(data.trackId) !== Number(trackId) || Number(data.djId) !== Number(djId) || !trackId || !djId) {
+          return;
+        }
+
+        const refreshedMusics = await playbackActions.getAddedMusicsByDJ(Number(djId), Number(trackId));
+        if (Array.isArray(refreshedMusics)) {
+          setAddedMusics(refreshedMusics);
+        }
+      };
+
+      socket.on('music points applied', handleMusicPointsApplied);
   
       fetchData();
+
+      return () => {
+        socket.off('music points applied', handleMusicPointsApplied);
+      };
   
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

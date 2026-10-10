@@ -14,6 +14,7 @@ import CharactersSelectPopup from './CharactersSelectPopup';
 import DeleteConfirmationPopup from './DeleteDJConfirmationPopup';
 import EditOrDeleteDJPopup from './EditOrDeleteDJPopup';
 import useDJProfile from '../utils/useDJProfile';
+import DJVoteRadar from './DJVoteRadar';
 
 // Componentes que não precisam ser carregados inicialmente
 const MessagePopup = lazy (() => import('./MessagePopup'));
@@ -29,7 +30,7 @@ interface Props {
 const DJProfile: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, ownerDJId, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     queueSettings, refreshTrackSettings, setQueueSettings, setTrackName, showRankingChangePopup, trackName, trackId
   } = useFetchTrackData(token);
 
@@ -65,6 +66,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
         { /* Componente de popup de confirmação de exclusão */ }
         <DeleteConfirmationPopup
           dj={ dj } // DJ logado
+          ownerDjId={ ownerDJId }
           token={ token } // Token do DJ logado
           onHide={ () => setShowDeleteConfirmation(false) } // Função para fechar o popup
           setPopupMessageData={ setPopupMessageData } // Função para definir os dados do popup de mensagem
@@ -91,6 +93,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
         <RankingChangePopup
           show={ showRankingChangePopup } // Envia o estado do popup como prop
           dj={ dj } // Envia o DJ atual como prop
+          ownerDJId={ ownerDJId }
           previousRanking={ previousRanking } // Envia o ranking anterior como prop
           currentRanking={ djs } // Envia o ranking atual como prop
           onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
@@ -159,14 +162,16 @@ const DJProfile: React.FC<Props> = ({ token }) => {
               <Card
                 className='text-center gradient-border dj-profile-card' // Estilo de texto centralizado
               >
-                { /* Renderiza o mini perfil do DJ */ }
-                <DJProfileMini
-                  currentRanking={ djs }
-                  dj={ djProfile } // Envia o perfil do DJ como prop
-                  onEdit={ () => setShowDJInfoPopup(true) }
-                  previousRanking={ globalPreviousRanking }
-                  showEditButton={ isProfileOwner }
-                />
+                <div className='dj-profile-overview'>
+                  <DJProfileMini
+                    currentRanking={ djs }
+                    dj={ djProfile } // Envia o perfil do DJ como prop
+                    onEdit={ () => setShowDJInfoPopup(true) }
+                    previousRanking={ globalPreviousRanking }
+                    showEditButton={ isProfileOwner }
+                  />
+                  <DJVoteRadar addedMusics={ addedMusics } />
+                </div>
                   { /*Renderiza o componente de músicas adicionadas pelo DJ */ }
                   <div className='dj-added-musics-slot'>
                     <AddedMusicsByDJ addedMusics={ addedMusics } />

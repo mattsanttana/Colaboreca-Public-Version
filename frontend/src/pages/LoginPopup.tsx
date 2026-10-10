@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Col, Container, Image, Modal, OverlayTrigger, Tooltip, Row } from 'react-bootstrap';
-import { FaQuestionCircle } from 'react-icons/fa';
+import { FaQuestionCircle, FaSpotify } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import CreateTrackConnected from './CreateTrack';
 import { logo } from '../assets/images/characterPath';
@@ -79,6 +79,7 @@ const LoginPopup: React.FC<Props> = ({ onHide, show = true }) => {
                 onClick={ handleClick } // Função chamada ao clicar no botão
                 variant='primary' // Cor do botão
               >
+                <FaSpotify aria-hidden="true" size={20} />
                 Entrar Com Spotify Premium
               </Button>
               { /* Tooltip explicativo sobre o Spotify Premium */ }

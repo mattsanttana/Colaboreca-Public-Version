@@ -24,7 +24,7 @@ interface Props {
 const Ranking: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData,
+    dj, djs, globalPreviousRanking, ownerDJId, popupMessageData, previousRanking, setPopupMessageData,
     queueSettings, refreshTrackSettings, setQueueSettings, setShowRankingChangePopup, setTrackName, showRankingChangePopup, trackId, trackName
   } = useFetchTrackData(token);
 
@@ -37,6 +37,7 @@ const Ranking: React.FC<Props> = ({ token }) => {
 
   return (
     <Container
+      className='ranking-route'
       onTouchStart={ handleTouchStart }
       onTouchMove={ handleTouchMove }
       onTouchEnd={ handleTouchEnd }
@@ -52,6 +53,7 @@ const Ranking: React.FC<Props> = ({ token }) => {
           <RankingChangePopup
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
+            ownerDJId={ ownerDJId }
             onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
             previousRanking={ previousRanking } // Envia o ranking anterior como prop
             show={ showRankingChangePopup } // Envia o estado do popup como prop
@@ -77,7 +79,7 @@ const Ranking: React.FC<Props> = ({ token }) => {
           />
         </Container>
       ) : (
-        <Container>
+        <Container className='ranking-page gradient-border'>
           <Header
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
@@ -93,7 +95,7 @@ const Ranking: React.FC<Props> = ({ token }) => {
             trackId={ trackId } // Envia o ID da pista como prop
             trackName={ trackName } // Envia o nome da pista como prop
           />
-          <Row>
+          <Row className='ranking-layout'>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
             <Col
               className='d-none d-xxl-block' // Esconde o menu lateral em telas menores
@@ -107,34 +109,23 @@ const Ranking: React.FC<Props> = ({ token }) => {
                 trackId={ Number(trackId) } // Envia o ID da pista como prop
               />
             </Col>
-            <Col className='py-4'>
+            <Col className='py-4 ranking-main-column'>
               { /* Renderiza o conteúdo principal da página */ }
-              <Card className='text-center text-light'>
-                <Card.Body
-                  // Estilo do corpo do card
-                  style={{
-                    backgroundColor: 'transparent', // Cor de fundo do card
-                    padding: '0', // Remove o padding do card
-                    height: '100%', // Altura do card
-                    overflowY: 'hidden', // Permite rolagem vertical
-                    width: '100%' // Largura do card
-                  }}
-                >
+              <Card className='text-center text-light gradient-border ranking-panel'>
+                <Card.Body className='ranking-panel-body'>
                   { /* Renderiza o pódio com os DJs */ }
-                  <Row
-                    sm={ 3 } md={ 1 } lg={ 1 } xl={ 3 } xxl={ 3 } // Define o layout responsivo
-                    style={{ width: '90%', marginLeft: '7%' }} // Define a largura e margem do pódio
-                  >
+                  <Row className='ranking-podium-row' sm={ 3 } md={ 1 } lg={ 1 } xl={ 3 } xxl={ 3 }>
                     { /* Componente de pódio */ }
                     <Podium
                       djs={ djs } // Envia a lista de DJs como prop
+                      featured
                       trackName={ trackName }
                     />
                   </Row>
                   <OverlayTrigger
-                    placement='top'
+                    placement='bottom'
                     overlay={
-                      <Tooltip>
+                      <Tooltip className='custom-modal'>
                         Os DJs são classificados com base na pontuação que acumulam ao longo da competição.
 
                         Critérios de desempate:
@@ -146,25 +137,11 @@ const Ranking: React.FC<Props> = ({ token }) => {
                     }
                   >
                     { /* Ícone de ajuda com tooltip */ }
-                    <span
-                      className='ms-2' // Margem esquerda para espaçamento
-                      // Estilo do ícone de ajuda
-                      style={{ 
-                        marginTop: '-10%', // Ajusta a posição vertical do ícone
-                        position: 'absolute', // Posiciona o ícone de ajuda
-                        right: 40 // Alinha o ícone à direita
-                      }}
-                    >
+                    <span className='ranking-help'>
                       <FaQuestionCircle style={{ cursor: 'pointer', color: '#ffffff' }} /> {/* Ícone de ajuda*/ }
                     </span>
                   </OverlayTrigger>
-                  <div
-                    style={{
-                      height: 'calc(100% - 350px)', // ajuste 240px para a altura real do seu slider
-                      overflowY: 'auto', // Define a barra de rolagem vertical
-                      overflowX: 'hidden' // Esconede a barra de rolagem horizontal
-                    }}
-                  >
+                  <div className='ranking-table-scroll'>
                     { /* Caso não haja DJs na sala, exibe uma mensagem */ }
                     { djs?.length === 0 ? (
                       <Card.Text>Nenhum DJ entrou na sala.</Card.Text>
@@ -173,6 +150,7 @@ const Ranking: React.FC<Props> = ({ token }) => {
                       <RankingTable
                         dj={ dj }
                         currentRanking={ djs } // Envia o ranking atual como prop
+                        ownerDJId={ ownerDJId }
                         previousRanking={ globalPreviousRanking } // Envia o ranking anterior como prop
                         trackToken={ token } // Envia o token da pista como prop
                       />

@@ -1,5 +1,5 @@
 import { Button, Container, Modal, OverlayTrigger, Spinner, Tooltip } from 'react-bootstrap';
-import { FaQuestionCircle } from 'react-icons/fa';
+import { FaQuestionCircle, FaSpotify } from 'react-icons/fa';
 import { Music } from '../types/SpotifySearchResponse';
 
 // Props recebidas pelo componente
@@ -56,7 +56,8 @@ const AddMusicConfirmationPopup: React.FC<Props> = ({ show, isAddingTrack, selec
                 style={{ maxWidth: '300px' }}
                 target='_blank' // Abre o link em uma nova aba
               >
-                Ouvir no Spotify 🎧
+                <FaSpotify aria-hidden="true" size={20} />
+                Ouvir no Spotify
               </Button>
               { /* Tooltip para explicar a ausência da prévia */ }
               <OverlayTrigger

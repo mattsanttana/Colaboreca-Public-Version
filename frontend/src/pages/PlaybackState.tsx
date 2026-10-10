@@ -41,6 +41,7 @@ const voteItemVariants: Variants = {
 type Props = {
   djPlayingNow: DJPlayingNow | null; // DJ que está tocando a música atual
   playingNow: PlayingNow | null; // Música que está tocando atualmente
+  isTrackOwner: boolean;
   trackName: string; // Nome da pista
   votes: { very_good: number; good: number; normal: number; bad: number; very_bad: number }; // Contadores de votos iniciais
   cardVisible: boolean;
@@ -49,11 +50,13 @@ type Props = {
 
 // Componente PlaybackState responsável por exibir o estado de reprodução atual
 const PlaybackState: React.FC<Props> = ({
-  djPlayingNow, playingNow, trackName, votes, cardVisible, displayVoteCounts
+  djPlayingNow, playingNow, isTrackOwner, trackName, votes, cardVisible, displayVoteCounts
 }) => {
   
   const counts = displayVoteCounts ?? votes ?? { very_good: 0, good: 0, normal: 0, bad: 0, very_bad: 0 };
   const isSpotifyAddedTrack = Boolean(djPlayingNow?.addedByApp);
+  const isSpotifyAfk = !playingNow;
+  const isPlaybackPaused = Boolean(playingNow && !playingNow.is_playing);
 
   // Renderiza o componente PlaybackState
   return (
@@ -81,19 +84,29 @@ const PlaybackState: React.FC<Props> = ({
             className='vote-footer'
             variants={ voteFooterVariants }
             initial='hidden'
-            animate={ cardVisible || isSpotifyAddedTrack ? 'visible' : 'hidden' }
+            animate={ cardVisible || isSpotifyAddedTrack || isSpotifyAfk || isPlaybackPaused ? 'visible' : 'hidden' }
           >
             <AnimatePresence mode='wait' initial={ false }>
-              { isSpotifyAddedTrack ? (
+              { isSpotifyAfk || isPlaybackPaused || isSpotifyAddedTrack ? (
                 <motion.p
-                  key='spotify-added-note'
+                  key={ isPlaybackPaused
+                    ? 'spotify-paused-note'
+                    : isSpotifyAfk
+                      ? isTrackOwner ? 'spotify-owner-afk-note' : 'spotify-afk-note'
+                      : 'spotify-added-note' }
                   className='vote-unavailable'
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  Esta música não está na disputa de votos porque foi adicionada diretamente pelo Spotify.
+                  { isPlaybackPaused
+                    ? 'A reprodução está pausada no Spotify. Dê play para retomar a música.'
+                    : isSpotifyAfk
+                      ? isTrackOwner
+                        ? 'O Spotify vinculado a esta pista parou de enviar atualizações. Abra o app do Spotify para retomar a sincronização das informações.'
+                        : 'O Spotify do responsável por esta pista não envia atualizações há algum tempo. Por isso, não podemos exibir as informações atualizadas da música atual.'
+                      : 'Esta música foi adicionada diretamente pelo Spotify e, por isso, não participa da votação.' }
                 </motion.p>
               ) : (
                 <motion.div key='vote-counts' className='vote-items' variants={ voteFooterVariants }>

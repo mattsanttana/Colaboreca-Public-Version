@@ -15,10 +15,18 @@ export type Music = {
 }
 
 export type DJMusic = {
+  id: number;
   cover: string;
   name: string;
-  artists: string[];
+  artists: string;
   wasPlayed: boolean;
+  voteCounts: {
+    very_good: number;
+    good: number;
+    normal: number;
+    bad: number;
+    very_bad: number;
+  };
 }
 
 export type SpotifyApiResponse = {

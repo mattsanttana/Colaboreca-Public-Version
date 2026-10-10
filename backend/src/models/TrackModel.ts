@@ -96,6 +96,7 @@ export default class TrackModel {
   // Método para atualizar uma pista
   async update(
     data: {
+      ownerDjId?: number | null;
       trackName?: string;
       queueOpen?: boolean;
       maxSongsPerDJ?: number;

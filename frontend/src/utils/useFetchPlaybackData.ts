@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
 import PlayingNow from "../types/PlayingNow";
 import { Vote, voteValues } from "../types/Vote";
 import { DJPlayingNow } from "../types/DJ";
@@ -8,8 +7,7 @@ import useVote from "./useVote";
 import { Music } from "../types/SpotifySearchResponse";
 import TQueue from "../types/TQueue";
 import { useParams } from "react-router-dom";
-
-const socket = io('http://localhost:3001'); // Conecta ao servidor WebSocket
+import socket from './socket';
 
 const useFetchPlaybackData = (djToken: string) => {
   const { trackId, } = useParams(); // Pega o ID da pista da URL

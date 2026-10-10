@@ -7,6 +7,7 @@ import RankingTable from './RankingTable';
 interface Props {
   currentRanking: DJ[]; // Ranking atual
   dj: DJ | undefined; // DJ atual
+  ownerDJId: number | null;
   onHide: () => void; // Função para fechar o popup
   previousRanking: DJ[]; // Ranking anterior
   show: boolean; // Estado para controlar a exibição do popup
@@ -14,7 +15,7 @@ interface Props {
 }
 
 // Componente principal do popup de animação de alteração de ranking
-const RankingChangePopup: React.FC<Props> = ({ currentRanking, dj, onHide, previousRanking, show, trackName }) => (
+const RankingChangePopup: React.FC<Props> = ({ currentRanking = [], dj, ownerDJId, onHide, previousRanking = [], show, trackName = '' }) => (
   <Modal
     centered
     className='custom-modal ranking-change-modal' // Classe personalizada
@@ -44,6 +45,7 @@ const RankingChangePopup: React.FC<Props> = ({ currentRanking, dj, onHide, previ
       <RankingTable
         currentRanking={ currentRanking } // Ranking atual
         dj={ dj } // DJ atual
+        ownerDJId={ ownerDJId }
         previousRanking={ previousRanking } // Ranking anterior
       />
     </Modal.Body>

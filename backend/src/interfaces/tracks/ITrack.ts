@@ -4,6 +4,7 @@ import { IMusic } from '../musics/IMusic';
 
 // Interface do modelo de pista
 export interface ITrack extends Identifiable {
+  ownerDjId: number | null; // ID do DJ dono da pista
   trackName: string; // Nome da pista
   spotifyToken: string; // Token do Spotify
   queueOpen: boolean; // Se a fila está aberta ou não
@@ -16,6 +17,7 @@ export interface ITrack extends Identifiable {
 // Interface de retorno da pista com os DJs e fila
 export interface ITrackQueueData {
   id: number; // ID da pista
+  ownerDjId: number | null; // ID do DJ dono da pista
   trackName: string; // Nome da pista
   spotifyToken: string; // Token do Spotify
   queueOpen: boolean; // Se a fila está aberta ou não

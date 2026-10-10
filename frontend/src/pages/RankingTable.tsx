@@ -13,12 +13,13 @@ const ExpelDJConfirmationPopup = lazy(() => import('./ExpelDJConfirmationPopup')
 interface Props {
   currentRanking: DJ[]; // Ranking atual
   dj?: DJ, // DJ atual
+  ownerDJId: number | null;
   previousRanking: DJ[]; // Ranking anterior
   trackToken?: string; // Token da pista
 }
 
 // Componente responsável por exibir a tabela de ranking dos DJs
-const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackToken }) => {
+const RankingTable: React.FC<Props> = ({ currentRanking, dj, ownerDJId, previousRanking, trackToken }) => {
   const navigate = useNavigate(); // Hook para navegação entre rotas
 
   // Hook personalizado para gerenciar o estado e lógica da tabela de ranking
@@ -29,7 +30,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
 
 
   return (
-    <Container className='table-responsive'>
+    <Container className='table-responsive ranking-table-wrapper'>
       { /* Carregaento preguiçoso para componentes menos importantes */ }
       <Suspense fallback={ <Spinner /> }>
         { /* Modal de confirmação para expulsar DJ */ }
@@ -42,7 +43,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
       
       { /* Barra de busca */ }
       <Container className='d-flex justify-content-end'>
-        <div className='search-group my-3' style={{ width: '30%', position: 'relative' }}>
+        <div className='search-group my-3 ranking-search-group'>
           <FaSearch className='search-icon' /> { /* Ícone de busca */ }
           { /* Verifica se há texto na busca para mostrar o ícone de limpar */ }
           { search ? (
@@ -70,6 +71,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
       </Container>
       {/* Container principal para animação */}
       <Container 
+        className='ranking-list'
         ref={ tableRef } // Referência para medir altura
         style={{ 
           position: 'relative', 
@@ -93,7 +95,6 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
               zIndex: 1,
               transform: springs[index].y.to(y => `translateY(${y}px)`),
               transition: 'background-color 0.3s ease',
-              border: 'none',
               cursor: 'pointer',
             }}
             // Navega para o perfil do DJ ao clicar na linha
@@ -170,7 +171,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
               </div>
               
               {/* Nome */}
-              <div className='text-light'>
+              <div className='ranking-dj-name'>
                 { rankingDJ.djName }
               </div>
             </div>
@@ -178,7 +179,7 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
             {/* Pontuação */}
             <div
               // Classe condicional para indicar aumento ou diminuição de pontos
-              className={ `flex-shrink-0 text-light ${
+              className={ `flex-shrink-0 ranking-score ${
                 pointDirection[rankingDJ.id] === 'up' ? 'points-up' : pointDirection[rankingDJ.id] === 'down' ? 'points-down' : ''
               }` }
             >
@@ -191,9 +192,17 @@ const RankingTable: React.FC<Props> = ({ currentRanking, dj, previousRanking, tr
             </div>
             
             {/* Botão de expulsão */}
-            { dj?.isOwner && dj.id !== rankingDJ.id && (
+            { dj?.id === ownerDJId && dj.id !== rankingDJ.id && (
               <div className='flex-shrink-0 ms-3'>
-                <Button variant='danger' size='sm' title='Expulsar DJ' onClick={() => handleExpelDJ(dj)}>
+                <Button
+                  variant='danger'
+                  size='sm'
+                  title='Expulsar DJ'
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleExpelDJ(dj);
+                  }}
+                >
                   <FaUserSlash /> { /* Ícone de expulsão */ }
                 </Button>
               </div>

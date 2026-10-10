@@ -24,70 +24,51 @@ const QueueList: React.FC<Props> = ({ currentTrackIndex, queue, setCurrentTrackI
   };
 
   return (
-    <Row>
+    <Row className='queue-list'>
       { queue.map((track, index) => (
         // Renderiza cada item da fila dentro de uma coluna
         <Col
+          className='queue-list-column'
           key={ index } // Chave única para cada item da fila
           md={ 4 } // Define a largura da coluna em telas médias
           onClick={ () => handleClickTrack(index) } // Adiciona evento de clique para pular para o item clicado
         >
           { /* Item da lista de músicas, que é um ListGroupItem do React Bootstrap */ }
           <ListGroupItem
+            className='queue-list-item'
             ref={ (el) => { trackRefs.current[index] = el instanceof HTMLDivElement ? el : null; } } // Adiciona a referência ao item da fila
-            style={{
-              backgroundColor: 'transparent', // Cor de fundo do item da lista
-              borderBottom: 'none', // Remove a borda inferior do item da lista
-              cursor: 'pointer' // Define o cursor como ponteiro para indicar que é clicável
-            }}
           >
             { /* Container para o conteúdo do item da lista */ }
             <Container
-              className='d-flex align-items-center' // Classes para alinhar o conteúdo do item da lista
-              style={{ backgroundColor: currentTrackIndex === index ? '#23272b' : '' }} // Define o estilo do item da lista
+              className={`d-flex align-items-center queue-list-item-content ${ currentTrackIndex === index ? 'active' : '' }`}
             >
               { /* Verifica se a música tem uma imagem de personagem, caso contrário, usa o logo padrão */ }
               { track.characterPath ? (
                 // Renderiza o popover com as opções de perfil e chat para o DJ
                 <Image
                   alt={ `Música adicionada por ${ track.addedBy }` }
-                  className='img-thumbnail i' // Classe para estilizar a imagem
+                  className='img-thumbnail i queue-contributor-image' // Classe para estilizar a imagem
                   onClick={ () => navigate( `/track/profile/${ trackId }/${ track.djId }` )} // Navega para a página de perfil do DJ ou da música
                   // Define o estilo da imagem
-                  style={{
-                    backgroundColor: '#000000', // Cor de fundo da imagem
-                    cursor: 'pointer', // Define o cursor como ponteiro para indicar que é clicável
-                    height: '70px', // Altura da imagem
-                    width: '70px' // Largura da imagem
-                  }}
+                  style={{ cursor: 'pointer', height: '70px', width: '70px' }}
                   src={ track.characterPath } // Caminho da imagem do personagem
                 />
               ) : (
                 <Image
                   alt='Logo do Colaboreca' // Texto alternativo da imagem
-                  className='img-thumbnail' // Classe para estilizar a imagem
+                  className='img-thumbnail queue-contributor-image' // Classe para estilizar a imagem
                   // Define o estilo da imagem
-                  style={{
-                    width: '70px', // Largura da imagem
-                    height: '70px', // Altura da imagem
-                    backgroundColor: '#000000', // Cor de fundo da imagem
-                  }}
+                  style={{ width: '70px', height: '70px' }}
                   src={ logo } // Caminho da imagem do logo
                 />
               )}
               { /* Container para o texto do item da lista */ }
               <Container
-                className='hide-scrollbar' // Classe para esconder a barra de rolagem
-                // Define o estilo do container de texto
-                style={{
-                  flexDirection: 'column', // Direção do layout do container
-                  margin: '8px', // Margem do container
-                  maxWidth: '200px' // Largura máxima do container
-                }}
+                className='queue-list-copy'
               >
                 { /* Nome do DJ que adicionou a música */ }
                 <h5
-                  className='text-light' // Cor do texto
+                  className='queue-added-by'
                   // Estilo do texto
                   style={{
                     fontSize: '13px', // Tamanho da fonte
@@ -99,7 +80,7 @@ const QueueList: React.FC<Props> = ({ currentTrackIndex, queue, setCurrentTrackI
                   { track.addedBy }
                 </h5>
                 <div
-                  className='text-light' // Cor do texto
+                  className='queue-music-detail'
                   // Estilo do texto
                   style={{
                     overflow: 'hidden', // Escolnde a barra de rolagem

@@ -4,9 +4,9 @@ import { IDJ } from '../../interfaces/djs/IDJ';
 // Migration de criação da tabela de djs
 export default {
   // Função de criação da tabela
-  up(queryInterface: QueryInterface) {
+  async up(queryInterface: QueryInterface) {
     // Cria a tabela de djs
-    return queryInterface.createTable<Model<IDJ>>('djs', {
+    await queryInterface.createTable<Model<IDJ>>('djs', {
       // Coluna de id
       id: {
         type: DataTypes.INTEGER, // Tipo inteiro
@@ -37,20 +37,25 @@ export default {
         type: DataTypes.INTEGER, // Tipo inteiro
         allowNull: false // Não pode ser nulo
       },
-      // Coluna que indica se o DJ é o dono da pista
-      isOwner: {
-        type: DataTypes.BOOLEAN, // Tipo booleano
-        allowNull: false, // Não pode ser nulo
-        defaultValue: false, // Valor padrão
-        field: 'is_owner' // Nome da coluna no banco de dados
-      },
       // Coluna de id da pista
       trackId: {
         type: DataTypes.INTEGER, // Tipo inteiro
         allowNull: false, // Não pode ser nulo
         field: 'track_id' // Nome da coluna no banco de dados
       }
-    })
+    });
+
+    return queryInterface.addConstraint('tracks', {
+      fields: ['owner_dj_id'],
+      type: 'foreign key',
+      name: 'tracks_owner_dj_id_fkey',
+      references: {
+        table: 'djs',
+        field: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+    });
   },
 
   // Função de remoção da tabela

@@ -71,12 +71,14 @@ export default class TrackService {
         return { status: 'ERROR', data: { message: 'An error occurred' } };
       }
 
-      const dj = await this.djModel.create({ djName, characterPath, trackId: track.id, isOwner: true }, { transaction }); // Criar o DJ
+      const dj = await this.djModel.create({ djName, characterPath, trackId: track.id }, { transaction }); // Criar o DJ
 
       if (!dj) {
         await transaction.rollback(); // Se o DJ não for criado, rollback a transação e retorne uma mensagem de erro
         return { status: 'ERROR', data: { message: 'An error occurred' } };
       }
+
+      await this.trackModel.update({ ownerDjId: dj.id }, { id: track.id }, { transaction });
 
       const token = JWT.sign({ id: dj.id, trackId: track.id }); // Gerar um token para a pista
 
@@ -261,6 +263,7 @@ export default class TrackService {
 
       // Se o token for inválido, retorne uma mensagem de erro
       if (typeof decoded === 'string') {
+        await transaction.rollback();
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid token' } };
       }
 
@@ -270,6 +273,11 @@ export default class TrackService {
       if (!track) {
         await transaction.rollback();
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
+      }
+
+      if (track.ownerDjId !== decoded.id) {
+        await transaction.rollback();
+        return { status: 'UNAUTHORIZED', data: { message: 'Only the track owner can delete this track.' } };
       }
 
       const trackId = decoded.trackId; // Pegar o ID da pista
@@ -380,6 +388,10 @@ export default class TrackService {
       // Se o DJ for o dono da pista, retorne uma mensagem de erro
       if (dj.trackId !== decoded.trackId) {
         return { status: 'FORBIDDEN', data: { message: 'You do not have permission to delete this DJ.' } };
+      }
+
+      if (dj.id === track.ownerDjId) {
+        return { status: 'FORBIDDEN', data: { message: 'The owner DJ cannot be expelled.' } };
       }
 
       const response = await this.djModel.delete({ id }); // Deletar o DJ

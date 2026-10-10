@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { Card, Container, Form, Image, Table } from 'react-bootstrap';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Bar, BarChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Card, Container, Form, Image } from 'react-bootstrap';
 import { DJMusic } from '../types/SpotifySearchResponse';
+import socket from '../utils/socket';
 
 // Props para o componente AddedMusicsByDJ
 interface Props {
@@ -9,20 +12,60 @@ interface Props {
 
 // Componente AddedMusicsByDJ
 const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
+  const [liveAddedMusics, setLiveAddedMusics] = useState(addedMusics);
   const [addedMusicsFilter, setAddedMusicsFilter] = useState<'all' | 'played' | 'not played'>('all'); // Estado para controlar o filtro de músicas (1: Todas, 2: Tocadas, 3: Não tocadas)
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const expandedRef = useRef<HTMLDivElement>(null);
+  const expandedContentRef = useRef<HTMLDivElement>(null);
 
-  const playedMusics = addedMusics.filter((music) => music.wasPlayed); // Filtra as músicas que foram tocadas
-  const notPlayedMusics = addedMusics.filter((music) => !music.wasPlayed); // Filtra as músicas que não foram tocadas
-  let musicsToShow: DJMusic[] = [];
+  useEffect(() => {
+    setLiveAddedMusics(addedMusics);
+  }, [addedMusics]);
 
-  // Determina quais músicas serão exibidas com base no filtro selecionado
-  if (addedMusicsFilter === 'all') {
-    musicsToShow = addedMusics; // Exibe todas as músicas adicionadas pelo DJ
-  } else if (addedMusicsFilter === 'played') {
-    musicsToShow = playedMusics; // Exibe apenas as músicas que foram tocadas
-  } else {
-    musicsToShow = notPlayedMusics; // Exibe apenas as músicas que não foram tocadas
-  }
+  useEffect(() => {
+    const handleNewVote = (data: { musicId: number; vote: keyof DJMusic['voteCounts'] }) => {
+      setLiveAddedMusics((currentMusics) => currentMusics.map((music) => (
+        music.id === Number(data.musicId)
+          ? { ...music, voteCounts: { ...music.voteCounts, [data.vote]: music.voteCounts[data.vote] + 1 } }
+          : music
+      )));
+    };
+
+    socket.on('new vote', handleNewVote);
+    return () => {
+      socket.off('new vote', handleNewVote);
+    };
+  }, []);
+
+  const musicsToShow = liveAddedMusics.filter((music) => {
+    if (addedMusicsFilter === 'played') return music.wasPlayed;
+    if (addedMusicsFilter === 'not played') return !music.wasPlayed;
+    return true;
+  });
+
+  const toggleExpand = (index: number) => {
+    setExpandedIndex((current) => current === index ? null : index);
+  };
+
+  const scrollToExpanded = useCallback(() => {
+    expandedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (expandedIndex === null) return undefined;
+
+    const timeout = setTimeout(scrollToExpanded, 50);
+    return () => clearTimeout(timeout);
+  }, [expandedIndex, scrollToExpanded]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (expandedIndex !== null) scrollToExpanded();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [expandedIndex, scrollToExpanded]);
 
   // Renderiza o componente DJProfile
   return (
@@ -46,63 +89,154 @@ const AddedMusicsByDJ: React.FC<Props> = ({ addedMusics }) => {
       <Card.Body className='dj-added-musics-body'>
         { /* Título do card */ }
         <Card.Title className='dj-added-musics-title'>Músicas adicionadas:</Card.Title>
-        { /* Verifica se há músicas adicionadas pelo DJ */ }
-        { addedMusics.length > 0 ? (
-          // Se houver, renderiza a tabela com as músicas
-          <Container className='table-responsive'>
-            <Table className='text-light dj-music-table'>
-              <thead>
-                <tr>
-                  <th
-                    className='text-light' // Classe para aplicar cor ao texto
-                    style={{ backgroundColor: 'transparent', borderBottom: 'none' }} // Estilo do cabeçalho da tabela
-                  />
-                  <th
-                    className='text-light'
-                    style={{ backgroundColor: 'transparent', borderBottom: 'none' }}
-                  />
-                  <th
-                    className='text-light'
-                    style={{ backgroundColor: 'transparent', borderBottom: 'none' }}
-                  />
-                </tr>
-              </thead>
-              <tbody>
-                { musicsToShow.map((music, index) => (
-                  <tr key={ index }>
-                    <td
-                      className='text-light'
-                      style={{ backgroundColor: 'transparent', borderBottom: 'none' }}
+        { musicsToShow.length > 0 ? (
+          <Container className='p-0'>
+            <AnimatePresence mode='popLayout'>
+              { musicsToShow.map((music, index) => {
+                const voteData = [
+                  { name: 'Hino', value: music.voteCounts.very_good },
+                  { name: 'Boa', value: music.voteCounts.good },
+                  { name: 'Tanto faz', value: music.voteCounts.normal },
+                  { name: 'Ruim', value: music.voteCounts.bad },
+                  { name: 'Ninguém merece', value: music.voteCounts.very_bad },
+                ];
+
+                return (
+                  <motion.div
+                    key={ music.id }
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
+                    className='mb-2'
+                    ref={ expandedIndex === index ? expandedRef : null }
+                  >
+                    <motion.div
+                      onClick={ () => toggleExpand(index) }
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        padding: '8px',
+                      }}
+                      whileHover={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                      className='d-flex align-items-center'
                     >
-                      { music.name }
-                    </td>
-                    <td
-                      className='text-light'
-                      style={{ backgroundColor: 'transparent', borderBottom: 'none' }}
-                    >
-                      { music.artists }
-                    </td>
-                    <td style={{ backgroundColor: 'transparent', borderBottom: 'none' }}>
+                      <div className='me-2' style={{ width: '24px', opacity: 0.7, fontWeight: 'bold' }}>
+                        { index + 1 }
+                      </div>
                       <Image
-                        alt={ music.name } // Texto alternativo para a imagem
-                        className='img-thumbnail' // Classe para aplicar estilo de miniatura à imagem
-                        src={ music.cover } // URL da imagem da capa da música
-                        // Estilo da imagem
-                        style={{
-                          backgroundColor: 'transparent', // Cor de fundo transparente
-                          height: '60px', // Altura da imagem
-                          minWidth: '60px', // Largura mínima da imagem
-                        }}
+                        src={ music.cover }
+                        alt={`Capa da música ${music.name || 'Desconhecida'}`}
+                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                        className='me-3'
                       />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+                      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                        <div className='text-truncate' style={{ fontWeight: 'bold', color: '#fff4c2' }}>
+                          { music.name || 'Música Desconhecida' }
+                        </div>
+                        <div className='text-truncate' style={{ fontSize: '0.85em', opacity: 0.7, color: '#fff4c2' }}>
+                          { music.artists || 'Artista Desconhecido' }
+                        </div>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: expandedIndex === index ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{ marginLeft: '8px', fontSize: '12px' }}
+                      >
+                        ▼
+                      </motion.div>
+                    </motion.div>
+
+                    <AnimatePresence>
+                      { expandedIndex === index && (
+                        <motion.div
+                          ref={ expandedContentRef }
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ height: { duration: 0.3 }, opacity: { duration: 0.2 } }}
+                          onAnimationComplete={() => expandedContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <div
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              borderRadius: '4px',
+                              marginTop: '8px',
+                              padding: '12px',
+                            }}
+                          >
+                            { voteData.some((item) => item.value > 0) ? (
+                              <div className='dj-music-vote-chart'>
+                                <ResponsiveContainer height='100%' width='100%'>
+                                  <BarChart data={ voteData } layout='vertical'>
+                                    <defs>
+                                      <linearGradient id='addedMusicVoteGradient' x1='0' y1='0' x2='1' y2='0'>
+                                        <stop offset='0%' stopColor='#fff4c2' />
+                                        <stop offset='33%' stopColor='#494c80' />
+                                        <stop offset='66%' stopColor='#2e3059' />
+                                        <stop offset='100%' stopColor='#186ea7' />
+                                      </linearGradient>
+                                    </defs>
+                                    <XAxis
+                                      allowDecimals={ false }
+                                      domain={[0, (dataMax: number) => Math.max(5, Math.ceil(dataMax * 1.2))]}
+                                      type='number'
+                                      tick={{ fontSize: 12, fill: '#a8dadc', fontWeight: 'bold' }}
+                                      tickCount={ 4 }
+                                      axisLine={{ stroke: '#494c80' }}
+                                      tickLine={ false }
+                                    />
+                                    <YAxis
+                                      dataKey='name'
+                                      tick={{ fontSize: 11, fill: '#a8dadc', fontWeight: 'bold' }}
+                                      type='category'
+                                      width={ 100 }
+                                      axisLine={{ stroke: '#494c80' }}
+                                      tickLine={ false }
+                                    />
+                                    <Tooltip
+                                      cursor={{ fill: '#ffb70322' }}
+                                      contentStyle={{
+                                        background: '#222',
+                                        border: '1px solid #494c80',
+                                        color: '#fff',
+                                        borderRadius: 8,
+                                        fontWeight: 'bold',
+                                      }}
+                                    />
+                                    <Bar
+                                      dataKey='value'
+                                      fill='url(#addedMusicVoteGradient)'
+                                      radius={[8, 8, 8, 8]}
+                                      barSize={ 18 }
+                                    >
+                                      <LabelList dataKey='value' position='right' fill='#fff4c2' fontSize={ 12 } fontWeight={ 700 } />
+                                    </Bar>
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              </div>
+                            ) : (
+                              <p className='m-0 py-4 text-center' style={{ color: '#fff4c2', opacity: 0.7 }}>
+                                Esta música ainda não recebeu votos.
+                              </p>
+                            ) }
+                          </div>
+                        </motion.div>
+                      ) }
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              }) }
+            </AnimatePresence>
           </Container>
         ) : (
           <Container>
-            <h4 className='text-light dj-music-empty'>A lista está vazia</h4> { /* Mensagem exibida quando não há músicas adicionadas pelo DJ */ }
+            <h4 className='text-light dj-music-empty'>
+              { liveAddedMusics.length === 0 ? 'O DJ ainda não adicionou nenhuma música' : 'Nenhuma música encontrada com este filtro' }
+            </h4>
           </Container>
         )}
       </Card.Body>

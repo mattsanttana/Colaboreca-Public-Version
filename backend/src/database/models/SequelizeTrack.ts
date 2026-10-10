@@ -9,6 +9,7 @@ class SequelizeTrack extends Model<
   InferCreationAttributes<SequelizeTrack>
 > {
   declare id: number; // ID da pista
+  declare ownerDjId: CreationOptional<number | null>; // ID do DJ dono da pista
   declare trackName: string; // Nome da pista
   declare spotifyToken: string; // Token do Spotify
   declare queueOpen: CreationOptional<boolean>; // Se a fila está aberta ou não
@@ -26,6 +27,11 @@ SequelizeTrack.init(
       type: DataTypes.INTEGER, // Tipo inteiro
       allowNull: false, // Não pode ser nulo
       primaryKey: true, // É uma chave primária
+    },
+    ownerDjId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'owner_dj_id',
     },
     // Coluna de nome da pista
     trackName: {

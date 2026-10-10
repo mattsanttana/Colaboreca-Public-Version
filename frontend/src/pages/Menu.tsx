@@ -33,7 +33,7 @@ const Menu: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackId })
       }}
     >
       <Container className='p-3 text-center hide-scroll' style={{ height: '92vh', overflow: 'auto' }}>
-        <Row className='mb-3 menu-container'>
+        <Row className='mb-5 menu-container'>
           <DJProfileMini
             currentRanking={ currentRanking } // Passa o ranking atual para o componente DJProfileMini
             dj={ dj } // Passa o DJ logado para o componente DJProfileMini

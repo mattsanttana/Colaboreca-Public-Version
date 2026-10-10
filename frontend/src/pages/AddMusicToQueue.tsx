@@ -29,7 +29,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
+    dj, djs, globalPreviousRanking, ownerDJId, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
     queueSettings, refreshTrackSettings, setQueueSettings, setTrackName, showRankingChangePopup, trackId, trackName
   } = useFetchTrackData(token);
 
@@ -53,6 +53,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
 
   return (
     <Container
+      className='add-music-route'
       onTouchStart={ handleTouchStart } // Adiciona evento de toque inicial
       onTouchMove={ handleTouchMove } // Adiciona evento de movimento do toque
       onTouchEnd={ handleTouchEnd } // Adiciona evento de toque final
@@ -76,6 +77,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
         <RankingChangePopup
           currentRanking={ djs } // Envia o ranking atual como prop
           dj={ dj } // Envia o DJ atual como prop
+          ownerDJId={ ownerDJId }
           onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
           previousRanking={ previousRanking } // Envia o ranking anterior como prop
           show={ showRankingChangePopup } // Envia o estado do popup como prop
@@ -103,7 +105,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
           />
         </Container>
       ) : (
-        <Container style={{ position: 'relative' }}>
+        <Container className='add-music-page gradient-border' style={{ position: 'relative' }}>
           { /* Renderiza o cabeçalho */ }
           <Header
             currentRanking={ djs } // Envia o ranking atual como prop
@@ -120,7 +122,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
             trackId={ trackId } // Envia o ID da pista como prop
             trackName={ trackName } // Envia o nome da pista como prop
           />
-          <Row>
+          <Row className='add-music-layout'>
             { /* Renderiza o menu lateral (somente para telas não-mobile) */ }
             <Col
               className='d-none d-xxl-block' // Esconde a coluna em telas menores que xxl
@@ -135,29 +137,18 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
               />
             </Col>
             <Col 
-              className='py-4' // Adiciona padding vertical
+              className='py-4 add-music-main-column' // Adiciona padding vertical
               // Largura para diferentes tamanhos de tela
               md={ 12 }  lg={ 12 }  xl={ 12 } xxl={ 9 } // Define a largura da coluna em telas grandes
             >
               { /* Card que contém a lista de músicas */ }
-              <Card
-                className='text-center text-light' // Classes para centralizar o texto e definir a cor do texto
-                style={{ boxShadow: '0 0 0 0.5px #ffffff' }} // Estilo para a sombra do card
-              >
+              <Card className='text-center text-light gradient-border add-music-panel'>
                 <Card.Body
-                  className='hide-scrollbar' // Classe para esconder a barra de rolagem
-                  // Estilo para o corpo do card
-                  style={{
-                    height: '90vh', // Altura do corpo do card
-                    overflowY: 'auto', // Permite rolagem vertical
-                    padding: '0px', // Remove o padding padrão
-                    position: 'relative', // Permite posicionamento absoluto de elementos filhos
-                    width: '100%' // Largura do corpo do card
-                  }}
+                  className='add-music-panel-body'
                 >
                   { /* Campo de pesquisa para buscar músicas */ }
                   <Form.Control
-                    className='my-3 custom-input' // Classe para o campo de pesquisa
+                    className='my-3 custom-input add-music-search' // Classe para o campo de pesquisa
                     placeholder='Que música você quer adicionar à fila?' // Placeholder do campo de pesquisa
                     onChange={ handleChange } // Função chamada ao alterar o valor do campo de pesquisa
                     // Estilo para o campo de pesquisa

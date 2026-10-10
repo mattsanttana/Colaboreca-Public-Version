@@ -15,7 +15,7 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
   // Função para renderizar as músicas em um grid
   const renderTracks = (tracks: Music[]) => (
     // Mapeia as músicas e cria um Card para cada uma
-    <Row style={{ width: '100%' }}>
+    <Row className='add-track-grid' style={{ width: '100%' }}>
       { tracks.map((track, index) => (
         <Col
           className='mb-4' // Margem inferior para espaçamento
@@ -24,14 +24,10 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
         >
           { /* Card que exibe a música */ }
           <Card
-            className='image-col text-light' // Classe para estilizar o card
+            className='image-col text-light gradient-border add-track-card' // Classe para estilizar o card
             onClick={ () => handleClick(track) } // Chama a função handleClick ao clicar no card
-            // Estilo do card
             style={{
-              backgroundColor: '#000', // Cor de fundo preta
-              boxShadow: '0 0 0 0.5px #fff', // Sombra
               cursor: 'pointer', // Cursor de ponteiro para indicar que é clicável
-              marginLeft: '5%', // Margem esquerda para espaçamento
             }}
           >
             { /* Imagem da música */ }
@@ -41,8 +37,8 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
             />
             { /* Corpo do card com informações da música */ }
             <Card.Body>
-              <Card.Title>{ track.name }</Card.Title>
-              <Card.Text>
+              <Card.Title className='add-track-title'>{ track.name }</Card.Title>
+              <Card.Text className='add-track-artists'>
                 { track.artists.map((artist) => artist.name).join(', ') }
               </Card.Text>
             </Card.Body>
@@ -77,7 +73,7 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
 
   // Se houver resultados de pesquisa, renderiza as músicas pesquisadas
   return (
-    <div style={{ minHeight: '75vh', position: 'relative' }}>
+    <div className='add-track-results' style={{ minHeight: '75vh', position: 'relative' }}>
       { queueOpen === false && (
         <div
           aria-live='polite'
@@ -110,12 +106,12 @@ const AddTrackGrid: React.FC<Props> = ({ handleClick, isDebouncing, memoizedSear
       )}
       { memoizedSearchResults.length > 0 ? (
         <>
-          <h1>Resultados da busca:</h1>
+          <h1 className='add-track-section-title'>Resultados da busca:</h1>
           { renderTracks(memoizedSearchResults) }
         </>
       ) : (
         <>
-          <h1>Populares no Brasil:</h1>
+          <h1 className='add-track-section-title'>Populares no Brasil:</h1>
           { renderTracks(memoizedTopTracksInBrazil) }
         </>
       )}

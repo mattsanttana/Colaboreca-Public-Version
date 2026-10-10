@@ -39,10 +39,10 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, onEdit, previousRa
           src={ dj?.characterPath }
           style={{
             backgroundColor: '#2e30594D',
-            border: '3px solid #ffda6a',
+            border: '3px solid #494c80',
             objectFit: 'cover',
             objectPosition: 'center',
-            boxShadow: '0 0 24px #ffb70344',
+            boxShadow: '0 0 24px rgba(73, 76, 128, 0.45)',
           }}
         />
         {/* Rank dentro da imagem */}
@@ -56,27 +56,34 @@ const DJProfileMini: React.FC<Props> = ({ currentRanking, dj, onEdit, previousRa
             borderRadius: '50%',
             background:
               dj?.ranking === 1
-                ? '#FFD700'
+                ? 'linear-gradient(145deg, #fff2a8 0%, #ffd700 52%, #b8860b 100%)'
                 : dj?.ranking === 2
-                ? '#C0C0C0'
+                ? 'linear-gradient(145deg, #ffffff 0%, #d9dee5 52%, #8994a3 100%)'
                 : dj?.ranking === 3
-                ? '#CD7F32'
-                : '#222',
+                ? 'linear-gradient(145deg, #ffd0a3 0%, #cd7f32 52%, #8b4513 100%)'
+                : 'linear-gradient(145deg, #343434, #171717)',
             color: dj?.ranking && dj.ranking <= 3 ? '#000' : '#fff',
             fontWeight: 'bold',
             fontSize: '1.5rem',
             fontFamily: '"Bebas Neue", Oswald, Arial, sans-serif',
-            border: '2px solid #fff4c2',
+            border:
+              dj?.ranking === 1
+                ? '2px solid #fff2a8'
+                : dj?.ranking === 2
+                ? '2px solid #f1f5f9'
+                : dj?.ranking === 3
+                ? '2px solid #ffe0bf'
+                : '2px solid #494c80',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow:
               dj?.ranking === 1
-                ? '0 0 8px #FFD700'
+                ? '0 0 0 3px rgba(255, 215, 0, 0.2), 0 0 14px rgba(255, 215, 0, 0.72), inset 0 1px 3px rgba(255, 255, 255, 0.65)'
                 : dj?.ranking === 2
-                ? '0 0 8px #C0C0C0'
+                ? '0 0 0 3px rgba(217, 222, 229, 0.2), 0 0 14px rgba(217, 222, 229, 0.65), inset 0 1px 3px rgba(255, 255, 255, 0.8)'
                 : dj?.ranking === 3
-                ? '0 0 8px #CD7F32'
+                ? '0 0 0 3px rgba(205, 127, 50, 0.22), 0 0 14px rgba(205, 127, 50, 0.68), inset 0 1px 3px rgba(255, 224, 191, 0.65)'
                 : 'none',
           }}
         >

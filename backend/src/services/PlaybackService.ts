@@ -7,7 +7,6 @@ import JWT from '../utils/JWT';
 import PlaybackActions from '../utils/PlaybackActions';
 import { getSocket } from '../utils/socketIO';
 import SpotifyActions from '../utils/SpotifyActions';
-import { IMusic } from '../interfaces/musics/IMusic';
 
 // Essa classe contém toda a lógica de negócio relacionada à reprodução de músicas
 export default class PlaybackService {
@@ -135,7 +134,7 @@ export default class PlaybackService {
 
       const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify
 
-      const completeQueue = PlaybackActions.getQueue(spotifyQueue, track.colaborecaQueue, track.djs, track.trackName); // Construir a fila completa associando DJs e músicas do Spotify
+      const completeQueue = PlaybackActions.getQueue(spotifyQueue, track.colaborecaQueue, track.djs, track.trackName, track.ownerDjId); // Construir a fila completa associando DJs e músicas do Spotify
 
       return { status: 'OK', data: completeQueue }; // Retornar a fila completa e o status correspondente
     } catch (error) {
@@ -190,12 +189,7 @@ export default class PlaybackService {
         return { status: 'NOT_FOUND', data: { message: 'DJ or Track not found' } };
       }
 
-      const musicsAddedByDJ = track.colaborecaQueue.filter((colaborecaTrack: IMusic) => colaborecaTrack.djId === djId); // Filtrar as músicas que foram adicionadas pelo DJ
-
-      // Se a fila do Spotify ou do Colaboreca não forem encontradas, retornar um erro
-      if (!musicsAddedByDJ) {
-        return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
-      }
+      const musicsAddedByDJ = await this.musicModel.findAll({ djId, trackId });
 
       const musics = PlaybackActions.wasPlayed(musicsAddedByDJ); // Separar as múiscas por tocadas ou não
 
@@ -229,7 +223,7 @@ export default class PlaybackService {
         return { status: 'UNAUTHORIZED', data: { message: 'Invalid Spotify token' } };
       }
 
-      const data = PlaybackActions.getDJAddedCurrentMusic(spotifyQueue, track.colaborecaQueue, track.djs); // Pegar todas as informações do DJ que adicionou a música
+      const data = PlaybackActions.getDJAddedCurrentMusic(spotifyQueue, track.colaborecaQueue, track.djs, track.ownerDjId); // Pegar todas as informações do DJ que adicionou a música
 
       return { status: 'OK', data }; // Retornar as informações da música que está tocando no momento e o status correspondente
     } catch (error) {
@@ -335,7 +329,7 @@ export default class PlaybackService {
 
       const spotifyQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify atualizada
       const colaborecaQueue = await this.musicModel.findAll({ trackId }, { transaction }); // Buscar a fila de músicas do Colaboreca atualizada
-      const queue = PlaybackActions.getQueue(spotifyQueue, colaborecaQueue, track.djs, track.trackName); // Construir a fila completa
+      const queue = PlaybackActions.getQueue(spotifyQueue, colaborecaQueue, track.djs, track.trackName, track.ownerDjId); // Construir a fila completa
 
       io.to(`track_${trackId}`).emit('queue updated', { queue, spotifyQueue: spotifyQueue.queue }); // Emitir um evento de atualização da fila
 

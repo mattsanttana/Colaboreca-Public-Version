@@ -29,7 +29,7 @@ export default class DJService {
         return { status: 'UNAUTHORIZED', data: { message: 'This track does not exist' } };
       }
 
-      const djWithSameName = await this.djModel.findOne({ djName, trackId }, { transaction }  ); // Verificar se já existe um DJ com o mesmo nome
+      const djWithSameName = await this.djModel.findOne({ djName, trackId }, { transaction }); // Verificar se já existe um DJ com o mesmo nome
 
       // Se o DJ já existir, retorne uma mensagem de erro
       if (djWithSameName) {
@@ -37,7 +37,7 @@ export default class DJService {
         return { status: 'CONFLICT', data: { message: 'DJ already exists' } };
       }
 
-      const dj = await this.djModel.create({djName, characterPath, trackId }, { transaction }); // Criar um novo DJ
+      const dj = await this.djModel.create({ djName, characterPath, trackId }, { transaction }); // Criar um novo DJ
 
       if (!dj) {
         await transaction.rollback();
@@ -50,7 +50,7 @@ export default class DJService {
 
       const response = { ...dj, token }; // Retornar o DJ e o token
 
-      io.to(`track_${ trackId }`).emit('dj created', { dj }); // Emitir um evento para o Socket.IO de que um novo DJ foi criado
+      io.to(`track_${trackId}`).emit('dj created', { dj }); // Emitir um evento para o Socket.IO de que um novo DJ foi criado
 
       return { status: 'CREATED', data: response }; // Retornar uma mensagem de sucesso e o status correspondente
     } catch (error) {
@@ -254,6 +254,12 @@ export default class DJService {
       // Se o DJ não for encontrado, retorne uma mensagem de erro
       if (!dj) {
         return { status: 'NOT_FOUND', data: { message: 'DJ not found' } };
+      }
+
+      const track = await this.trackModel.findOne({ id: decoded.trackId });
+
+      if (track?.ownerDjId === dj.id) {
+        return { status: 'FORBIDDEN', data: { message: 'The owner DJ cannot be deleted.' } };
       }
 
       const response = await this.djModel.delete({ id: decoded.id }); // Deletar o DJ

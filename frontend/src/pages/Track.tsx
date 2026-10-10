@@ -32,7 +32,7 @@ const Track: React.FC<Props> = ({ token }) => {
 
   // Hook personalizado para buscar dados da pista
   const {
-    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData,
+    dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, ownerDJId,
     queueSettings, refreshTrackSettings, setShowRankingChangePopup, setQueueSettings, setTrackName, showRankingChangePopup, trackName
   } = useFetchTrackData(token);
 
@@ -66,6 +66,7 @@ const Track: React.FC<Props> = ({ token }) => {
           <RankingChangePopup
             currentRanking={ djs } // Envia o ranking atual como prop
             dj={ dj } // Envia o DJ atual como prop
+            ownerDJId={ ownerDJId } // Envia o ID do DJ dono da pista como prop
             onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
             previousRanking={ previousRanking } // Envia o ranking anterior como prop
             show={ showRankingChangePopup } // Envia o estado do popup como prop
@@ -136,6 +137,7 @@ const Track: React.FC<Props> = ({ token }) => {
               { /* Componente de estado de reprodução */ }
               <PlaybackState
                 djPlayingNow={ djPlayingNow } // Envia o DJ que está tocando a música atual como prop
+                isTrackOwner={ ownerDJId === dj?.id } // Verifica se o DJ atual é o dono da pista
                 votes={ initialVoteCounts } // Envia os votos da música atual como prop
                 playingNow={ playingNow } // Envia o estado de reprodução como prop
                 trackName={ trackName } // Envia o nom da pista como prop
@@ -156,6 +158,7 @@ const Track: React.FC<Props> = ({ token }) => {
               > 
                 <Podium
                   djs={ djs } // Envia a lista de DJs como prop
+                  preview
                   trackName={ trackName }
                 />
               </div>
@@ -168,6 +171,7 @@ const Track: React.FC<Props> = ({ token }) => {
                   previewQueue={ queue.slice(0, 5) } // Envia a fila de reprodução como prop
                   isLoading={ isLoadingQueue } // Envia o estado de carregamento da fila como prop
                   trackId={ trackId }
+                  playingNow={ playingNow }
                 />
               </div>
             </Col>

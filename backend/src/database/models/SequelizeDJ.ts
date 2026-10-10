@@ -6,13 +6,12 @@ import SequelizeTrack from './SequelizeTrack';
 class SequelizeDJ extends Model<
   InferAttributes<SequelizeDJ>,
   InferCreationAttributes<SequelizeDJ>
-  > {
+> {
   declare id?: number; // ID do DJ
   declare djName: string; // Nome do DJ
   declare characterPath: string; // Caminho da imagem do personagem
   declare score?: number; // Pontuação do DJ
   declare ranking?: number; // Ranking do DJ
-  declare isOwner?: boolean; // Indica se o DJ é o dono da pista
   declare trackId: number; // ID da pista
 }
 
@@ -51,13 +50,6 @@ SequelizeDJ.init(
       allowNull: false, // Não pode ser nulo
       defaultValue: 0 // Valor padrão
     },
-    // Coluna que indica se o DJ é o dono da pista
-    isOwner: {
-      type: DataTypes.BOOLEAN, // Tipo booleano
-      allowNull: false, // Não pode ser nulo
-      defaultValue: false, // Valor padrão
-      field: 'is_owner' // Nome da coluna no banco de dados
-    },
     // Coluna de id da pista
     trackId: {
       type: DataTypes.INTEGER, // Tipo inteiro
@@ -80,6 +72,12 @@ SequelizeTrack.hasMany(SequelizeDJ, {
 SequelizeDJ.belongsTo(SequelizeTrack, {
   foreignKey: 'trackId', // Chave estrangeira
   as: 'track', // Associação para identificar a track associada ao DJ
+});
+
+SequelizeTrack.belongsTo(SequelizeDJ, {
+  foreignKey: 'ownerDjId',
+  as: 'ownerDJ',
+  onDelete: 'SET NULL',
 });
 
 export default SequelizeDJ;

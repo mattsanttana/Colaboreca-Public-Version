@@ -4,14 +4,16 @@ import TQueue from '../types/TQueue';
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { logo } from '../assets/images/characterPath';
 import { useNavigate } from 'react-router-dom';
+import PlayingNow from '../types/PlayingNow';
 
 interface Props {
   previewQueue: TQueue[];
   isLoading: boolean;
   trackId: string | undefined;
+  playingNow: PlayingNow | null; // Música que está tocando atualmente
 }
 
-const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, trackId }) => {
+const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, trackId, playingNow }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   
   const expandedRef = useRef<HTMLDivElement>(null);
@@ -259,8 +261,10 @@ const QueuePreview: React.FC<Props> = ({ previewQueue, isLoading, trackId }) => 
                 ))}
               </AnimatePresence>
               { previewQueue.length === 0 && !isLoading && (
-                <div className="text-center py-5" style={{ opacity: 0.5 }}>
-                  Dispositivo Desconectado
+                <div className="text-center py-5" style={{ color: '#fff4c2', opacity: 0.5 }}>
+                  { !playingNow
+                    ? 'Ops! Perdemos a conexão com o Spotify, possivelmente por inatividade.'
+                    : 'A DJ Dani (inteligência artificial do Spotify) assumiu a reprodução. Por isso, não conseguimos exibir as informações da fila.' }
                 </div>
               )}
             </div>

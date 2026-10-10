@@ -30,9 +30,23 @@ const useQueue = (playingNow: PlayingNow | null, currentTrackIndex?: number) => 
 
   // useEffect para atualizar o índice da música no carrossel
   useEffect(() => {
-    // Rolar para o item selecionado sempre que currentTrackIndex mudar
-    if (currentTrackIndex !== undefined && trackRefs.current[currentTrackIndex]) {
-      trackRefs.current[currentTrackIndex].scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const selectedTrack = currentTrackIndex === undefined ? null : trackRefs.current[currentTrackIndex];
+    const listScroller = selectedTrack?.closest<HTMLElement>('.queue-list-scroll');
+    if (!selectedTrack || !listScroller) return;
+
+    const itemBounds = selectedTrack.getBoundingClientRect();
+    const scrollerBounds = listScroller.getBoundingClientRect();
+
+    if (itemBounds.bottom > scrollerBounds.bottom) {
+      listScroller.scrollTo({
+        top: listScroller.scrollTop + itemBounds.bottom - scrollerBounds.bottom,
+        behavior: 'smooth',
+      });
+    } else if (itemBounds.top < scrollerBounds.top) {
+      listScroller.scrollTo({
+        top: listScroller.scrollTop - (scrollerBounds.top - itemBounds.top),
+        behavior: 'smooth',
+      });
     }
   }, [currentTrackIndex]);
 

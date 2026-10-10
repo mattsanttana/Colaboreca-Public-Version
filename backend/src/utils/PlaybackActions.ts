@@ -1,11 +1,11 @@
 import { SpotifyQueue } from '../interfaces/spotify_response/SpotifyResponse';
 import { IDJ } from '../interfaces/djs/IDJ';
-import { IMusic } from '../interfaces/musics/IMusic';
+import { IMusic, IMusicWithDJAndVotes } from '../interfaces/musics/IMusic';
 
 // Classe util para manipular ações de playback
 export default class PlaybackActions {
   // Método para pegar a fila completa
-  static getQueue(spotifyQueue: SpotifyQueue, colaborecaQueue: IMusic[], djs: IDJ[], trackName: string) {
+  static getQueue(spotifyQueue: SpotifyQueue, colaborecaQueue: IMusic[], djs: IDJ[], trackName: string, ownerDjId: number | null) {
     const processedURIs = new Set<string>(); // Set para armazenar as URIs que já foram processadas
 
     // Mapear a fila do Spotify e adicionar informações do DJ
@@ -37,7 +37,7 @@ export default class PlaybackActions {
         };
       } else {
         // Caso contrário, a música foi adicionada pelo próprio aplicativo
-        const ownerDJ = djs.find((dj: IDJ) => dj.isOwner === true);
+        const ownerDJ = djs.find((dj: IDJ) => dj.id === ownerDjId);
 
         return {
           djId: ownerDJ?.id,
@@ -52,16 +52,28 @@ export default class PlaybackActions {
   }
 
   // Método separar as músicas tocadas e não tocadas
-  static wasPlayed(musicsAddedByDJ: IMusic[]) {
+  static wasPlayed(musicsAddedByDJ: IMusicWithDJAndVotes[]) {
     // Mapear a fila do Colaboreca e adicionar informações do DJ
-    const completeQueue = musicsAddedByDJ.map((colaborecaTrack: any) => {
+    const completeQueue = musicsAddedByDJ.map((colaborecaTrack) => {
       const trackWasPlayed = colaborecaTrack.pointsApllied; // Verificar se a música foi tocada
+      const voteCounts = colaborecaTrack.votes.reduce((counts, vote) => {
+        counts[vote.vote] += 1;
+        return counts;
+      }, {
+        very_good: 0,
+        good: 0,
+        normal: 0,
+        bad: 0,
+        very_bad: 0,
+      });
 
       return {
+        id: colaborecaTrack.id,
         cover: colaborecaTrack.cover,
         name: colaborecaTrack.name,
         artists: colaborecaTrack.artists,
         wasPlayed: trackWasPlayed,
+        voteCounts,
       };
     });
 
@@ -69,7 +81,7 @@ export default class PlaybackActions {
   }
 
   // Método para pegar o DJ que adicionu a música que está sendo reproduzida no momento
-  static getDJAddedCurrentMusic(spotifyQueue: SpotifyQueue, colaborecaQueue: IMusic[], djs: IDJ[]) {
+  static getDJAddedCurrentMusic(spotifyQueue: SpotifyQueue, colaborecaQueue: IMusic[], djs: IDJ[], ownerDjId: number | null) {
     const currentMusic = spotifyQueue.currently_playing; // Buscar a música que está tocando no momento
     const colaborecaQueueNotPlayed = colaborecaQueue.filter((colaborecaTrack: any) => colaborecaTrack.pointsApllied === false); // Filtrar a fila do Colaboreca pelas músicas que ainda não foram tocadas
 
@@ -88,7 +100,7 @@ export default class PlaybackActions {
       characterPath = djs.find((dj: any) => dj.id === colaborecaMusic.djId)?.characterPath; // Definir o caminho do personagem
     } else {
       // Caso contrário, a música foi adicionada pelo próprio aplicativo
-      const ownerDJ = djs.find((dj: IDJ) => dj.isOwner === true);
+      const ownerDJ = djs.find((dj: IDJ) => dj.id === ownerDjId);
       addedBy = ownerDJ?.djName;
       characterPath = ownerDJ?.characterPath ?? null;
       addedByApp = true; // Definir que a música foi adicionada pelo aplicativo

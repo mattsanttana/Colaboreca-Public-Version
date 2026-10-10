@@ -6,11 +6,11 @@ export default class DJModel {
   private djModel = SequelizeDJ; // Instância do modelo de DJ
 
   // Método para criar um DJ
-  async create(data: { djName: string, characterPath: string, trackId: number, isOwner?: boolean }, options?: { transaction: Transaction }) {
+  async create(data: { djName: string, characterPath: string, trackId: number }, options?: { transaction: Transaction }) {
     // Verifica se existem opções de transação e cria um DJ
     const response = options ?
       await this.djModel.create(data, { ...options }) :
-        await this.djModel.create(data);
+      await this.djModel.create(data);
     return response; // Retorna a resposta
   }
 
@@ -19,7 +19,7 @@ export default class DJModel {
     // Verifica se existem opções de transação e busca todos os DJs
     const djs = options ?
       await this.djModel.findAll({ where, ...options }) :
-        await this.djModel.findAll({ where });
+      await this.djModel.findAll({ where });
     return djs.map(dj => dj.get()); // Retorna os DJs encontrados
   }
 
@@ -28,7 +28,7 @@ export default class DJModel {
     // Verifica se existem opções de transação e busca um DJ
     const dj = options ?
       await this.djModel.findOne({ where, ...options }) :
-        await this.djModel.findOne({ where });
+      await this.djModel.findOne({ where });
     return dj?.get(); // Retorna o DJ encontrado
   }
 
@@ -41,7 +41,7 @@ export default class DJModel {
     // Verifica se existem opções de transação e atualiza um DJ
     const response = options ?
       await this.djModel.update(data, { where, ...options }) :
-        await this.djModel.update(data, { where });
+      await this.djModel.update(data, { where });
     return response; // Retorna a resposta
   }
 

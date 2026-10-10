@@ -23,15 +23,11 @@ const QueueCarousel: React.FC<Props> = ({ queue, setCurrentTrackIndex, sliderRef
 
   return (
     <Container
-      className='mx-auto sticky-carousel d-flex justify-content-center' // Classe para o espaçamento e centralização do container
+      className='mx-auto sticky-carousel queue-carousel d-flex justify-content-center' // Classe para o espaçamento e centralização do container
       style={{ backgroundColor: 'transparent' }} // Fundo do container transparente
     >
       <Container
-        style={{
-          marginBottom: '20px', // Margem inferior do carrossel
-          marginTop: '10px', // Margem superior do carrossel
-          maxWidth: '300px' // Largura máxima do carrossel
-        }}
+        className='queue-carousel-inner'
       >
         <Slider
           { ...settings } // Configurações do carrossel
@@ -41,20 +37,23 @@ const QueueCarousel: React.FC<Props> = ({ queue, setCurrentTrackIndex, sliderRef
           { queue.map((track, index) => (
             <Container
               key={ index } // Chave única para cada item do carrossel
-              style={{ padding: '20px' }} // Padding do item do carrossel
+              className='queue-carousel-slide'
             >
               { /* Imagem da capa da música */ }
               <Container className='d-flex justify-content-center'>
                 <Image
                   alt={ track.musicName } // Texto alternativo da imagem
                   src={ track.cover } // Caminho da imagem da capa
-                  style={{ width: '150px', height: '150px' }} // Define a largura e altura da imagem
+                  className='queue-current-cover'
                 />
               </Container>
               { /* Nome da música, artistas e quem adicionou a música */ }
-              <h4>{ track.musicName }</h4>
-              <h5>{ track.artists }</h5>
-              <p>Adicionada por: { track.addedBy }</p>
+              <h4 className='queue-current-title'>{ track.musicName }</h4>
+              <h5 className='queue-current-artists'>{ track.artists }</h5>
+              <p className='queue-current-added-by'>
+                <span>Adicionada por</span>
+                <strong>{ track.addedBy }</strong>
+              </p>
             </Container>
           ))}
         </Slider>

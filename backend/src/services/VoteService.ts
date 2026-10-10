@@ -311,7 +311,8 @@ export default class VoteService {
         return { status: 'ERROR', data: { message: 'An error occurred while updating music points applied' } }; // Retorna uma mensagem de erro
       }
 
-      transaction.commit(); // Comita a transação
+      await transaction.commit(); // Comita a transação
+      io.to(`track_${trackId}`).emit('music points applied', { trackId, musicId, djId: music.djId });
 
       return { status: 'OK', data: { message: 'Points applied to DJ and ranking updated' } };
     } catch (error) {

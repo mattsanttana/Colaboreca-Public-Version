@@ -33,7 +33,7 @@ const Queue: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados da pista
   const {
     dj, djs, globalPreviousRanking, popupMessageData, previousRanking, setPopupMessageData, setShowRankingChangePopup,
-    queueSettings, refreshTrackSettings, setQueueSettings, setTrackName, showRankingChangePopup, trackId, trackName
+    ownerDJId, queueSettings, refreshTrackSettings, setQueueSettings, setTrackName, showRankingChangePopup, trackId, trackName
   } = useFetchTrackData(token);
 
   // Hook personalizado para buscar dados de reprodução
@@ -48,6 +48,7 @@ const Queue: React.FC<Props> = ({ token }) => {
   return (
     // Envolve o componente em um div para lidar com eventos de toque
     <Container
+      className='queue-route'
       onTouchStart={ handleTouchStart } // Adiciona evento de toque inicial
       onTouchMove={ handleTouchMove } // Adiciona evento de movimento do toque
       onTouchEnd={ handleTouchEnd } // Adiciona evento de toque final
@@ -64,6 +65,7 @@ const Queue: React.FC<Props> = ({ token }) => {
         <RankingChangePopup
           dj={ dj } // Envia o DJ atual como prop
           currentRanking={ djs } // Envia o ranking atual como prop
+          ownerDJId={ ownerDJId } // Envia o ID do DJ dono da pista como prop
           onHide={ () => setShowRankingChangePopup(false) } // Função para fechar o popup
           previousRanking={ previousRanking } // Envia o ranking anterior como prop
           show={ showRankingChangePopup } // Envia o estado do popup como prop
@@ -92,7 +94,7 @@ const Queue: React.FC<Props> = ({ token }) => {
         </Container>
       ) : (
         // se não renderiza o conteúdo principal
-        <Container>
+        <Container className='queue-page gradient-border'>
           { /* Cabeçalho do componente */ }
           <Header
             currentRanking={ djs } // Envia o ranking atual como prop
@@ -109,7 +111,7 @@ const Queue: React.FC<Props> = ({ token }) => {
             trackId={ trackId } // Envia o ID da pista como prop
             trackName={ trackName } // Envia o nome da pista como prop
           />
-          <Row>
+          <Row className='queue-layout'>
             { /* Menu para o menu lateral, visível apenas em telas grandes */ }
             <Col
               className='d-none d-xxl-block' // Esconde o menu em telas pequenas
@@ -124,33 +126,17 @@ const Queue: React.FC<Props> = ({ token }) => {
               />
             </Col>
             <Col
-              className='py-4' // Adiciona padding vertical ao conteúdo
+              className='py-4 queue-main-column' // Adiciona padding vertical ao conteúdo
               md={ 12 } xl={ 12 } xxl={ 9 } // Define a largura do conteúdo principal
             >
               { /* Card que contém a fila de músicas */ }
-              <Card
-                className='text-center text-light' // Classes para centralizar o texto e definir a cor do texto
-                // Estilo o card
-                style={{
-                  backgroundColor: 'transparent', // Cor de fundo do card
-                  boxShadow: '0 0 0 0.5px #ffffff' // Sombra do card
-                }}
-              >
+              <Card className='text-center text-light gradient-border queue-panel'>
                 { /* Corpo do card com carrousel e lista de músicas */ }
-                <Card.Body
-                  className='hide-scrollbar' // Classe para esconder a barra de rolagem
-                  // Define o estilo do corpo do card
-                  style={{
-                    height: '814px', // Altura do corpo do card
-                    paddingTop: '0%', // Padding superior do corpo do card
-                    overflow: 'auto', // Permite rolagem automática
-                    width: '100%' // Largura do corpo do card
-                  }}
-                >
+                <Card.Body className='queue-panel-body'>
                   { /* Verifica se a fila de músicas tem itens */ }
                   { queue.length > 0 ? (
                     // Se sim, renderiza o carrossel e a lista de músicas
-                    <Container style={{ height: '100%', width: '100%', paddingTop: 0, overflow: 'hidden' }}>
+                    <Container className='queue-content'>
                       {/* Slider - não rola junto com a lista */}
                       <QueueCarousel
                         currentTrackIndex={ currentTrackIndex } // Índice da música selecionada
@@ -159,13 +145,7 @@ const Queue: React.FC<Props> = ({ token }) => {
                         sliderRef={ sliderRef } // Referência para o slider
                       />
                       { /* A área rolável, começa logo após o slider */ }
-                      <div
-                        style={{
-                          height: 'calc(100% - 350px)', // ajuste 240px para a altura real do seu slider
-                          overflowY: 'auto', // Define a barra de rolagem vertical
-                          overflowX: 'hidden' // Esconede a barra de rolagem horizontal
-                        }}
-                      >
+                      <div className='queue-list-scroll'>
                         <QueueList
                           currentTrackIndex={ currentTrackIndex } // Índice da música selecionada
                           queue={ queue } // Fila de reprodução atual
@@ -178,7 +158,7 @@ const Queue: React.FC<Props> = ({ token }) => {
                   </Container>
                   // Se a fila de músicas estiver vazia, exibe uma mensagem informando que não há músicas na fila
                   ) : (
-                    <h3 className='text-light' style={{ marginTop: '40%' }}>Dispositivo desconectado</h3>
+                    <h3 className='queue-empty-state'>Dispositivo desconectado</h3>
                   )}
                 </Card.Body>
               </Card>
