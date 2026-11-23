@@ -1,0 +1,43 @@
+.custom-modal.ranking-change-modal .modal-dialog {
+  margin-top: 0;
+}
+
+@keyframes rankChange {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-rank-change {
+  animation: rankChange 1s ease-in-out;
+}
+
+@keyframes blink {
+  0% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  50% {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  100% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.blink {
+  animation: blink 1s ease-in-out 1;
+}
+
+.ranking-change-popup-modal-modal-body, #ranking-change-popup-modal-modal-body {
+  max-height: 70vh;
+}

@@ -1,0 +1,20 @@
+.track-settings-popup-fw-bold, #track-settings-popup-fw-bold {
+  min-width: 5rem;
+}
+
+.track-settings-popup-custom-modal-header, #track-settings-popup-custom-modal-header {
+  border-bottom: none;
+}
+
+.track-settings-popup-body, #track-settings-popup-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.track-settings-popup-p-3, #track-settings-popup-p-3 {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.track-settings-popup-p-3-2, #track-settings-popup-p-3-2 {
+  background-color: rgba(0, 0, 0, 0.2);
+}

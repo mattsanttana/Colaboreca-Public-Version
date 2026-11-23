@@ -1,0 +1,118 @@
+.thermometer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 3rem;
+  padding: 0 1.25rem;
+}
+
+.thermometer {
+  width: 100%;
+  height: 28px;
+  margin: 20px 0 14px;
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.thermometer::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 1px solid #fff4c255;
+  border-radius: 999px;
+  background: linear-gradient(to right,
+      #ffb703 0%,
+      #ffda6a var(--vote-progress),
+      #494c80 var(--vote-progress),
+      #2e3059 100%);
+  box-shadow: 0 0 12px #ffb70333;
+}
+
+.thermometer::-moz-range-track {
+  height: 8px;
+  border: 1px solid #fff4c255;
+  border-radius: 999px;
+  background: #2e3059;
+  box-shadow: 0 0 12px #ffb70333;
+}
+
+.thermometer::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #ffb703, #ffda6a);
+}
+
+.thermometer::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 3px solid #fff4c2;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffda6a, #ffb703);
+  box-shadow: 0 0 0 4px #494c80, 0 0 16px #ffb70399;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.thermometer::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 3px solid #fff4c2;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffda6a, #ffb703);
+  box-shadow: 0 0 0 4px #494c80, 0 0 16px #ffb70399;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.thermometer:hover::-webkit-slider-thumb,
+.thermometer:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 5px #494c80, 0 0 20px #ffb703cc;
+}
+
+.thermometer:hover::-moz-range-thumb,
+.thermometer:focus-visible::-moz-range-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 5px #494c80, 0 0 20px #ffb703cc;
+}
+
+.thermometer:focus-visible {
+  outline: 2px solid #fff4c2;
+  outline-offset: 6px;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+}
+
+.labels span {
+  font-size: 14px;
+  flex: 1;
+  padding: 0 2px;
+  color: #a7a8c4;
+  text-align: center;
+  line-height: 1.3;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.highlight {
+  font-weight: bold;
+  color: #ffda6a !important;
+  text-shadow: 0 0 12px #ffb70377;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+.thermometer-container {
+    padding: 0 0.5rem;
+  }
+.labels span {
+    font-size: 11px;
+  }
+}

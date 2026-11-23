@@ -1,0 +1,159 @@
+.sticky-carousel {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #000000;
+  /* Ajuste o valor do z-index conforme necessário */
+}
+
+.slick-dots li button:before {
+  color: white;
+  /* Altere para a cor desejada */
+}
+
+.slick-dots {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-bottom: 20px;
+}
+
+.slick-dots li {
+  margin: 0 5px;
+  /* Ajuste o espaçamento entre os indicadores conforme necessário */
+}
+
+.slick-dots li.slick-active button:before {
+  color: white
+}
+
+.queue-carousel {
+  height: var(--queue-carousel-height, clamp(260px, 42vh, 350px));
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.5rem 0.75rem 0.35rem;
+  border-bottom: 1px solid rgba(119, 121, 181, 0.48);
+  border-radius: 8px 8px 0 0;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(73, 76, 128, 0.2), transparent 68%),
+    linear-gradient(180deg, rgba(31, 32, 59, 0.55), rgba(17, 18, 39, 0.12));
+  color: #fff4c2;
+}
+
+.queue-carousel-inner {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.queue-carousel-slide {
+  padding: 0.35rem 1rem;
+  color: #fff4c2;
+  text-align: center;
+}
+
+.queue-current-cover {
+  width: clamp(125px, 22vh, 175px) !important;
+  height: clamp(125px, 22vh, 175px) !important;
+  border: 1px solid #7779b5;
+  border-radius: 9px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4), 0 0 18px rgba(73, 76, 128, 0.38);
+  object-fit: cover;
+}
+
+.queue-current-title {
+  overflow: hidden;
+  margin: 0.55rem 0 0.2rem;
+  color: #fff4c2;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-current-artists {
+  overflow: hidden;
+  margin: 0;
+  color: #b7b5cf;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-current-added-by {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid rgba(255, 218, 106, 0.24);
+  border-radius: 999px;
+  background: rgba(12, 13, 28, 0.48);
+  color: #ffda6a;
+  font-size: 0.76rem;
+}
+
+.queue-current-added-by span {
+  color: #b7b5cf;
+}
+
+.queue-current-added-by strong {
+  color: #ffda6a;
+}
+
+.queue-carousel .slick-dots {
+  position: static;
+  display: flex;
+  min-height: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+
+.queue-carousel .slick-dots li {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.queue-carousel .slick-dots li button {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+}
+
+.queue-carousel .slick-dots li button:before {
+  width: 14px;
+  height: 14px;
+  color: #8d8eaa;
+  font-size: 8px;
+  line-height: 14px;
+}
+
+.queue-carousel .slick-dots li.slick-active button:before {
+  color: #ffda6a;
+}
+
+@media (max-width: 767.98px) {
+.queue-carousel-slide {
+    padding: 0.25rem 0.5rem;
+  }
+.queue-current-cover {
+    width: 125px !important;
+    height: 125px !important;
+  }
+.queue-current-title {
+    font-size: 1rem;
+  }
+.queue-current-artists {
+    font-size: 0.82rem;
+  }
+}
+
+.queue-carousel-mx-auto, #queue-carousel-mx-auto {
+  background-color: transparent;
+}

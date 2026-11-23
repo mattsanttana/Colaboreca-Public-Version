@@ -1,0 +1,143 @@
+.ranking-route {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+}
+
+.ranking-page {
+  display: flex;
+  min-height: calc(100dvh - 1rem);
+  flex-direction: column;
+}
+
+.ranking-layout {
+  min-height: 0;
+  flex: 1;
+}
+
+.ranking-main-column {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.ranking-panel {
+  display: flex;
+  min-height: min(760px, calc(100dvh - 8rem));
+  flex: 1;
+  flex-direction: column;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(23, 24, 47, 0.98), rgba(10, 11, 24, 0.98)) !important;
+}
+
+.ranking-panel-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+  padding: 0.75rem;
+  background: transparent;
+}
+
+.ranking-podium-row {
+  position: relative;
+  width: 100%;
+  flex: 0 0 auto;
+  justify-content: center;
+  margin: 0;
+}
+
+.ranking-podium-row>.container {
+  width: 100%;
+}
+
+.ranking-help {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.8rem;
+  z-index: 2;
+  cursor: help;
+}
+
+.ranking-help svg {
+  color: #ffda6a !important;
+  filter: drop-shadow(0 0 5px rgba(255, 218, 106, 0.28));
+}
+
+.tooltip.custom-modal {
+  --bs-tooltip-bg: #0d3a5a;
+  --bs-tooltip-color: #fff;
+  --bs-tooltip-opacity: 1;
+}
+
+.tooltip.custom-modal .tooltip-inner {
+  max-width: 360px;
+  padding: 0.85rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, #1f2340, #3a5a7a, #0d3a5a, #1a5a7f) padding-box,
+    linear-gradient(to bottom, #fff4c2, #ffb703, #c99700, #ffda6a) border-box;
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-line;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+}
+
+.tooltip.custom-modal.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: #0d3a5a;
+}
+
+.tooltip.custom-modal.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #3a5a7a;
+}
+
+.tooltip.custom-modal.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #1f2340;
+}
+
+.tooltip.custom-modal.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #1a5a7f;
+}
+
+.ranking-table-scroll {
+  min-height: 180px;
+  flex: 1 1 0%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+@media (max-width: 767.98px) {
+.ranking-page {
+    min-height: 100dvh;
+  }
+.ranking-panel {
+    min-height: calc(100dvh - 7rem);
+  }
+.ranking-panel-body {
+    padding: 0.5rem;
+  }
+.ranking-podium-row {
+    margin-inline: auto;
+  }
+.ranking-help {
+    top: 0.4rem;
+    right: 0.5rem;
+  }
+}
+
+.ranking-container, #ranking-container {
+  height: 100vh;
+}
+
+.ranking-faquestioncircle, #ranking-faquestioncircle {
+  cursor: pointer;
+  color: #ffffff;
+}

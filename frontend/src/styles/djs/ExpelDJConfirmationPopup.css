@@ -1,0 +1,7 @@
+.expel-djconfirmation-popup-header, #expel-djconfirmation-popup-header {
+  border-bottom: none;
+}
+
+.expel-djconfirmation-popup-footer, #expel-djconfirmation-popup-footer {
+  border-top: none;
+}

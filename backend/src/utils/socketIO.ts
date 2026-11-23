@@ -1,5 +1,6 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import SequelizeDJ from '../database/models/SequelizeDJ';
 
 let io: SocketIOServer; // Instância do Socket.io
 
@@ -28,8 +29,15 @@ export const initSocket = (server: HTTPServer) => {
     });
 
     // Emissão de eventos de digitação
-    socket.on('typing', (data) => {
-      socket.to(`track_${data.trackId}`).emit('dj typing', data);
+    socket.on('typing', async (data) => {
+      const dj = await SequelizeDJ.findByPk(data.djId);
+
+      if (!dj) return;
+
+      socket.to(`track_${data.trackId}`).emit('dj typing', {
+        ...data,
+        dj: dj.get(),
+      });
     });
 
     // Disconexão do cliente

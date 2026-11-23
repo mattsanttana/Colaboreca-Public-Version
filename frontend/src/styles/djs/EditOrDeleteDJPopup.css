@@ -1,0 +1,70 @@
+.dj-name-input {
+  border: 1px solid transparent;
+  transition: border-color 0.3s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.dj-name-input.is-valid {
+  border-color: #00d4aa;
+}
+
+.edit-dj-popup .modal-body form {
+  width: min(100%, 320px);
+}
+
+.edit-dj-popup .dj-avatar-picker {
+  width: fit-content;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+
+.edit-dj-popup .dj-avatar-preview {
+  width: 200px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 3px solid #ffda6a;
+  box-shadow: 0 0 20px #ffb70344;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.edit-dj-popup .dj-avatar-picker:hover .dj-avatar-preview,
+.edit-dj-popup .dj-avatar-picker:focus-visible .dj-avatar-preview {
+  transform: scale(1.03);
+  box-shadow: 0 0 26px #ffb70388;
+}
+
+.edit-dj-popup .dj-avatar-tooltip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  padding: 6px 12px;
+  border: 1px solid #ffda6a88;
+  border-radius: 999px;
+  background: #2e3059eF;
+  color: #fff4c2;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.edit-dj-popup .dj-name-input {
+  width: 100%;
+  max-width: none;
+  border: 1px solid #fff4c255;
+}
+
+.edit-dj-popup .dj-name-input:focus {
+  border-color: #ffb703;
+  box-shadow: 0 0 0 3px #ffb70333;
+}
+
+.edit-or-delete-djpopup-custom-modal-header, #edit-or-delete-djpopup-custom-modal-header {
+  border-bottom: none;
+}
+
+.edit-or-delete-djpopup-body, #edit-or-delete-djpopup-body {
+  align-items: center;
+}
+
+.edit-or-delete-djpopup-cursor, #edit-or-delete-djpopup-cursor {
+  cursor: pointer;
+}

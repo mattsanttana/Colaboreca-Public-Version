@@ -1,10 +1,24 @@
 import { FindOptions, Transaction, WhereOptions } from "sequelize";
 import SequelizeMessage from "../database/models/SequelizeMessage";
+import SequelizeDJ from "../database/models/SequelizeDJ";
 import { Op } from 'sequelize';
 
 // Classe responsável pelo modelo de mensagem
 export default class MessageModel {
   private messageModel = SequelizeMessage; // Instância do modelo de mensagem
+
+  private readonly messageIncludes = [
+    {
+      model: SequelizeDJ,
+      as: 'dj',
+      attributes: ['id', 'djName', 'characterPath', 'score', 'ranking', 'trackId'],
+    },
+    {
+      model: SequelizeDJ,
+      as: 'receiveDJ',
+      attributes: ['id', 'djName', 'characterPath', 'score', 'ranking', 'trackId'],
+    },
+  ];
 
   // Método para criar uma mensagem
   async create(
@@ -35,7 +49,12 @@ export default class MessageModel {
       replyTo
     }, options);
 
-    return response.get(); // Retorna a mensagem criada
+    const createdMessage = response.get();
+    const hydratedMessage = await this.findOne({
+      where: { id: createdMessage.id },
+    }, options);
+
+    return hydratedMessage ?? createdMessage; // Retorna a mensagem com os DJs relacionados
   }
 
   // Método para atualizar mensagens
@@ -60,20 +79,22 @@ export default class MessageModel {
   // Método para buscar uma mensagem
   async findOne(findOptions: FindOptions, options?: { transaction: Transaction }) {
     // Verifica se existem opções de transação e busca uma mensagem
-    const response = options ? await this.messageModel.findOne({
+    const response = await this.messageModel.findOne({
       ...findOptions,
-      ...options
-    }) : await this.messageModel.findOne(findOptions);
+      include: this.messageIncludes,
+      ...options,
+    });
     return response?.get(); // Retorna a mensagem encontrada
   }
 
   // Método para buscar todas as mensagens
   async findAll(findOptions: FindOptions, options?: { transaction: Transaction }) {
     // Verifica se existem opções de transação e busca todas as mensagens
-    const response = options ? await this.messageModel.findAll({
+    const response = await this.messageModel.findAll({
       ...findOptions,
-      ...options
-    }) : await this.messageModel.findAll(findOptions);
+      include: this.messageIncludes,
+      ...options,
+    });
     return response.map((message) => message.get()); // Retorna as mensagens encontradas
   }
 

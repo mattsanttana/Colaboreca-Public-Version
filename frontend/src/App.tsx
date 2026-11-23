@@ -1,15 +1,15 @@
 import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/Home';
-import Login from './pages/LoginPopup';
-import NotFound from './pages/NotFound';
-import DJs from './pages/Ranking';
-import Track from './pages/Track';
-import DJProfile from './pages/DJProfile';
-import AddMusicToQueue from './pages/AddMusicToQueue';
-import Queue from './pages/Queue';
-import Chat from './pages/Chat';
-import EnterTrack from './pages/EnterTrack';
-import CreateDJ from './pages/CreateDJ';
+import HomePage from './pages/home/Home';
+import Login from './pages/access/LoginPopup';
+import NotFound from './pages/shared/NotFound';
+import DJs from './pages/ranking/Ranking';
+import Track from './pages/tracks/Track';
+import DJProfile from './pages/djs/DJProfile';
+import AddMusicToQueue from './pages/queue/AddMusicToQueue';
+import Queue from './pages/queue/Queue';
+import Chat from './pages/chat/Chat';
+import EnterTrack from './pages/tracks/EnterTrack';
+import CreateDJ from './pages/djs/CreateDJ';
 
 // Componente principal do aplicativo onde as rotas são definidas
 const App = () => {
@@ -23,7 +23,7 @@ const App = () => {
       <Route path="/track-info/:trackId" element={<Track />} />
       <Route path="/track-info/djs/:trackId" element={<DJs />} />
       <Route path="/track-info/profile/:trackId/:djId" element={<DJProfile />} />
-      <Route path="/track-info/queue/:trackId" element={<Queue  />} />
+      <Route path="/track-info/queue/:trackId" element={<Queue />} />
       <Route path="/track-info/ranking/:trackId" element={<DJs />} />
       <Route path="/track/:trackId" element={<Track />} />
       <Route path="/track/ranking/:trackId" element={<DJs />} />

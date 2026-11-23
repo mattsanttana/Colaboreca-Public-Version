@@ -1,0 +1,111 @@
+.queue-route {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: 100dvh;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.queue-page {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  margin: 0 auto;
+  align-self: center;
+}
+
+.queue-page>.container {
+  flex: 0 0 auto;
+}
+
+.queue-layout {
+  height: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+
+.queue-layout>.col {
+  height: 100%;
+  min-height: 0;
+}
+
+.queue-main-column {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.queue-panel {
+  display: flex;
+  height: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(24, 25, 48, 0.98), rgba(12, 13, 28, 0.98)) !important;
+}
+
+.queue-panel-body {
+  display: flex;
+  height: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0.5rem;
+  color: #fff4c2;
+}
+
+.queue-content {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+  padding: 0;
+}
+
+.queue-page .slick-dots li button:before {
+  color: #b7b5cf;
+  opacity: 0.65;
+}
+
+.queue-page .slick-dots li.slick-active button:before {
+  color: #ffda6a;
+  opacity: 1;
+}
+
+.queue-route aside.menu-container {
+  height: 100%;
+  margin-top: 0 !important;
+}
+
+.queue-route aside.menu-container>.container {
+  height: 100% !important;
+}
+
+@media (max-width: 767.98px) {
+.queue-content {
+    --queue-carousel-height: clamp(245px, 40vh, 300px);
+  }
+}
+
+.queue-container, #queue-container {
+  height: 100vh;
+}

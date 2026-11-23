@@ -1,0 +1,42 @@
+.menu-button {
+  width: 75%;
+  margin-bottom: 15px;
+}
+
+.custom-modal .login-popup-dialog {
+  max-width: 560px;
+  width: 560px;
+  margin-top: 2vh;
+}
+
+.custom-modal .login-popup-dialog .modal-header {
+  padding: 0.8rem 1.25rem;
+}
+
+.custom-modal .login-popup-dialog .modal-title {
+  font-size: 1.3rem;
+}
+
+.custom-modal .login-popup-dialog .menu-button {
+  font-size: 0.95rem;
+  padding: 0.55rem 0.9rem;
+}
+
+.login-popup-logo, #login-popup-logo {
+  max-width: 100px;
+}
+
+.login-popup-login-title, #login-popup-login-title {
+  color: #fff4c2;
+  font-size: 1.35rem;
+  margin: 0;
+  text-align: center;
+}
+
+.login-popup-faquestioncircle, #login-popup-faquestioncircle {
+  cursor: pointer;
+}
+
+.login-popup-menu-button, #login-popup-menu-button {
+  margin-top: 0.75rem;
+}

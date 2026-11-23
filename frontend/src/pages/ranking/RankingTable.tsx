@@ -1,0 +1,200 @@
+import '../../styles/ranking/RankingTable.css';
+import { lazy, Suspense } from 'react';
+import { Button, Container, FormControl, Image, Spinner } from 'react-bootstrap';
+import { FaArrowUp, FaArrowDown, FaTimes, FaStar, FaSearch, FaUserSlash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { animated } from '@react-spring/web';
+import { DJ } from '../../types/DJ';
+import useRankingTable from '../../utils/useRankingTable';
+
+// Componentes que não precisam ser carregados inicialmente
+const ExpelDJConfirmationPopup = lazy(() => import('../djs/ExpelDJConfirmationPopup'));
+
+// Props para o componente RankingTable
+interface Props {
+  currentRanking: DJ[]; // Ranking atual
+  dj?: DJ, // DJ atual
+  ownerDJId: number | null;
+  previousRanking: DJ[]; // Ranking anterior
+  trackToken?: string; // Token da pista
+}
+
+// Componente responsável por exibir a tabela de ranking dos DJs
+const RankingTable: React.FC<Props> = ({ currentRanking, dj, ownerDJId, previousRanking, trackToken }) => {
+  const navigate = useNavigate(); // Hook para navegação entre rotas
+
+  // Hook personalizado para gerenciar o estado e lógica da tabela de ranking
+  const {
+    setShowConfirmModal, showConfirmModal, trackId, search, setSearch, tableRef, tableHeight, rowRefs,
+    filteredRanking, points, pointDirection, updatedDJId, springs, confirmExpelDJ, handleExpelDJ, formatScore
+  } = useRankingTable(currentRanking, dj, previousRanking, trackToken);
+
+
+  return (
+    <Container className='table-responsive ranking-table-wrapper'>
+      { /* Carregaento preguiçoso para componentes menos importantes */ }
+      <Suspense fallback={ <Spinner /> }>
+        { /* Modal de confirmação para expulsar DJ */ }
+        <ExpelDJConfirmationPopup
+          confirmExpelDJ={ confirmExpelDJ } // Função para confirmar expulsão
+          onHide={ () => setShowConfirmModal(false) } // Função para controlar exibição do modal
+          show={ showConfirmModal } // Estado de exibição do modal
+        />
+      </Suspense>
+      
+      { /* Barra de busca */ }
+      <Container className='d-flex justify-content-end'>
+        <div className='search-group my-3 ranking-search-group'>
+          <FaSearch className='search-icon' /> { /* Ícone de busca */ }
+          { /* Verifica se há texto na busca para mostrar o ícone de limpar */ }
+          { search ? (
+            // Ícone de limpar busca
+            <FaTimes
+              className='times-icon ranking-table-times-icon'
+
+              onClick={ () => setSearch('') } // Limpa o campo de busca
+            />
+          // Se não houver texto, não mostra nada
+          ) : null }
+          { /* Campo de entrada para busca de DJs */ }
+          <FormControl
+            className='custom-input'
+            type='text'
+            placeholder='Buscar DJ'
+            value={ search } // Valor do campo de busca
+            onChange={e => setSearch(e.target.value)} // Atualiza o estado da busca ao digitar
+            style={{
+              paddingLeft: '2rem', 
+              paddingRight: '2rem' 
+            }}
+          />
+        </div>
+      </Container>
+      {/* Container principal para animação */}
+      <Container 
+        className='ranking-list ranking-table-ranking-list'
+        ref={ tableRef } // Referência para medir altura
+        style={{ height: tableHeight, minHeight: '300px' 
+      }}>
+        { /* Mapeia o ranking filtrado para exibir cada DJ */ }
+        { filteredRanking.map((rankingDJ, index) => (
+          // Linha animada para cada DJ
+          <animated.div
+            key={ rankingDJ.id }
+            ref={ el => rowRefs.current[index] = el } // Referência para medir altura da linha
+            id={ `dj-${ rankingDJ.id }` } // ID para scroll
+            className={ `ranking-row d-flex align-items-center mb-2 p-2 rounded ${ rankingDJ.id === updatedDJId ? 'highlighted' : '' }` } // Classe para destacar DJ atualizado
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 1,
+              transform: springs[index].y.to(y => `translateY(${y}px)`),
+              transition: 'background-color 0.3s ease',
+              cursor: 'pointer',
+            }}
+            // Navega para o perfil do DJ ao clicar na linha
+            onClick={() => navigate( `/track/profile/${ trackId }/${ rankingDJ.id }` )}
+          >
+            {/* Posição */}
+            <Container className='flex-shrink-0 ranking-table-container'>
+              <span
+                className='d-inline-flex align-items-center justify-content-center ranking-table-d-inline-flex'
+                style={{ background:
+                    rankingDJ.ranking === 1
+                      ? '#FFD700' 
+                      : rankingDJ.ranking === 2
+                      ? '#C0C0C0' 
+                      : rankingDJ.ranking === 3
+                      ? '#CD7F32' 
+                      : '#222', 
+                  color:
+                    rankingDJ.ranking === 1 || rankingDJ.ranking === 2 || rankingDJ.ranking === 3
+                      ? '#000' 
+                      : '#fff', 
+                  fontWeight: 'bold', boxShadow:
+                    rankingDJ.ranking === 1
+                      ? '0 0 8px #FFD700' 
+                      : rankingDJ.ranking === 2
+                      ? '0 0 8px #C0C0C0' 
+                      : rankingDJ.ranking === 3
+                      ? '0 0 8px #CD7F32' 
+                      : 'none', 
+              }}>
+                { rankingDJ.ranking === 0 ? '—' : rankingDJ.ranking } { /* Mostra travessão se ranking for 0 */ }
+              </span>
+            </Container>
+
+            {/* Avatar e Nome */}
+            <div className='d-flex align-items-center flex-grow-1'> 
+              {/* Avatar */}
+              <div className='flex-shrink-0 mx-2'>
+                <Image
+                  alt={ `Personagem do DJ ${ rankingDJ.djName }` }
+                  src={ rankingDJ.characterPath }
+                  className='img-thumbnail ranking-table-image'
+                  style={{ border:
+                      rankingDJ.ranking === 1
+                        ? '2px solid #FFD700' 
+                        : rankingDJ.ranking === 2
+                        ? '2px solid #C0C0C0' 
+                        : rankingDJ.ranking === 3
+                        ? '2px solid #CD7F32' 
+                        : '1px solid #444', 
+                    boxShadow:
+                      rankingDJ.ranking === 1
+                        ? '0 0 10px #FFD700' 
+                        : rankingDJ.ranking === 2
+                        ? '0 0 10px #C0C0C0' 
+                        : rankingDJ.ranking === 3
+                        ? '0 0 10px #CD7F32' 
+                        : 'none' }}
+                />
+              </div>
+              
+              {/* Nome */}
+              <div className='ranking-dj-name'>
+                { rankingDJ.djName }
+              </div>
+            </div>
+            
+            {/* Pontuação */}
+            <div
+              
+              className={ `flex-shrink-0 ranking-score ${
+                pointDirection[rankingDJ.id] === 'up' ? 'points-up' : pointDirection[rankingDJ.id] === 'down' ? 'points-down' : ''
+              }` }
+            >
+              <span className='d-flex align-items-center'>
+                { formatScore(points[rankingDJ.id] !== undefined ? points[rankingDJ.id] : rankingDJ.score) } { /* Formata e exibe a pontuação */ }
+                <FaStar className='ms-2 points-icon' /> { /* Ícone de estrela */ }
+                { pointDirection[rankingDJ.id] === 'up' && <FaArrowUp className='ms-2 point-arrow up' /> } { /* Ícone de seta para cima se pontos aumentaram */ }
+                { pointDirection[rankingDJ.id] === 'down' && <FaArrowDown className='ms-2 point-arrow down' /> } { /* Ícone de seta para baixo se pontos diminuíram */ }
+              </span>
+            </div>
+            
+            {/* Botão de expulsão */}
+            { dj?.id === ownerDJId && dj.id !== rankingDJ.id && (
+              <div className='flex-shrink-0 ms-3'>
+                <Button
+                  variant='danger'
+                  size='sm'
+                  title='Expulsar DJ'
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleExpelDJ(dj);
+                  }}
+                >
+                  <FaUserSlash /> { /* Ícone de expulsão */ }
+                </Button>
+              </div>
+            )}
+          </animated.div>
+        ))}
+      </Container>
+    </Container>
+  );
+}
+
+export default RankingTable;

@@ -1,0 +1,11 @@
+.edit-track-name-popup-custom-modal-header, #edit-track-name-popup-custom-modal-header {
+  border-bottom: none;
+}
+
+.edit-track-name-popup-control, #edit-track-name-popup-control {
+  background-color: black;
+}
+
+.edit-track-name-popup-footer, #edit-track-name-popup-footer {
+  border-top: none;
+}

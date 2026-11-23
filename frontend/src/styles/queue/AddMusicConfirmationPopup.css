@@ -1,0 +1,21 @@
+.confirmation-content {
+  width: 100%;
+  max-width: 420px;
+}
+
+.audio-preview-player {
+  max-width: 100%;
+}
+
+.spotify-preview-message {
+  color: #ffda6a;
+}
+
+.spotify-listen-button {
+  max-width: 300px;
+}
+
+.preview-help-icon {
+  cursor: pointer;
+  color: #ffffff;
+}

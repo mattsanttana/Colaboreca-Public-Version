@@ -1,0 +1,31 @@
+.track-id {
+  font-size: 50px;
+  margin-bottom: 20px;
+}
+
+.share-track-popup-card, #share-track-popup-card {
+  box-shadow: 0 0 0 0.5px #ffffff;
+  padding: 0;
+}
+
+.share-track-popup-column, #share-track-popup-column {
+  color: #fff4c2;
+}
+
+.share-track-popup-track-id, #share-track-popup-track-id {
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+.share-track-popup-wrapper, #share-track-popup-wrapper {
+  background-color: #fff4c2;
+  margin-top: 20px;
+  width: 200px;
+  border-radius: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.share-track-popup-wrapper-2, #share-track-popup-wrapper-2 {
+  margin-top: 13px;
+}

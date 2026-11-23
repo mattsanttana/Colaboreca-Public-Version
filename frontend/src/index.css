@@ -1,154 +1,477 @@
-/*
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* Global application styles */
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  background-color: #000000;
+  position: relative;
+  z-index: 0;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
-.image-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  padding: 0 300px;
-}
-
-.image-row img {
-  width: 180px;
-  height: auto;
-  margin: 5px;
-}
-
-.chosen-character {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 400px;
-  height: auto;
-  margin: 0 auto;
-}
-
-.short-character {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 50px;
-  height: auto;
-  margin: 0 auto;
-}
-
-#escolha-um-avatar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.logo img {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 500px;
-  height: auto;
-  margin-top: -38%;
-  margin-left: 300px;
-  border-radius: 50%;
-}
-
-#conteiner-buttons-logo {
-  display: flex;
-  align-items: center;
+body::before {
+  content: "";
   position: absolute;
-  margin-top: 5%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(./assets/images/background/background.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.1;
+  z-index: -1;
 }
 
-#buttons-initial-page {
-  display: flex;
-  justify-content: center;
+::-webkit-scrollbar {
+  width: 8px;
+  /* Largura da barra de rolagem */
+  height: 8px;
+  /* Altura da barra de rolagem horizontal */
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  /* Cor do trilho da barra de rolagem */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #333333;
+  /* Cor da "pegada" da barra de rolagem */
+  border-radius: 4px;
+  /* Arredondamento da "pegada" */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555555;
+  /* Cor ao passar o mouse */
+}
+
+.card,
+.container,
+.row,
+.col,
+.aside {
+  border: none !important;
+  box-shadow: none !important;
+  background-color: transparent;
+}
+
+.blue-color {
+  background-color: rgb(17, 152, 243)
+}
+
+.yellow-color {
+  color: rgb(252, 198, 2)
+}
+
+/* remove scrow from number input */
+
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+/* home-page menu button style */
+
+.menu-button-spotify {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: linear-gradient(135deg, #1ed760, #169c46);
+  color: #071b10;
+  border: 1px solid #71ed9a;
+  margin: 0;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(29, 185, 84, 0.28);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.menu-button-spotify:hover {
+  background: linear-gradient(135deg, #2be56b, #1db954);
+  border-color: #a1f7ba;
+  color: #04170b;
+  box-shadow: 0 7px 20px rgba(29, 185, 84, 0.4);
+  transform: translateY(-2px);
+}
+
+.menu-button-spotify:active {
+  background: linear-gradient(135deg, #169c46, #117a36);
+  border-color: #5cda82;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.22);
+  transform: translateY(0);
+}
+
+.menu-button-spotify:focus-visible {
+  outline: 2px solid #a1f7ba;
+  outline-offset: 3px;
+}
+
+.menu-button-spotify:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+/* inicial-page h1 phrase style */
+
+.login-title {
+  font-size: 2.9rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+  margin-left: 70px;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+.login-title {
+    font-size: 1.5rem;
+    margin-left: 0;
+    text-align: center;
+    margin: 50px 0;
+  }
+}
+
+@media (max-width: 768px) {
+.horizontal-logo {
+    max-width: 150px;
+    margin-left: -150px;
+  }
+}
+
+/* share-track track-id style */
+
+/* dj table img style */
+
+/* create dj character style */
+
+/* menu items style */
+
+/* menu profile style */
+
+.menu-container,
+.squeres-container {
+  will-change: transform;
+}
+
+/* modal black style */
+
+.custom-modal .modal-dialog {
+  max-width: 600px;
+  /* tamanho máximo do modal */
+  margin: auto;
+  position: relative;
+  margin-top: 10vh;
+}
+
+.custom-modal .modal-content {
+  background: linear-gradient(90deg, #1f2340, #3a5a7a, #0d3a5a, #1a5a7f);
+  color: white;
+  overflow: hidden;
+  position: relative;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-modal .modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: linear-gradient(to bottom, #fff4c2, #ffb703, #c99700, #ffda6a);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.custom-modal .modal-modal-body {
+  padding: 0 1rem 1rem 1rem;
+  display: flex;
   flex-direction: column;
-  margin-left: 120%;
-  margin-top: -40%;
-  width: 75%;
-  height: 350%;
-  border-radius: 4%;
-  position: absolute;
-  background-color: #171616;
-}
-
-#buttons-initial-page button {
-  margin: 10px;
-  width: 400px;
-  height: 75px;
-}
-
-#buttons-initial-page h1 {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: -20%;
-  width: 80%;
+  overflow: hidden;
+  /* evita que filhos transbordem */
 }
-*/
+
+.custom-input {
+  height: 42px;
+  background-color: #212529;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+  max-width: 300px;
+}
+
+.custom-input::placeholder {
+  color: #666;
+}
+
+.custom-input:focus {
+  background-color: #212529;
+  color: #fff;
+  border: none;
+  box-shadow: 0 0 0 3px #2e3059;
+  outline: none;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #494C80, #3E4170);
+  color: #F5F7FA;
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  padding: 10px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(73, 76, 128, 0.45);
+}
+
+.primary-button:hover {
+  border-color: #ffda6a;
+  filter: brightness(1.12);
+  box-shadow: 0 6px 20px rgba(255, 183, 3, 0.28);
+  transform: translateY(-2px);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(73, 76, 128, 0.5);
+}
+
+.danger-button {
+  background: linear-gradient(135deg, #6b3049, #49273f);
+  color: #fff4c2;
+  border: 1px solid #ffb70366;
+  padding: 10px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px #49273f66;
+}
+
+.danger-button:hover {
+  background: linear-gradient(135deg, #85405a, #61304d);
+  border-color: #ffda6a;
+  box-shadow: 0 6px 20px #49273f99;
+  color: #fff4c2;
+  transform: translateY(-2px);
+}
+
+.danger-button:active {
+  transform: translateY(0);
+}
+
+.danger-button:focus-visible {
+  outline: 2px solid #ffda6a;
+  outline-offset: 3px;
+}
+
+.secondary-button {
+  background: transparent;
+  color: #C9D4E0;
+  border: 1px solid rgba(73, 76, 128, 0.8);
+  padding: 10px 24px;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.secondary-button:hover {
+  background: rgba(73, 76, 128, 0.15);
+  color: #F5F7FA;
+  border-color: rgba(255, 209, 102, 0.6);
+  transform: translateY(-1px);
+}
+
+.custom-modal-header {
+  position: relative;
+  border-bottom: none;
+}
+
+.custom-modal-header .modal-title {
+  color: #fff4c2;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.custom-modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 2px;
+  background: linear-gradient(to right, #fff4c2, #ffb703, #c99700, #ffda6a);
+  border-radius: 1px;
+}
+
+.custom-modal-header .btn-close {
+  filter: invert(1);
+}
+
+/* Track.css */
+
+@keyframes fade-logo {
+  15% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.logo-spinner {
+  width: 150px;
+  /* Ajuste o tamanho como preferir */
+  height: 150px;
+  animation: fade-logo 2s infinite ease-in-out;
+  /* A animação dura 2 segundos e se repete infinitamente */
+}
+
+@media (max-width: 768px) {
+.logo {
+    width: 250px;
+  }
+}
+
+/* Adicione no seu CSS global */
+@keyframes float {
+  0% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 8px 15px rgba(255, 255, 255, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    border-color: #ffffff;
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 204, 0, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 204, 0, 0);
+    border-color: #ffffff;
+  }
+}
+
+@keyframes float3d {
+  0% {
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+
+  50% {
+    transform: translate3d(0, -5px, 10px) rotateX(5deg);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+}
+
+/* Melhorar performance */
+animated.div {
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 10px;
+  /* Aplica o arredondamento no container */
+  overflow: hidden;
+  /* Garante que nada vaze */
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* ocupa toda a área */
+  padding: 2px;
+  /* largura da borda */
+  border-radius: inherit;
+  /* respeita o border-radius do pai */
+  background: linear-gradient(to right, #fff4c2, #494c80, #2e3059, #186ea7);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  /* não atrapalha clique */
+}
+
+/* animação de entrada (aplicada quando a classe .enter é adicionada) */
+
+/* 🎨 Paleta base (a que tu já tem)
+
+Cinzas e grafites: #6c757d, #3a3f45, #212529
+
+Azuis escuros: #494c80, #2e3059
+
+Azul vibrante (link atual): #186ea7
+
+✨ Sugestões pra enriquecer
+
+Cor de destaque quente (pra botões principais, ícones ou hover)
+
+#e63946 (vermelho coral intenso)
+
+ou #ffb703 (amarelo dourado mais suave, lembra energia/astro)
+
+Tons secundários frios (pra dar respiro sem fugir do dark)
+
+#4cc9f0 (ciano claro, ótimo pra hover de links)
+
+#a8dadc (um azul clarinho acinzentado, ótimo pra texto em destaque)
+
+Detalhes mais “futuristas” (pra ícones, efeitos de glow, etc)
+
+#9d4edd (roxo neon elegante)
+
+#f72585 (magenta vibrante, pode ser usado bem sutilmente) */

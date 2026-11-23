@@ -1,0 +1,23 @@
+.card-hover:hover {
+  background-color: #5052884d !important;
+  /* exemplo: cor mais opaca no hover */
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.track-container, #track-container {
+  height: 100vh;
+}
+
+.track-mb-5, #track-mb-5 {
+  background-color: #2e30594D;
+}
+
+.track-wrapper, #track-wrapper {
+  background-color: #2e30594D;
+  cursor: pointer;
+}
+
+.track-wrapper-2, #track-wrapper-2 {
+  background-color: #2e30594D;
+}

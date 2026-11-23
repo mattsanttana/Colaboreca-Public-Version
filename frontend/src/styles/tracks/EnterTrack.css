@@ -1,0 +1,28 @@
+.enter-track-image, #enter-track-image {
+  max-width: 120px;
+}
+
+.enter-track-group, #enter-track-group {
+  max-width: 400px;
+}
+
+.enter-track-login-title, #enter-track-login-title {
+  color: #fff4c2;
+  font-size: 1.35rem;
+  margin: 0;
+  text-align: center;
+}
+
+.enter-track-wrapper, #enter-track-wrapper {
+  margin-left: 50px;
+}
+
+.enter-track-custom-input, #enter-track-custom-input {
+  min-width: 0;
+  z-index: 1;
+}
+
+.enter-track-button, #enter-track-button {
+  width: 48px;
+  height: 42px;
+}

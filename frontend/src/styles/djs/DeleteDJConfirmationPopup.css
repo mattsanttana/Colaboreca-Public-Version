@@ -1,0 +1,11 @@
+.delete-djconfirmation-popup-custom-modal-header, #delete-djconfirmation-popup-custom-modal-header {
+  border-bottom: none;
+}
+
+.delete-djconfirmation-popup-text, #delete-djconfirmation-popup-text {
+  color: #fff4c2;
+}
+
+.delete-djconfirmation-popup-footer, #delete-djconfirmation-popup-footer {
+  border-top: none;
+}

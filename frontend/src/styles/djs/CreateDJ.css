@@ -1,0 +1,29 @@
+.create-dj-container, #create-dj-container {
+  height: 100vh;
+}
+
+.create-dj-container-2, #create-dj-container-2 {
+  width: 100%;
+  max-width: 500px;
+  min-height: 100dvh;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.create-dj-image, #create-dj-image {
+  max-width: 150px;
+}
+
+.create-dj-title, #create-dj-title {
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #fff4c2;
+  margin-bottom: 1rem;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 244, 194, 0.22), 0 0 24px rgba(76, 201, 240, 0.12);
+}
+
+.create-dj-wrapper, #create-dj-wrapper {
+  width: 100%;
+  max-width: 300px;
+}

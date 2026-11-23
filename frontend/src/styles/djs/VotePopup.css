@@ -1,0 +1,13 @@
+.vote-popup-wrapper, #vote-popup-wrapper {
+  align-items: center;
+  display: flex;
+  margin-left: auto;
+}
+
+.vote-popup-faquestioncircle, #vote-popup-faquestioncircle {
+  cursor: pointer;
+}
+
+.vote-popup-primary-button, #vote-popup-primary-button {
+  max-width: 300px;
+}

@@ -1,0 +1,198 @@
+.podium-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto;
+}
+
+.podium-img {
+  width: 100%;
+  height: auto;
+}
+
+.short-character {
+  width: 50px;
+  height: auto;
+  border-radius: 50%;
+}
+
+.dj-rank {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  transform: translate(-50%, 0);
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.dj-podium-name {
+  max-width: 100px;
+  overflow: hidden;
+  margin: 0 0 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(255, 244, 194, 0.4);
+  border-radius: 999px;
+  background: rgba(10, 11, 25, 0.88);
+  color: #fff4c2;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.42);
+}
+
+.dj-rank-1 {
+  left: 52%;
+  top: 2%;
+}
+
+.dj-rank-2 {
+  left: 17%;
+  top: 13%;
+}
+
+.dj-rank-3 {
+  left: 87%;
+  top: 13%;
+}
+
+.dj-img {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  /* ou 'cover' se preferir preencher */
+}
+
+.dj-rank-1 .dj-img {
+  width: 108px;
+  height: 108px;
+}
+
+.ranking-podium-card {
+  border: 1px solid rgba(255, 218, 106, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(29, 30, 58, 0.86), rgba(13, 14, 30, 0.82));
+  color: #fff4c2;
+  overflow: visible;
+}
+
+.ranking-podium-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.75rem 0.2rem;
+  border: 0;
+  background: transparent;
+}
+
+.ranking-track-name {
+  width: fit-content;
+  max-width: min(100%, 320px);
+  overflow: hidden;
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(255, 244, 194, 0.52);
+  border-radius: 7px;
+  background: linear-gradient(100deg, #494c80, #a8dadc, #186ea7);
+  color: #17182c;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-podium-body {
+  position: relative;
+  height: clamp(190px, 24vh, 240px);
+  overflow: visible;
+  padding: 0.25rem 0.75rem 0.75rem;
+  background: transparent;
+}
+
+.ranking-podium-container.featured .ranking-podium-body {
+  height: clamp(300px, 36vh, 370px);
+}
+
+.ranking-podium-container.featured .podium-wrapper {
+  max-width: 380px;
+}
+
+.ranking-podium-container.featured .podium-img {
+  display: block;
+  width: 90%;
+  margin-inline: auto;
+  transform: translateY(40px);
+}
+
+.ranking-podium-container.featured .dj-podium-name {
+  max-width: 130px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.ranking-podium-container.featured .dj-img {
+  width: 120px;
+  height: 120px;
+}
+
+.ranking-podium-container.featured .dj-rank-1 .dj-img {
+  width: 150px;
+  height: 150px;
+}
+
+.ranking-podium-container.preview .ranking-podium-body {
+  height: clamp(295px, 38vh, 330px);
+}
+
+.ranking-podium-container.preview .ranking-podium-card {
+  border: 0;
+  background: transparent !important;
+}
+
+.ranking-podium-container.preview .podium-wrapper {
+  max-width: 320px;
+}
+
+.ranking-podium-container.preview .podium-img {
+  transform: translateY(60px);
+}
+
+.ranking-podium-container.preview .dj-podium-name {
+  max-width: 120px;
+  font-size: 0.76rem;
+}
+
+.ranking-podium-container.preview .dj-img {
+  width: 108px;
+  height: 108px;
+}
+
+.ranking-podium-container.preview .dj-rank-1 .dj-img {
+  width: 138px;
+  height: 138px;
+}
+
+.ranking-podium-card .card-body {
+  background: transparent;
+}
+
+@media (max-width: 767.98px) {
+.ranking-podium-container.featured .ranking-podium-body {
+    height: clamp(260px, 32vh, 310px);
+  }
+.ranking-podium-container.featured .podium-wrapper {
+    max-width: 320px;
+  }
+.ranking-podium-container.featured .dj-podium-name {
+    max-width: 105px;
+    font-size: 0.72rem;
+  }
+.ranking-podium-container.featured .dj-img {
+    width: 95px;
+    height: 95px;
+  }
+.ranking-podium-container.featured .dj-rank-1 .dj-img {
+    width: 120px;
+    height: 120px;
+  }
+}

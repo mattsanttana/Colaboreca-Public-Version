@@ -1,0 +1,98 @@
+.dj-profile-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0 1rem 0.5rem;
+  background: #080912cc;
+  overflow: hidden;
+}
+
+.dj-profile-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.dj-profile-page>.container {
+  flex: 0 0 auto;
+}
+
+.dj-profile-content-row {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dj-profile-main-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dj-profile-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1.5rem 1rem;
+  overflow: hidden;
+}
+
+.dj-profile-overview {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 1.25rem;
+  flex: 0 0 auto;
+  min-height: 330px;
+  margin-bottom: 1rem;
+}
+
+.dj-profile-overview>.dj-profile-mini {
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 767.98px) {
+.dj-profile-screen {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+  }
+.dj-profile-page {
+    min-height: 100dvh;
+    overflow: visible;
+  }
+.dj-profile-content-row {
+    flex: 1 0 auto;
+    overflow: visible;
+  }
+.dj-profile-main-column {
+    min-height: auto;
+  }
+.dj-profile-card {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+  }
+.dj-profile-overview {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: 1rem;
+  }
+.dj-profile-overview>.dj-profile-mini {
+    max-width: 560px;
+    justify-self: center;
+  }
+}
+
+.djprofile-container, #djprofile-container {
+  height: 100vh;
+}

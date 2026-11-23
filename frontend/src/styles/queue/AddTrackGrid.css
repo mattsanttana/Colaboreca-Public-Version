@@ -1,0 +1,98 @@
+.add-track-results {
+  padding: 0.5rem 0.75rem 1.25rem;
+  color: #fff4c2;
+}
+
+.add-track-section-title {
+  margin: 0 0 1rem;
+  color: #fff4c2;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.add-track-grid {
+  margin: 0;
+}
+
+.add-track-card {
+  height: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(37, 39, 70, 0.98), rgba(19, 20, 40, 0.98)) !important;
+  color: #fff4c2 !important;
+  text-align: left;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.add-track-card:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+.add-track-card:focus-visible {
+  outline: 2px solid #ffda6a;
+  outline-offset: 2px;
+}
+
+.add-track-card .card-img-top {
+  border-bottom: 1px solid rgba(119, 121, 181, 0.42);
+}
+
+.add-track-card .card-body {
+  background: transparent;
+}
+
+.add-track-title {
+  color: #fff4c2;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.add-track-artists {
+  color: #b7b5cf;
+  font-size: 0.88rem;
+}
+
+.add-track-grid-add-track-grid, #add-track-grid-add-track-grid {
+  width: 100%;
+}
+
+.add-track-grid-cursor, #add-track-grid-cursor {
+  cursor: pointer;
+}
+
+.add-track-grid-wrapper, #add-track-grid-wrapper {
+  align-items: center;
+}
+
+.add-track-grid-add-track-results, #add-track-grid-add-track-results {
+  min-height: 75vh;
+  position: relative;
+}
+
+.add-track-grid-wrapper-2, #add-track-grid-wrapper-2 {
+  background-color: rgba(45, 45, 45, 0.78);
+  inset: 0;
+  min-height: 75vh;
+  position: absolute;
+  z-index: 1050;
+}
+
+.add-track-grid-wrapper-3, #add-track-grid-wrapper-3 {
+  align-items: center;
+  color: #f2f2f2;
+  display: flex;
+  height: 75vh;
+  justify-content: center;
+  padding: 2rem;
+  position: sticky;
+  text-align: center;
+  top: 4rem;
+}
+
+.add-track-grid-label, #add-track-grid-label {
+  font-size: 1rem;
+  opacity: 0.9;
+}

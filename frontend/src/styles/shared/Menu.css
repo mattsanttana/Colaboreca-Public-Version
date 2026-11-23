@@ -1,0 +1,51 @@
+.menu-item .nav-link {
+  transition: background-color 0.3s ease;
+  border-radius: 30px;
+  will-change: transform;
+  font-weight: bold;
+}
+
+.menu-item .nav-link:hover {
+  background-color: #5da2ba4D;
+  /* hover azul ciano claro e transparente */
+  border-radius: 30px;
+  will-change: transform;
+}
+
+.menu-item {
+  font-size: 1.1rem;
+  padding: 0.40rem 1.20rem;
+}
+
+.menu-nav {
+  border-right: 2px solid transparent;
+  border-image: linear-gradient(to bottom, #fff4c2, #ffb703, #c99700, #ffda6a) 1;
+}
+
+.menu-link-bright {
+  color: #fff4c2 !important;
+  font-weight: bold;
+  transition: text-shadow 0.2s;
+  text-shadow:
+    0 0 6px #fff3,
+    /* brilho branco suave e difuso */
+    0 1px 2px #0003;
+  /* leve sombra preta para contraste */
+}
+
+.hide-scroll {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE e Edge antigos */
+}
+
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari */
+}
+
+.menu-p-3, #menu-p-3 {
+  height: 92vh;
+  overflow: auto;
+}

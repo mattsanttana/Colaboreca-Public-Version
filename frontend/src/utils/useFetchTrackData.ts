@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Settings } from '../types/Settings';
 import socket from './socket';
 
-const useFetchTrackData = (djToken: string) => {
+const useFetchTrackData = (token: string) => {
   const { trackId, } = useParams(); // Pega o ID da pista da URL
   const [trackName, setTrackName] = useState(''); // Nome da pista
   const [ownerDJId, setOwnerDJId] = useState<number | null>(null);
@@ -48,7 +48,7 @@ const useFetchTrackData = (djToken: string) => {
         try {
           const [fetchedTrack, fetchedDJData] = await Promise.all([
             trackActions.getTrackById(Number(trackId)), // Busca os dados da pista
-            djActions.getDJData(djToken) // Busca os dados do DJ
+            djActions.getDJData(token) // Busca os dados do DJ
           ]);
 
           // Verifica se o DJ está na pista e caso não esteja, exibe um popup de erro

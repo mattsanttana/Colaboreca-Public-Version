@@ -1,0 +1,73 @@
+.bar-chart {
+  margin-top: 50px;
+  height: 320px;
+  margin-left: -53px;
+}
+
+@media (max-width: 430px) {
+.bar-chart {
+    margin-top: 75px;
+  }
+}
+
+@media (max-width: 390px) {
+.bar-chart {
+    height: 270px;
+  }
+}
+
+.dj-vote-radar {
+  min-width: 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(73, 76, 128, 0.48);
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(0, 153, 176, 0.09), transparent 68%),
+    linear-gradient(145deg, rgba(13, 15, 34, 0.74), rgba(8, 12, 27, 0.72));
+  box-shadow: inset 0 0 20px rgba(0, 153, 176, 0.035);
+  color: #ddffff;
+}
+
+.dj-vote-radar-chart {
+  height: 330px;
+}
+
+.dj-vote-radar-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dj-vote-radar-title {
+  margin: 0;
+  color: #9ffbff;
+  font-size: 1.1rem;
+  text-shadow: 0 0 12px rgba(20, 220, 233, 0.34);
+}
+
+.dj-vote-radar-count {
+  color: #75dbe9;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.dj-vote-radar-empty {
+  display: grid;
+  min-height: 330px;
+  place-items: center;
+  margin: 0;
+  color: #9ffbff;
+  opacity: 0.7;
+  text-align: center;
+}
+
+@media (max-width: 767.98px) {
+.dj-vote-radar-chart {
+    height: 300px;
+  }
+.dj-vote-radar-empty {
+    min-height: 300px;
+  }
+}

@@ -1,0 +1,227 @@
+.points-up {
+  color: #0f0;
+  text-shadow: 0 0 8px #0f0, 0 0 12px #0f0;
+}
+
+.points-down {
+  color: #f00;
+  text-shadow: 0 0 8px #f00, 0 0 12px #f00;
+}
+
+.point-arrow {
+  margin-left: 6px;
+  animation: pulseUp 0.8s ease-in-out infinite;
+}
+
+.point-arrow.up {
+  color: #0f0;
+}
+
+.point-arrow.down {
+  color: #f00;
+}
+
+.points-icon {
+  margin-left: 4px;
+  font-size: 0.8rem;
+  color: gold;
+}
+
+@keyframes pulseUp {
+
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+.dj-profile-avatar-wrapper {
+  position: relative;
+  width: min(100%, 210px);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+}
+
+.dj-profile-avatar-wrapper .profile-avatar {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #494c80;
+  background: #2e30594d;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 0 24px rgba(73, 76, 128, 0.4);
+}
+
+.dj-profile-mini {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  justify-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.dj-profile-identity {
+  min-width: 0;
+  width: 100%;
+}
+
+.dj-profile-eyebrow {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #a8a9cf;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.dj-profile-name {
+  overflow-wrap: anywhere;
+  margin: 0 0 0.8rem;
+  color: #fff4c2;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.dj-profile-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.dj-profile-stat {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 2px solid #494c80;
+  background: rgba(12, 13, 29, 0.48);
+}
+
+.dj-profile-stat>span {
+  color: #a8a9cf;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.dj-profile-stat>strong {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #f3f0ff;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.dj-profile-stat .dj-profile-rank {
+  color: #ffda6a;
+  font-size: 1.35rem;
+}
+
+.dj-profile-score-icon {
+  color: #ffda6a;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 767.98px) {
+.dj-profile-name {
+    font-size: 1.55rem;
+  }
+}
+
+@media (max-width: 420px) {
+.dj-profile-mini {
+    grid-template-columns: minmax(95px, 0.75fr) minmax(0, 1.25fr);
+    gap: 0.65rem;
+  }
+.dj-profile-avatar-wrapper {
+    width: min(100%, 125px);
+  }
+.dj-profile-name {
+    font-size: 1.35rem;
+  }
+.dj-profile-stat {
+    padding: 0.45rem 0.5rem;
+  }
+.dj-profile-stat>strong {
+    font-size: 0.95rem;
+  }
+.dj-profile-stat .dj-profile-rank {
+    font-size: 1.2rem;
+  }
+}
+
+.dj-profile-edit-icon {
+  position: absolute;
+  top: 8px;
+  right: 18px;
+  z-index: 2;
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #fff4c2;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #494c80, #3e4170);
+  color: #ffda6a;
+  box-shadow: 0 3px 12px #0009, 0 0 12px #ffb70344;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.dj-profile-edit-icon:hover,
+.dj-profile-edit-icon:focus-visible {
+  border-color: #ffda6a;
+  background: linear-gradient(135deg, #5559a0, #494c80);
+  color: #fff4c2;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px #000a, 0 0 16px #ffb70377;
+}
+
+.dj-profile-edit-icon:focus-visible {
+  outline: 2px solid #ffda6a;
+  outline-offset: 3px;
+}
+
+.djprofile-mini-profile-avatar, #djprofile-mini-profile-avatar {
+  background-color: #2e30594D;
+  border: 3px solid #494c80;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 0 24px rgba(73, 76, 128, 0.45);
+}
+
+.djprofile-mini-wrapper, #djprofile-mini-wrapper {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 1.5rem;
+  font-family: "Bebas Neue", Oswald, Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.djprofile-mini-wrapper-2, #djprofile-mini-wrapper-2 {
+  line-height: 1.2;
+}
+
+.djprofile-mini-wrapper-3, #djprofile-mini-wrapper-3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff4c2;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}

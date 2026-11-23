@@ -1,4 +1,4 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from 'sequelize';
+import { DataTypes, InferAttributes, InferCreationAttributes, Model, NonAttribute } from 'sequelize';
 import db from '.';
 import SequelizeChat from './SequelizeChat';
 import SequelizeDJ from './SequelizeDJ';
@@ -18,6 +18,8 @@ class SequelizeMessage extends Model<
   declare read?: boolean; // Mensagem lida
   declare isReply?: boolean; // Mensagem de resposta
   declare replyTo?: number | null; // ID da mensagem respondida
+  declare dj?: NonAttribute<SequelizeDJ>; // DJ que enviou a mensagem
+  declare receiveDJ?: NonAttribute<SequelizeDJ | null>; // DJ que recebeu a mensagem
 }
 
 // Inicialização do modelo de mensagem
@@ -115,6 +117,16 @@ SequelizeDJ.hasMany(SequelizeMessage, {
 SequelizeMessage.belongsTo(SequelizeDJ, {
   foreignKey: 'djId', // Chave estrangeira
   as: 'dj', // Associação para identificar o DJ associado à mensagem
+});
+
+SequelizeDJ.hasMany(SequelizeMessage, {
+  foreignKey: 'receiveDJId', // Chave estrangeira do destinatário
+  as: 'receivedMessages', // Mensagens recebidas pelo DJ
+});
+
+SequelizeMessage.belongsTo(SequelizeDJ, {
+  foreignKey: 'receiveDJId', // Chave estrangeira do destinatário
+  as: 'receiveDJ', // DJ que recebeu a mensagem
 });
 
 export default SequelizeMessage;

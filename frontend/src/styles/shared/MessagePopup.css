@@ -1,0 +1,7 @@
+.message-popup-header, #message-popup-header {
+  border-bottom: none;
+}
+
+.message-popup-footer, #message-popup-footer {
+  border-top: none;
+}

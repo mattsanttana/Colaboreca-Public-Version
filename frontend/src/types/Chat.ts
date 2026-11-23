@@ -1,3 +1,5 @@
+import { DJ } from './DJ';
+
 export type Message = {
   id: number
   djId: number;
@@ -8,6 +10,8 @@ export type Message = {
   read: boolean;
   isReply: boolean;
   replyTo: number;
+  dj?: DJ;
+  receiveDJ?: DJ;
 }
 
 export type Chats = {
