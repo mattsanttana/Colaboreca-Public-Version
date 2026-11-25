@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Chats, Message } from "../types/Chat";
 import useMessage from "./useMessage";
 import { DJ } from "../types/DJ";
+import useChatSocket from "./useChatSocket";
 import socket from "./socket";
 
 const useFetchChatData = (
@@ -18,24 +19,24 @@ const useFetchChatData = (
   const [selectedDJChat, setSelectedDJChat] = useState<number | null>(null);
   const [chats, setChats] = useState<Chats>({});
   const [message, setMessage] = useState("");
-  const [unreadMessages, setUnreadMessages] = useState<{
-    [key: string]: number;
-  }>({});
-  const [messagesLoaded, setMessagesLoaded] = useState(false);
-  const [djTyping, setDJTyping] = useState<{
-    [key: string]: { isTyping: boolean; typingDJ: DJ | null };
-  }>({});
   const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
   const [messageToReply, setMessageToReply] = useState<Message | null>(null);
   const [inputHeight, setInputHeight] = useState(0); // valor inicial (por exemplo, 50px)
 
   const messageActions = useMessage();
   const navigate = useNavigate();
-  const typingTimeoutRef = useRef<
-    Record<string, ReturnType<typeof setTimeout>>
-  >({});
   const messageRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const { unreadMessages, djTyping, typingTimeoutRef } = useChatSocket({
+    token,
+    dj,
+    trackId,
+    selectedChat,
+    chats,
+    setChats,
+    messageActions,
+    setInputHeight,
+  });
 
   useEffect(() => {
     if (djChat && !selectedChat) {
@@ -63,187 +64,6 @@ const useFetchChatData = (
       }
     }
   }, [chats, djChat, selectedChat]);
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const djMessages = await messageActions.getAllMessagesForThisDJ(token);
-
-        if (djMessages?.status === 200) {
-          const newChats = djMessages.data.reduce(
-            (acc: Chats, message: Message) => {
-              const chatId = message.chatId || "general";
-              acc[chatId] = [
-                ...(acc[chatId] || []),
-                {
-                  id: message.id,
-                  djId: message.djId,
-                  receiveDJId: message.receiveDJId,
-                  message: message.message,
-                  dj: message.dj,
-                  receiveDJ: message.receiveDJ,
-                  createdAt: new Date(message.createdAt),
-                  read: message.read,
-                  isReply: message.isReply,
-                  replyTo: message.replyTo,
-                },
-              ];
-              return acc;
-            },
-            {} as Chats
-          );
-
-          setChats(newChats);
-          setMessagesLoaded(true);
-        }
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
-    };
-
-    fetchMessages();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!messagesLoaded) return; // Verifica se as mensagens foram carregadas
-
-    const calculateUnreadMessages = () => {
-      const unreadCounts = Object.keys(chats).reduce((acc, chatId) => {
-        if (chatId === "general") return acc; // Ignora o chat geral
-        const unreadCount = chats[chatId].filter(
-          (message) => !message.read && message.receiveDJId === dj?.id
-        ).length;
-
-        if (unreadCount > 0) {
-          acc[chatId] = unreadCount;
-        }
-        return acc;
-      }, {} as { [key: string]: number });
-
-      setUnreadMessages(unreadCounts);
-    };
-
-    calculateUnreadMessages();
-  }, [chats, messagesLoaded, dj?.id]);
-
-  useEffect(() => {
-    const handleSocketConnect = () => {
-      // Solicita a entrada na sala geral
-      socket.emit("joinRoom", `general_${trackId}`);
-
-      // Entra na sala do usuário se o DJ estiver disponível
-      if (dj) {
-        socket.emit("joinRoom", `user_${dj.id}`);
-      }
-    };
-
-    socket.on("connect", handleSocketConnect);
-
-    // Quando `dj` é atualizado, verifica se precisa entrar na sala do DJ
-    if (socket.connected && dj) {
-      socket.emit("joinRoom", `general_${trackId}`);
-      socket.emit("joinRoom", `user_${dj.id}`);
-    }
-
-    const handleDJTyping = (data: { chatId: string; dj: DJ }) => {
-      setDJTyping((prevTyping) => ({
-        ...prevTyping,
-        [data.chatId]: {
-          isTyping: true,
-          typingDJ: data.dj,
-        },
-      }));
-
-      // Limpar o temporizador anterior, se existir
-      if (typingTimeoutRef.current[data.chatId]) {
-        clearTimeout(typingTimeoutRef.current[data.chatId]);
-      }
-
-      // Definir um novo temporizador
-      typingTimeoutRef.current[data.chatId] = setTimeout(() => {
-        setDJTyping((prevTyping) => ({
-          ...prevTyping,
-          [data.chatId]: {
-            isTyping: false,
-            typingDJ: null,
-          },
-        }));
-      }, 1000);
-    };
-
-    // Recebe mensagens do servidor
-    socket.on("chat message", async (message) => {
-      const isChatOpen = Number(selectedChat) === Number(message.chatId);
-      const isRecipient = Number(message.receiveDJId) === Number(dj?.id);
-
-      if (isChatOpen && isRecipient) {
-        const messageId = [message.id];
-        await messageActions.markMessagesAsRead(messageId, token);
-        setUnreadMessages((prevUnreadMessages) => {
-          const updatedUnreadMessages = { ...prevUnreadMessages };
-          delete updatedUnreadMessages[message.chatId];
-          return updatedUnreadMessages;
-        });
-      }
-
-      setChats((prevChats) => {
-        const chatId = message.chatId || "general";
-        const updatedChats = { ...prevChats };
-
-        // Atualizando o chat, incluindo o DJ ID e a mensagem
-        updatedChats[chatId] = [
-          ...(updatedChats[chatId] || []),
-          {
-            id: message.id,
-            djId: message.djId,
-            receiveDJId: message.receiveDJId,
-            message: message.message,
-            dj: message.dj,
-            receiveDJ: message.receiveDJ,
-            createdAt: message.createdAt,
-            read: isChatOpen && isRecipient, // Marca como lida se o chat estiver aberto e o destinatário for o DJ atual
-            isReply: message.isReply,
-            replyTo: message.replyTo,
-          },
-        ];
-
-        return updatedChats;
-      });
-    });
-
-    // Recebe notificações de mensagens lidas do servidor
-    socket.on("messages marked as read", ({ messageIds }) => {
-      setChats((prevChats) => {
-        const updatedChats = { ...prevChats };
-
-        // Atualiza o estado das mensagens para marcá-las como lidas
-        Object.keys(updatedChats).forEach((chatId) => {
-          updatedChats[chatId] = updatedChats[chatId].map((message) =>
-            messageIds.includes(message.id)
-              ? { ...message, read: true }
-              : message
-          );
-        });
-
-        setInputHeight(0);
-        return updatedChats;
-      });
-    });
-
-    socket.on("dj typing", handleDJTyping);
-
-    // Limpeza do evento `connect` para evitar múltiplas adições
-    return () => {
-      socket.off("connect", handleSocketConnect);
-      socket.off("chat message");
-      socket.off("messages marked as read");
-      socket.off("dj typing", handleDJTyping);
-    };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dj, selectedChat]);
 
   const handleFocus = () => {
     setShowSuggestions(true);
