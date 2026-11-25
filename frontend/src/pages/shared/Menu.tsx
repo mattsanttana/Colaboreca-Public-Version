@@ -2,8 +2,11 @@ import '../../styles/shared/Menu.css';
 import React, { useState } from 'react';
 import { Button, Container, Modal, Nav, Row } from 'react-bootstrap';
 import { FaChartLine, FaComments, FaHome, FaList, FaMusic, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { DJ } from '../../types/DJ';
+import { RootState } from '../../redux/store';
+import useChatNotifications from '../../utils/useChatNotifications';
 import DJProfileMini from '../djs/DJProfileMini';
 
 // Recebe as props
@@ -17,6 +20,8 @@ type Props = {
 // Componente Menu que é responsável por exibir o menu lateral da aplicação
 const Menu: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackId }) => {
   const navigate = useNavigate(); // Hook para navegação entre páginas
+  const token = useSelector((state: RootState) => state.reducer.token);
+  const unreadChatCount = useChatNotifications(token, dj?.id, trackId);
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
 
   const handleHomeNavigation = () => {
@@ -95,7 +100,15 @@ const Menu: React.FC<Props> = ({ currentRanking, dj, previousRanking, trackId })
               className='d-flex menu-link-bright' // Classe para estilizar o link
               onClick={ () => navigate(`/track/chat/${ trackId }`) } // Redireciona para o chat
             >
-              <FaComments className='me-2' />Papinho { /* Ícone de chat */ }
+              <FaComments className='me-2' />Papinho
+              {unreadChatCount > 0 && (
+                <span
+                  className='menu-chat-notification'
+                  aria-label={`${unreadChatCount} conversas com notificações`}
+                >
+                  {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                </span>
+              )}
             </Nav.Link>
           </Nav.Item>
           <Nav.Item className='menu-item'>

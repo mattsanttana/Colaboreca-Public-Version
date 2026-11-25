@@ -113,6 +113,12 @@ const useAddMusicToQueue = (
             redirectTo: '',
             show: true
           });
+        } else if (addMusic?.status === 403 && addMusic.data?.timeoutUntil) {
+          setPopupMessageData({
+            message: `Você está temporariamente impedido de adicionar músicas à fila até ${new Date(addMusic.data.timeoutUntil).toLocaleString()}.`,
+            redirectTo: '',
+            show: true
+          });
         } else if (addMusic?.status === 401) {
           setPopupMessageData({
             message: 'Você atingiu o limite de músicas na fila. Aguarde até que uma seja tocada.',

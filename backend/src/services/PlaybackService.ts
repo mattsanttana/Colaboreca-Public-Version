@@ -273,6 +273,17 @@ export default class PlaybackService {
         return { status: 'UNAUTHORIZED', data: { message: 'DJ not found' } };
       }
 
+      if (dj.queueTimeoutUntil && new Date(dj.queueTimeoutUntil).getTime() > Date.now()) {
+        await transaction.rollback();
+        return {
+          status: 'FORBIDDEN',
+          data: {
+            message: 'You are timed out from adding songs to the queue',
+            timeoutUntil: dj.queueTimeoutUntil,
+          },
+        };
+      }
+
       const spotifyToken = await SpotifyActions.refreshAccessToken(track.spotifyToken); // Atualizar o token do Spotify
 
       const currentQueue = await SpotifyActions.getQueue(spotifyToken); // Buscar a fila de músicas do Spotify

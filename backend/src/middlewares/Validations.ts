@@ -196,13 +196,74 @@ export default class Validations {
     next(); // Se tudo estiver correto, chama o próximo middleware
   }
 
+  static validateEditMessage(req: Request, res: Response, next: NextFunction) {
+    const { message } = req.body;
+    if (typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ message: 'Message cannot be empty' });
+    }
+    next();
+  }
+
+  static validateToggleMessageReaction(req: Request, res: Response, next: NextFunction) {
+    const { messageId, emoji } = req.body;
+    const isFlag = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u.test(emoji);
+    const isKeycap = /^[#*0-9]\uFE0F?\u20E3$/u.test(emoji);
+    const isValidEmoji =
+      typeof emoji === 'string'
+      && Array.from(emoji).length <= 16
+      && /^[\p{Emoji}\p{Emoji_Component}\u200D\uFE0F\u20E3]+$/u.test(emoji)
+      && (/\p{Extended_Pictographic}/u.test(emoji) || isFlag || isKeycap);
+
+    if (!Number.isInteger(Number(messageId)) || Number(messageId) <= 0 || !isValidEmoji) {
+      return res.status(400).json({ message: 'Invalid message reaction' });
+    }
+
+    next();
+  }
+
+  static validateModeratorChange(req: Request, res: Response, next: NextFunction) {
+    if (typeof req.body.enabled !== 'boolean') {
+      return res.status(400).json({ message: 'enabled must be a boolean' });
+    }
+    next();
+  }
+
+  static validateDJTimeout(req: Request, res: Response, next: NextFunction) {
+    const { type, durationMs } = req.body;
+    if (
+      (type !== 'chat' && type !== 'queue')
+      || typeof durationMs !== 'number'
+      || !Number.isFinite(durationMs)
+    ) {
+      return res.status(400).json({ message: 'Invalid timeout request' });
+    }
+    next();
+  }
+
+  static validateDJTimeoutRemoval(req: Request, res: Response, next: NextFunction) {
+    if (req.body.type !== 'chat' && req.body.type !== 'queue') {
+      return res.status(400).json({ message: 'Invalid timeout type' });
+    }
+    next();
+  }
+
+  static validateMessageId(req: Request, res: Response, next: NextFunction) {
+    if (!Number.isInteger(Number(req.params.messageId)) || Number(req.params.messageId) <= 0) {
+      return res.status(400).json({ message: 'Invalid message ID' });
+    }
+    next();
+  }
+
   // Método para validar o(s) ID(s) da(s) mensagem(s)
   static async validateMessagesIds(req: Request, res: Response, next: NextFunction) {
     const { messageIds } = req.body; // Pega o(s) ID(s) da(s) mensagem(s)
 
-    // Se o(s) ID(s) da(s) mensagem(s) não existir(em), retorna um erro e o status correspondente
-    if (!messageIds) {
-      return res.status(400).json({ message: 'Missing parameters' });
+    if (
+      !Array.isArray(messageIds)
+      || messageIds.length === 0
+      || messageIds.some((id) => !Number.isInteger(Number(id)) || Number(id) <= 0)
+    ) {
+      return res.status(400).json({ message: 'Invalid message IDs' });
     }
 
     next(); // Se tudo estiver correto, chama o próximo middleware

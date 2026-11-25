@@ -11,8 +11,8 @@
   margin: 0;
   padding: 0 12px;
   overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
+  user-select: text;
+  -webkit-user-select: text;
   cursor: default;
 }
 

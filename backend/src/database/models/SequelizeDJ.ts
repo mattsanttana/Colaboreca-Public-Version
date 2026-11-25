@@ -1,4 +1,4 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from 'sequelize';
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from 'sequelize';
 import db from '.';
 import SequelizeTrack from './SequelizeTrack';
 
@@ -13,6 +13,9 @@ class SequelizeDJ extends Model<
   declare score?: number; // Pontuação do DJ
   declare ranking?: number; // Ranking do DJ
   declare trackId: number; // ID da pista
+  declare isModerator: CreationOptional<boolean>;
+  declare chatTimeoutUntil?: Date | null;
+  declare queueTimeoutUntil?: Date | null;
 }
 
 // Inicialização do modelo de DJ
@@ -55,6 +58,22 @@ SequelizeDJ.init(
       type: DataTypes.INTEGER, // Tipo inteiro
       allowNull: false, // Não pode ser nulo
       field: 'track_id' // Nome da coluna no banco de dados
+    },
+    isModerator: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_moderator',
+    },
+    chatTimeoutUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'chat_timeout_until',
+    },
+    queueTimeoutUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'queue_timeout_until',
     }
   },
   {

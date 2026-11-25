@@ -7,8 +7,13 @@ export interface IMessage extends Identifiable {
   djId: number; // ID do DJ
   receiveDJId?: number; // ID do DJ que recebeu a mensagem
   message: string; // Mensagem
+  previousMessage?: string | null;
+  editedAt?: Date | null;
   createdAt: Date; // Data de criação
   read: boolean; // Mensagem lida
   isReply?: boolean; // Mensagem de resposta
   replyTo?: number; // ID da mensagem respondida
+  deletedAt?: Date | null;
+  deletedByDJId?: number | null;
+  deletedByModeration?: boolean;
 }

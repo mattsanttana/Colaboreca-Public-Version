@@ -159,36 +159,24 @@ const Header: React.FC<Props> = ({ currentRanking, dj, isSlideMenuOpen, onSettin
             />
           </Navbar.Brand>
         </Container>
-        { /* Botão para compartilhar a pista ou mostrar detalhes da pista */ }
-        <Container className="header-container-4"
-
-        >
-          <Container
-            className='d-flex align-items-center justify-content-end' // Classe para justificar o conteúdo à direita
-            onClick={ () => setShowShareTrackPopup(true) } // Chama a função para abrir o modal
-            // Estilo do botão
-            style={{
-              cursor: 'pointer', 
-              width: '50px', 
-            }}
-          > 
+        <div className="header-actions">
+          <Button
+            variant="link"
+            className="header-container-4"
+            onClick={() => setShowShareTrackPopup(true)}
+            aria-label="Compartilhar pista"
+          >
             <FaShareAlt className="header-fasharealt" />
-          </Container>
-        </Container>
-        { /* Botão de configurações da pista */ }
-        <Container className="header-container-5"
-
-        >
-          <Container
-            className='d-flex align-items-center justify-content-end header-container-6' // Classe para justificar o conteúdo à direita
-            onClick={ openTrackSettings } // Busca as configurações atuais antes de abrir o popup
-            // Estilo do botão
-            style={{ 
-              width: '50px', 
-          }}> 
+          </Button>
+          <Button
+            variant="link"
+            className="header-container-5 header-container-6"
+            onClick={openTrackSettings}
+            aria-label="Configurações da pista"
+          >
             <FaCog className="header-facog" />
-          </Container>
-        </Container>
+          </Button>
+        </div>
       </Navbar>
     </Container>
   );

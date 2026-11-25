@@ -1,0 +1,108 @@
+.chat-message-actions {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.chat-message-actions .chat-button,
+.chat-message-actions .chat-message-actions-menu,
+.chat-message-actions .chat-actions-toggle {
+  pointer-events: auto;
+}
+
+.chat-message-actions .chat-button {
+  top: 50%;
+}
+
+.chat-message-actions-menu {
+  position: absolute;
+  top: 50%;
+  right: 68px;
+  transform: translateY(-50%);
+}
+
+.chat-message-actions-menu-sent {
+  right: auto;
+  left: 68px;
+}
+
+.chat-actions-toggle {
+  display: inline-flex;
+  width: 28px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 244, 194, 0.2);
+  border-radius: 50%;
+  background: #1f2340;
+  color: #fff4c2;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.chat-actions-toggle:hover,
+.chat-actions-toggle:focus-visible {
+  background: #5da2ba;
+  color: #fff;
+  opacity: 1;
+}
+
+.chat-message-actions-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 25;
+  display: flex;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid rgba(255, 218, 106, 0.22);
+  border-radius: 10px;
+  background: #0d0e1c;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  color: #fff4c2;
+  font-size: 0.8rem;
+}
+
+.chat-message-actions-popover button {
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.chat-message-actions-popover button:hover,
+.chat-message-actions-popover button:focus-visible {
+  background: rgba(93, 162, 186, 0.3);
+}
+
+.chat-timeout-presets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+}
+
+.chat-timeout-custom {
+  display: grid;
+  gap: 4px;
+  padding: 4px 8px;
+}
+
+.chat-timeout-custom input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 244, 194, 0.25);
+  border-radius: 5px;
+  background: #1f2340;
+  color: #fff;
+}
+
+.chat-moderation-error {
+  padding: 3px 8px;
+  color: #ff9a9a;
+}

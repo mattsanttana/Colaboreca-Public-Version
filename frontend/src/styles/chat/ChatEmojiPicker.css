@@ -1,0 +1,75 @@
+.chat-emoji-control {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.chat-emoji-toggle {
+  display: inline-flex;
+  width: 40px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff4c2;
+  font-size: 1.25rem;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.chat-emoji-toggle:hover,
+.chat-emoji-toggle:focus {
+  border-color: rgba(255, 244, 194, 0.14);
+  background: rgba(93, 162, 186, 0.3);
+  color: #fff4c2;
+  text-decoration: none;
+}
+
+.chat-emoji-toggle:active {
+  border-color: rgba(255, 218, 106, 0.22);
+  background: #2e3059;
+  color: #ffda6a;
+}
+
+.chat-emoji-toggle:focus-visible {
+  outline: 2px solid #fff4c2;
+  outline-offset: 2px;
+}
+
+.chat-emoji-picker.chat-emoji-picker {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  --epr-dark-highlight-color: #ffda6a;
+  --epr-dark-text-color: #fff4c2;
+  --epr-dark-hover-bg-color: #2e3059;
+  --epr-dark-hover-bg-color-reduced-opacity: rgba(93, 162, 186, 0.3);
+  --epr-dark-focus-bg-color: #2e3059;
+  --epr-dark-search-input-bg-color: #16172b;
+  --epr-dark-search-input-bg-color-active: #212529;
+  --epr-dark-category-label-bg-color: rgba(13, 14, 28, 0.9);
+  --epr-dark-picker-border-color: rgba(255, 218, 106, 0.22);
+  --epr-dark-bg-color: #0d0e1c;
+  --epr-dark-category-icon-active-color: #ffda6a;
+  --epr-dark-category-icon-inactive-color: #c7c7d8;
+  --epr-dark-skin-tone-picker-menu-color: #16172b;
+}
+
+.chat-emoji-loading {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  display: flex;
+  width: min(300px, calc(100vw - 32px));
+  height: 120px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 218, 106, 0.22);
+  border-radius: 10px;
+  background: #0d0e1c;
+  color: #fff4c2;
+}

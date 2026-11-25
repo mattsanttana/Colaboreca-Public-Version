@@ -23,6 +23,8 @@
 }
 
 .menu-link-bright {
+  position: relative;
+  align-items: center;
   color: #fff4c2 !important;
   font-weight: bold;
   transition: text-shadow 0.2s;
@@ -31,6 +33,24 @@
     /* brilho branco suave e difuso */
     0 1px 2px #0003;
   /* leve sombra preta para contraste */
+}
+
+.menu-chat-notification {
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffda6a, #ffb703);
+  color: #1f2340;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: none;
+  box-shadow: 0 0 0 2px rgba(13, 14, 28, 0.9);
 }
 
 .hide-scroll {

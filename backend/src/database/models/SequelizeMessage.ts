@@ -1,7 +1,8 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model, NonAttribute } from 'sequelize';
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model, NonAttribute } from 'sequelize';
 import db from '.';
 import SequelizeChat from './SequelizeChat';
 import SequelizeDJ from './SequelizeDJ';
+import SequelizeMessageReaction from './SequelizeMessageReaction';
 
 // Classe responsável pela criação do modelo de mensagem
 class SequelizeMessage extends Model<
@@ -14,12 +15,18 @@ class SequelizeMessage extends Model<
   declare djId: number; // ID do DJ
   declare receiveDJId?: number | null; // ID do DJ que recebeu a mensagem
   declare message: string; // Mensagem
+  declare previousMessage?: string | null;
+  declare editedAt?: Date | null;
   declare createdAt: Date; // Data de criação
   declare read?: boolean; // Mensagem lida
   declare isReply?: boolean; // Mensagem de resposta
   declare replyTo?: number | null; // ID da mensagem respondida
+  declare deletedAt?: Date | null;
+  declare deletedByDJId?: number | null;
+  declare deletedByModeration: CreationOptional<boolean>;
   declare dj?: NonAttribute<SequelizeDJ>; // DJ que enviou a mensagem
   declare receiveDJ?: NonAttribute<SequelizeDJ | null>; // DJ que recebeu a mensagem
+  declare reactions?: NonAttribute<SequelizeMessageReaction[]>;
 }
 
 // Inicialização do modelo de mensagem
@@ -62,6 +69,16 @@ SequelizeMessage.init(
       type: DataTypes.TEXT, // Tipo texto
       allowNull: false, // Não pode ser nulo
     },
+    previousMessage: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'previous_message',
+    },
+    editedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'edited_at',
+    },
     // Coluna de data de criação
     createdAt: {
       type: DataTypes.DATE, // Tipo data
@@ -88,6 +105,22 @@ SequelizeMessage.init(
       allowNull: true, // Pode ser nulo
       defaultValue: null, // Valor padrão
       field: 'reply_to', // Nome da coluna no banco de dados
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'deleted_at',
+    },
+    deletedByDJId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'deleted_by_dj_id',
+    },
+    deletedByModeration: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'deleted_by_moderation',
     },
   },
   {
@@ -127,6 +160,17 @@ SequelizeDJ.hasMany(SequelizeMessage, {
 SequelizeMessage.belongsTo(SequelizeDJ, {
   foreignKey: 'receiveDJId', // Chave estrangeira do destinatário
   as: 'receiveDJ', // DJ que recebeu a mensagem
+});
+
+SequelizeMessage.hasMany(SequelizeMessageReaction, {
+  foreignKey: 'messageId',
+  as: 'reactions',
+  onDelete: 'CASCADE',
+});
+
+SequelizeMessageReaction.belongsTo(SequelizeMessage, {
+  foreignKey: 'messageId',
+  as: 'message',
 });
 
 export default SequelizeMessage;

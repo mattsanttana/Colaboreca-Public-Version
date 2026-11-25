@@ -8,6 +8,28 @@ const chatController = new ChatController(); // Instancia o controlador do chat
 const router = Router(); // Instancia o roteador
 
 router.post(
+  '/reactions',
+  Validations.validateToggleMessageReaction,
+  Validations.validateToken,
+  (req, res) => chatController.toggleMessageReaction(req, res)
+);
+
+router.patch(
+  '/reactions/read',
+  Validations.validateMessagesIds,
+  Validations.validateToken,
+  (req, res) => chatController.markMessageReactionsAsRead(req, res)
+);
+
+router.patch(
+  '/:messageId',
+  Validations.validateMessageId,
+  Validations.validateEditMessage,
+  Validations.validateToken,
+  (req, res) => chatController.editMessage(req, res)
+);
+
+router.post(
   '/', // Rota para enviar uma mensagem
   Validations.validateSendMessage, // Valida se a mensagem é válida
   Validations.validateToken, // Valida o token

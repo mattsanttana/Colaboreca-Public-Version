@@ -7,4 +7,7 @@ export interface IDJ extends Identifiable {
   score: number; // Pontuação do DJ
   ranking: number; // Ranking do DJ
   trackId: number; // ID da pista
+  isModerator?: boolean;
+  chatTimeoutUntil?: Date | null;
+  queueTimeoutUntil?: Date | null;
 }

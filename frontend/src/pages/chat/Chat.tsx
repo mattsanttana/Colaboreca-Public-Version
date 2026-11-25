@@ -48,7 +48,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     isLoading,
   } = useFetchPlaybackData(token);
 
-  const chatData = useFetchChatData(token, dj, djs, trackId);
+  const chatData = useFetchChatData(token, dj, djs, trackId, ownerDJId);
   const {
     isMenuOpen,
     handleTouchEnd,
@@ -122,19 +122,17 @@ const Chat: React.FC<Props> = ({ token }) => {
               />
             </div>
             <ChatList
-              dj={dj}
               trackName={trackName}
               logo={logo}
               search={chatData.search}
               handleChange={chatData.handleChange}
               handleFocus={chatData.handleFocus}
               showSuggestions={chatData.showSuggestions}
+              setShowSuggestions={chatData.setShowSuggestions}
               availableDJs={chatData.availableDJs}
               handleStartChat={chatData.handleStartChat}
               selectedChat={chatData.selectedChat}
               selectedDJChat={chatData.selectedDJChat}
-              setSelectedChat={chatData.setSelectedChat}
-              setSelectedDJChat={chatData.setSelectedDJChat}
               sortedChatIds={chatData.sortedChatIds}
               chats={chatData.chats}
               djTyping={chatData.djTyping}
@@ -142,6 +140,7 @@ const Chat: React.FC<Props> = ({ token }) => {
               truncateText={chatData.truncateText}
               handleSelectChat={chatData.handleSelectChat}
               getChatDJ={chatData.getChatDJ}
+              getChatActivity={chatData.getChatActivity}
               unreadMessages={chatData.unreadMessages}
             />
             <ChatConversation
@@ -149,6 +148,7 @@ const Chat: React.FC<Props> = ({ token }) => {
               selectedDJChat={chatData.selectedDJChat}
               setSelectedChat={chatData.setSelectedChat}
               setSelectedDJChat={chatData.setSelectedDJChat}
+              djs={djs}
               chats={chatData.chats}
               djTyping={chatData.djTyping}
               selectedDJ={chatData.selectedDJ}
@@ -163,6 +163,8 @@ const Chat: React.FC<Props> = ({ token }) => {
               truncateText={chatData.truncateText}
               setMessageToReply={chatData.setMessageToReply}
               message={chatData.message}
+              messageError={chatData.messageError}
+              setMessage={chatData.setMessage}
               handleChangeMessageInput={chatData.handleChangeMessageInput}
               setInputHeight={chatData.setInputHeight}
               handleSubmitMessage={chatData.handleSubmitMessage}
@@ -172,6 +174,13 @@ const Chat: React.FC<Props> = ({ token }) => {
               hoveredMessageId={chatData.hoveredMessageId}
               setHoveredMessageId={chatData.setHoveredMessageId}
               handleReply={chatData.handleReply}
+              handleToggleReaction={chatData.handleToggleReaction}
+              handleEditMessage={chatData.handleEditMessage}
+              handleDeleteMessage={chatData.handleDeleteMessage}
+              handleSetModerator={chatData.handleSetModerator}
+              handleTimeoutDJ={chatData.handleTimeoutDJ}
+              handleRemoveTimeoutDJ={chatData.handleRemoveTimeoutDJ}
+              ownerDJId={ownerDJId}
             />
           </Row>
         </Container>

@@ -10,7 +10,8 @@ const useFetchChatData = (
   token: string,
   dj: DJ | undefined,
   djs: DJ[],
-  trackId: string | undefined
+  trackId: string | undefined,
+  ownerDJId: number | null
 ) => {
   const { djChat } = useParams();
   const [search, setSearch] = useState("");
@@ -19,6 +20,7 @@ const useFetchChatData = (
   const [selectedDJChat, setSelectedDJChat] = useState<number | null>(null);
   const [chats, setChats] = useState<Chats>({});
   const [message, setMessage] = useState("");
+  const [messageError, setMessageError] = useState("");
   const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
   const [messageToReply, setMessageToReply] = useState<Message | null>(null);
   const [inputHeight, setInputHeight] = useState(0); // valor inicial (por exemplo, 50px)
@@ -30,6 +32,7 @@ const useFetchChatData = (
   const { unreadMessages, djTyping, typingTimeoutRef } = useChatSocket({
     token,
     dj,
+    ownerDJId,
     trackId,
     selectedChat,
     chats,
@@ -77,6 +80,7 @@ const useFetchChatData = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setMessage(event.target.value);
+    setMessageError("");
 
     socket.emit("typing", {
       chatId: selectedChat,
@@ -95,21 +99,51 @@ const useFetchChatData = (
     messageToReply: Message | null,
     textareaElement: HTMLTextAreaElement
   ) => {
+    setMessageError("");
+    let response: Awaited<ReturnType<typeof messageActions.sendMessage>>;
+
     if (selectedDJChat) {
-      const response = await messageActions.sendMessage(
+      response = await messageActions.sendMessage(
         selectedDJChat,
         message,
         messageToReply,
         token
       );
 
+      if (response?.status !== 201) {
+        setMessageError(
+          response?.status === 403
+            ? "Você está temporariamente impedido de enviar mensagens."
+            : "Não foi possível enviar a mensagem."
+        );
+        return;
+      }
       setSelectedChat(String(response?.data.chatId));
     } else if (djId === "general") {
-      await messageActions.sendMessage(null, message, messageToReply, token);
+      response = await messageActions.sendMessage(
+        null,
+        message,
+        messageToReply,
+        token
+      );
     } else {
       if (!dj) return;
 
-      await messageActions.sendMessage(dj.id, message, messageToReply, token);
+      response = await messageActions.sendMessage(
+        dj.id,
+        message,
+        messageToReply,
+        token
+      );
+    }
+
+    if (response?.status !== 201) {
+      setMessageError(
+        response?.status === 403
+          ? "Você está temporariamente impedido de enviar mensagens."
+          : "Não foi possível enviar a mensagem."
+      );
+      return;
     }
 
     setMessage("");
@@ -123,14 +157,77 @@ const useFetchChatData = (
   };
 
   const handleMarkAsRead = async (chatId: string) => {
-    const messages = chats[chatId];
-    const unreadMessages = messages.filter(
-      (message) => !message.read && message.djId !== dj?.id
-    ); // Filtra as mensagens não lidas e não enviadas pelo cliente
-    const unreadMessageIds = unreadMessages.map((message) => message.id); // Extrai os IDs das mensagens não lidas
+    const messages = chats[chatId] || [];
+    const ownMessageIds = new Set(
+      messages.filter((message) => message.djId === dj?.id).map(({ id }) => id)
+    );
+    const unreadMessages =
+      chatId === "general"
+        ? messages.filter(
+            (message) =>
+              !message.read
+              && message.djId !== dj?.id
+              && message.isReply
+              && message.replyTo !== null
+              && ownMessageIds.has(message.replyTo)
+          )
+        : messages.filter(
+            (message) =>
+              !message.read
+              && message.djId !== dj?.id
+              && message.receiveDJId === dj?.id
+          );
+    const unreadMessageIds = unreadMessages.map(({ id }) => id);
+    const unreadReactionMessageIds =
+      chatId === "general"
+        ? []
+        : messages
+            .filter(
+              (message) =>
+                message.djId === dj?.id
+                && (message.reactions || []).some(
+                  (reaction) => reaction.djId !== dj?.id && !reaction.read
+                )
+            )
+            .map(({ id }) => id);
+
+    let readMessageIds: number[] = [];
     if (unreadMessageIds.length > 0) {
-      await messageActions.markMessagesAsRead(unreadMessageIds, token);
+      const response = await messageActions.markMessagesAsRead(
+        unreadMessageIds,
+        token
+      );
+      if (response?.status !== 200) {
+        console.error("Could not mark chat messages as read:", response?.data);
+      } else {
+        readMessageIds = unreadMessageIds;
+      }
     }
+    let readReactionMessageIds: number[] = [];
+    if (unreadReactionMessageIds.length > 0) {
+      const response = await messageActions.markMessageReactionsAsRead(
+        unreadReactionMessageIds,
+        token
+      );
+      if (response?.status !== 200) {
+        console.error("Could not mark message reactions as read:", response?.data);
+      } else {
+        readReactionMessageIds = unreadReactionMessageIds;
+      }
+    }
+
+    setChats((previousChats) => ({
+      ...previousChats,
+      [chatId]: (previousChats[chatId] || []).map((message) => ({
+        ...message,
+        read: readMessageIds.includes(message.id) ? true : message.read,
+        reactions: message.reactions?.map((reaction) =>
+          readReactionMessageIds.includes(message.id)
+            ? { ...reaction, read: true }
+            : reaction
+        ),
+      })),
+    }));
   };
 
   const scrollToMessage = (messageId: number) => {
@@ -186,20 +283,6 @@ const useFetchChatData = (
     [djs, selectedDJChat]
   );
 
-  const sortedChatIds = useMemo(() => {
-    return Object.keys(chats)
-      .filter((chatId) => chatId !== "general")
-      .sort((a, b) => {
-        const lastMessageA = chats[a][chats[a].length - 1];
-        const lastMessageB = chats[b][chats[b].length - 1];
-
-        return (
-          new Date(lastMessageB.createdAt).getTime() -
-          new Date(lastMessageA.createdAt).getTime()
-        );
-      });
-  }, [chats]);
-
   const getDJMessageById = (messageId: number) => {
     for (const chatId in chats) {
       const message = chats[chatId].find((message) => message.id === messageId);
@@ -215,15 +298,74 @@ const useFetchChatData = (
       : text;
   };
 
+  const getChatActivity = useCallback(
+    (messages: Message[]) => {
+      const lastMessage = messages[messages.length - 1];
+      let latestReaction: { createdAt: number; djName: string } | null = null;
+
+      for (const message of messages) {
+        if (message.djId !== dj?.id) continue;
+        for (const reaction of message.reactions || []) {
+          if (reaction.djId === dj?.id || !reaction.createdAt) continue;
+          const createdAt = new Date(reaction.createdAt).getTime();
+          if (!Number.isFinite(createdAt)) continue;
+          if (!latestReaction || createdAt > latestReaction.createdAt) {
+            latestReaction = {
+              createdAt,
+              djName:
+                djs.find((candidate) => candidate.id === reaction.djId)?.djName
+                || "Alguém",
+            };
+          }
+        }
+      }
+
+      const lastMessageTime = lastMessage
+        ? new Date(lastMessage.createdAt).getTime()
+        : 0;
+      if (latestReaction && latestReaction.createdAt > lastMessageTime) {
+        return {
+          timestamp: latestReaction.createdAt,
+          preview: `${latestReaction.djName} reagiu a sua mensagem`,
+          kind: "reaction" as const,
+        };
+      }
+
+      return {
+        timestamp: lastMessageTime,
+        preview: lastMessage?.message || "",
+        kind: "message" as const,
+      };
+    },
+    [dj?.id, djs]
+  );
+
+  const sortedChatIds = useMemo(() => {
+    return Object.keys(chats)
+      .filter((chatId) => chatId !== "general")
+      .sort(
+        (a, b) =>
+          getChatActivity(chats[b]).timestamp -
+          getChatActivity(chats[a]).timestamp
+      );
+  }, [chats, getChatActivity]);
+
   const lastGeneralMessage = useMemo(() => {
     const generalMessages = chats["general"] || [];
     const message = generalMessages[generalMessages.length - 1];
+    const activity = getChatActivity(generalMessages);
+    const authorName =
+      message?.djId === dj?.id ? "Você" : message?.dj?.djName || "";
 
     return {
       djId: message?.djId || "",
       message: message || "",
+      preview:
+        activity.kind === "reaction"
+          ? activity.preview
+          : `${authorName}${activity.preview ? `: ${activity.preview}` : ""}`,
     };
-  }, [chats]);
+  }, [chats, dj?.id, getChatActivity]);
 
   const isFirstMessageInSeries = (messages: Message[], index: number) => {
     if (index === 0) return true;
@@ -241,10 +383,15 @@ const useFetchChatData = (
   };
 
   const handleSelectChat = (chatId: string) => {
-    const lastMessage = chats[chatId][chats[chatId].length - 1];
+    const messages = chats[chatId] || [];
+    const lastMessage = messages[messages.length - 1];
 
     setSelectedChat(chatId);
-    setSelectedDJChat(getChatDJ(lastMessage)?.id ?? null);
+    setSelectedDJChat(
+      chatId === "general" || !lastMessage
+        ? null
+        : getChatDJ(lastMessage)?.id ?? null
+    );
     handleMarkAsRead(chatId);
   };
 
@@ -252,7 +399,144 @@ const useFetchChatData = (
     setMessageToReply(message);
   };
 
+  const handleToggleReaction = async (messageId: number, emoji: string) => {
+    if (!dj) return;
+
+    const response = await messageActions.toggleMessageReaction(
+      messageId,
+      emoji,
+      token
+    );
+
+    if (!response || response.status !== 200) {
+      console.error("Could not update message reaction:", response?.data);
+      return;
+    }
+
+    const { active, djId, createdAt } = response.data as {
+      active: boolean;
+      djId: number;
+      createdAt?: string | Date | null;
+    };
+
+    setChats((previousChats) => {
+      const updatedChats = { ...previousChats };
+      Object.keys(updatedChats).forEach((chatId) => {
+        updatedChats[chatId] = updatedChats[chatId].map((chatMessage) => {
+          if (chatMessage.id !== messageId) return chatMessage;
+
+          const reactions = chatMessage.reactions || [];
+          const hasReaction = reactions.some(
+            (reaction) =>
+              reaction.djId === djId && reaction.emoji === emoji
+          );
+          return {
+            ...chatMessage,
+            reactions: active
+              ? hasReaction
+                ? reactions
+                : [
+                    ...reactions,
+                    {
+                      djId,
+                      emoji,
+                      createdAt: createdAt || new Date(),
+                      read: false,
+                    },
+                  ]
+              : reactions.filter(
+                  (reaction) =>
+                    reaction.djId !== djId || reaction.emoji !== emoji
+                ),
+          };
+        });
+      });
+      return updatedChats;
+    });
+  };
+
+  const handleEditMessage = async (messageId: number, content: string) => {
+    const response = await messageActions.editMessage(messageId, content, token);
+    if (response?.status !== 200) {
+      console.error("Could not edit message:", response?.data);
+      return false;
+    }
+
+    const update = response.data as {
+      messageId: number;
+      message: string;
+      previousMessage: string | null;
+      editedAt: string | Date | null;
+    };
+    setChats((previousChats) => {
+      const updatedChats = { ...previousChats };
+      Object.keys(updatedChats).forEach((chatId) => {
+        updatedChats[chatId] = updatedChats[chatId].map((chatMessage) =>
+          chatMessage.id === messageId
+            ? {
+                ...chatMessage,
+                message: update.message,
+                previousMessage: update.previousMessage,
+                editedAt: update.editedAt,
+              }
+            : chatMessage
+        );
+      });
+      return updatedChats;
+    });
+    return true;
+  };
+
+  const handleDeleteMessage = async (messageId: number) => {
+    const response = await messageActions.deleteMessage(messageId, token);
+    if (response?.status !== 200) {
+      console.error("Could not delete message:", response?.data);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSetModerator = async (djId: number, enabled: boolean) => {
+    const response = await messageActions.setModerator(djId, enabled, token);
+    if (response?.status !== 200) {
+      console.error("Could not update moderator role:", response?.data);
+      return false;
+    }
+    return true;
+  };
+
+  const handleTimeoutDJ = async (
+    djId: number,
+    type: "chat" | "queue",
+    durationMs: number
+  ) => {
+    const response = await messageActions.timeoutDJ(
+      djId,
+      type,
+      durationMs,
+      token
+    );
+    if (response?.status !== 200) {
+      console.error("Could not apply timeout:", response?.data);
+      return false;
+    }
+    return true;
+  };
+
+  const handleRemoveTimeoutDJ = async (
+    djId: number,
+    type: "chat" | "queue"
+  ) => {
+    const response = await messageActions.removeTimeoutDJ(djId, type, token);
+    if (response?.status !== 200) {
+      console.error("Could not remove DJ timeout:", response?.data);
+      return false;
+    }
+    return true;
+  };
+
   return {
+    djs,
     search,
     setSearch,
     showSuggestions,
@@ -265,6 +549,7 @@ const useFetchChatData = (
     setChats,
     message,
     setMessage,
+    messageError,
     unreadMessages,
     djTyping,
     hoveredMessageId,
@@ -293,11 +578,18 @@ const useFetchChatData = (
     getDJMessageById,
     truncateText,
     lastGeneralMessage,
+    getChatActivity,
     isFirstMessageInSeries,
     handleViewProfile,
     handleStartChat,
     handleSelectChat,
     handleReply,
+    handleToggleReaction,
+    handleEditMessage,
+    handleDeleteMessage,
+    handleSetModerator,
+    handleTimeoutDJ,
+    handleRemoveTimeoutDJ,
   };
 };
 

@@ -14,6 +14,23 @@ export default class ChatController {
     res.status(mapStatusHTTP(response.status)).json(response.data); // Retorna a resposta e o status correspondente
   }
 
+  async toggleMessageReaction(req: Request, res: Response) {
+    const response = await this.chatService.toggleMessageReaction(
+      req.body,
+      req.headers.authorization as string
+    );
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
+  async editMessage(req: Request, res: Response) {
+    const response = await this.chatService.editMessage(
+      Number(req.params.messageId),
+      req.body.message,
+      req.headers.authorization as string
+    );
+    res.status(mapStatusHTTP(response.status)).json(response.data);
+  }
+
   // Método para buscar todas as mensagens de um chat
   async findAllMessagesForThisDJ(req: Request, res: Response) {
     const authorization = req.headers.authorization; // Pega o token de autorização
@@ -27,5 +44,13 @@ export default class ChatController {
     const authorization = req.headers.authorization; // Pega o token de autorização
     const response = await this.chatService.markMessagesAsRead(data, authorization as string); // Chama o serviço de chat para marcar a mensagem como lida
     res.status(mapStatusHTTP(response.status)).json(response.data); // Retorna a resposta e o status correspondente
+  }
+
+  async markMessageReactionsAsRead(req: Request, res: Response) {
+    const response = await this.chatService.markMessageReactionsAsRead(
+      req.body,
+      req.headers.authorization as string
+    );
+    res.status(mapStatusHTTP(response.status)).json(response.data);
   }
 }

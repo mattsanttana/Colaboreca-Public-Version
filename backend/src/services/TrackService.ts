@@ -378,6 +378,10 @@ export default class TrackService {
         return { status: 'NOT_FOUND', data: { message: 'Track not found' } };
       }
 
+      if (track.ownerDjId !== decoded.id) {
+        return { status: 'FORBIDDEN', data: { message: 'Only the track owner can expel DJs.' } };
+      }
+
       const dj = await this.djModel.findOne({ id }); // Buscar o DJ pelo ID
 
       // Se o DJ não for encontrado, retorne uma mensagem de DJ não encontrado
