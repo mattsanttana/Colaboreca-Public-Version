@@ -40,11 +40,11 @@ const Queue: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(token)
+  } = useFetchPlaybackData()
   
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu() // Hook personalizado para lidar com o menu
 
-  const { queue, trackRefs } = useQueue(playingNow, currentTrackIndex)
+  const { queue, trackRefs } = useQueue(currentTrackIndex)
 
   return (
     // Envolve o componente em um div para lidar com eventos de toque

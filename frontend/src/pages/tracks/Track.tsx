@@ -39,9 +39,9 @@ const Track: React.FC<Props> = ({ token }) => {
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup, initialVoteCounts,
     cardVisible, displayVoteCounts
-  } = useFetchPlaybackData(token);
+  } = useFetchPlaybackData();
 
-  const { queue, isLoadingQueue } = useQueue(playingNow)
+  const { queue, isLoadingQueue } = useQueue()
 
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu(); // Hook personalizado para lidar com o menu
 

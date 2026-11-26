@@ -1,11 +1,12 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import SequelizeDJ from '../database/models/SequelizeDJ';
+import JWT from './JWT';
 
 let io: SocketIOServer; // Instância do Socket.io
 
 // Inicializar o Socket.io
-export const initSocket = (server: HTTPServer) => {
+export const initSocket = (server: HTTPServer, refreshTrack?: (trackId: number) => Promise<void>) => {
   // Configurações do Socket.io
   io = new SocketIOServer(server, {
     cors: {
@@ -19,7 +20,46 @@ export const initSocket = (server: HTTPServer) => {
   io.on('connection', (socket) => {
     // Quando um cliente se conecta, ele pode entrar em uma sala específica
     socket.on('joinRoom', (room) => {
+      if (typeof room !== 'string' || room.startsWith('track_')) return;
       socket.join(room); // Adiciona o cliente à sala
+    });
+
+    socket.on('joinTrack', (data: { trackId?: number; token?: string }) => {
+      if (!data || !Number.isInteger(data.trackId) || typeof data.token !== 'string') return;
+
+      const decoded = JWT.verify(data.token);
+      if (
+        typeof decoded === 'string' ||
+        Number(decoded.trackId) !== data.trackId ||
+        !Number.isInteger(Number(decoded.id))
+      ) {
+        return;
+      }
+
+      socket.join(`track_${data.trackId}`);
+      socket.join(`track_${data.trackId}_dj_${Number(decoded.id)}`);
+
+      if (refreshTrack) {
+        void refreshTrack(data.trackId).catch((error) => {
+          console.error(`Failed to refresh playback for track ${data.trackId}:`, error);
+        });
+      }
+    });
+
+    socket.on('leaveTrack', (data: { trackId?: number; token?: string }) => {
+      if (!data || !Number.isInteger(data.trackId) || typeof data.token !== 'string') return;
+
+      const decoded = JWT.verify(data.token);
+      if (
+        typeof decoded === 'string' ||
+        Number(decoded.trackId) !== data.trackId ||
+        !Number.isInteger(Number(decoded.id))
+      ) {
+        return;
+      }
+
+      void socket.leave(`track_${data.trackId}`);
+      void socket.leave(`track_${data.trackId}_dj_${Number(decoded.id)}`);
     });
 
     // Emissão de mensagens para a sala especificada

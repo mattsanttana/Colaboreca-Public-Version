@@ -37,7 +37,7 @@ const AddMusicToQueue: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(token);
+  } = useFetchPlaybackData();
 
   const { isMenuOpen, handleTouchEnd, handleTouchMove, handleTouchStart, setIsMenuOpen } = useMenu(); // Hook personalizado para lidar com o menu
 

@@ -21,6 +21,7 @@ const useFetchTrackData = (token: string) => {
 
   const djActions = useDJ(); // Ações do DJ
   const trackActions = useTrack(); // Ações da pista
+  const connectedDJId = dj?.id;
 
   const refreshTrackSettings = async () => {
     if (!trackId) return;
@@ -90,13 +91,24 @@ const useFetchTrackData = (token: string) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!connectedDJId || !trackId) return;
+
+    const joinTrack = () => {
+      socket.emit('joinTrack', { trackId: Number(trackId), token });
+    };
+
+    if (socket.connected) joinTrack();
+    socket.on('connect', joinTrack);
+
+    return () => {
+      socket.off('connect', joinTrack);
+      socket.emit('leaveTrack', { trackId: Number(trackId), token });
+    };
+  }, [connectedDJId, trackId, token]);
+
     // UseEffect para lidar com eventos do socket
     useEffect(() => {
-      // Verifica se o socket está conectado e se o DJ existe
-      if (socket.connected && dj) {
-        socket.emit('joinRoom', `track_${ trackId }`); // Entra na sala da pista
-      }
-
       // Socket que recebe as atualizações feitas no nome da pista
       const handleTrackUpdated = (updatedTrack: {
         trackName: string;

@@ -38,7 +38,7 @@ const DJProfile: React.FC<Props> = ({ token }) => {
   // Hook personalizado para buscar dados de reprodução
   const {
     djPlayingNow, isLoading, playingNow, setShowVotePopup, showVotePopup
-  } = useFetchPlaybackData(token)
+  } = useFetchPlaybackData()
 
   const { 
     addedMusics, djProfile, editedCharacterPath, isProfileOwner, setShowDJInfoPopup, setEditedCharacterPath, setShowCharacterPopup,

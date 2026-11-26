@@ -1,34 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
-import usePlayback from './usePlayback';
 import TQueue from '../types/TQueue';
-import PlayingNow from '../types/PlayingNow';
-import { useParams } from 'react-router-dom';
+import socket from './socket';
 
-const useQueue = (playingNow: PlayingNow | null, currentTrackIndex?: number) => {
-  const { trackId, } = useParams(); // Pega o ID da pista da URL
-  const [ queue, setQueue ] = useState<TQueue[]>([]); // Estado para armazenar a fila de músicas
-  const [ isLoadingQueue, setIsLoadingQueue ] = useState<boolean>(true); // Estado para indicar se está carregando
+const useQueue = (currentTrackIndex?: number) => {
+  const [queue, setQueue] = useState<TQueue[]>([]);
+  const [isLoadingQueue, setIsLoadingQueue] = useState(true);
+  const trackRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const playbackActions = usePlayback(); // Ações de reprodução, como pular músicas
-  const trackRefs = useRef<(HTMLDivElement | null)[]>([]); // Referências para os itens da fila
-
-  // useEfect para buscar a fila de músicas quando o componente é montado
   useEffect(() => {
-    const fetchQueueData = async () => {
-      if (trackId) {
-        const queue = await playbackActions.getQueue(Number(trackId)); // Busca a fila de músicas usando a ação de reprodução
+    const handleQueueUpdate = (data: { queue: TQueue[] }) => {
+      setQueue(data.queue ?? []);
+      setIsLoadingQueue(false);
+    };
 
-        setQueue(queue); // Atualiza o estado da fila com os dados recebidos
-        setIsLoadingQueue(false); // Define o estado de carregamento como falso
-      }
-    }
+    socket.on('playback updated', handleQueueUpdate);
+    socket.on('queue updated', handleQueueUpdate);
 
-    fetchQueueData(); // Chama a função para buscar os dados da fila
+    return () => {
+      socket.off('playback updated', handleQueueUpdate);
+      socket.off('queue updated', handleQueueUpdate);
+    };
+  }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playingNow?.item?.uri || '']);
-
-  // useEffect para atualizar o índice da música no carrossel
   useEffect(() => {
     const selectedTrack = currentTrackIndex === undefined ? null : trackRefs.current[currentTrackIndex];
     const listScroller = selectedTrack?.closest<HTMLElement>('.queue-list-scroll');
@@ -53,8 +46,8 @@ const useQueue = (playingNow: PlayingNow | null, currentTrackIndex?: number) => 
   return {
     queue,
     trackRefs,
-    isLoadingQueue
-  }
-}
+    isLoadingQueue,
+  };
+};
 
 export default useQueue;

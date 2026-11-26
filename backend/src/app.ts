@@ -3,18 +3,20 @@ import * as http from 'http';
 import accessControl from './middlewares/accessControl';
 import router from './routes';
 import { initSocket } from './utils/socketIO';
+import PlaybackMonitorService from './services/PlaybackMonitorService';
 
 // Classe principal da aplicação
 class App {
   public app: express.Express; // Instância do Express
   private server: http.Server; // Instância do servidor HTTP
+  private playbackMonitor = new PlaybackMonitorService();
 
   constructor() {
     this.app = express(); // Inicialize o Express
 
     this.server = http.createServer(this.app); // Criar o servidor HTTP
 
-    initSocket(this.server); // Inicialize o Socket.IO
+    initSocket(this.server, (trackId) => this.playbackMonitor.refreshTrack(trackId)); // Inicialize o Socket.IO
 
     this.config(); // Configure o Express
 
@@ -39,6 +41,7 @@ class App {
     // Inicia o servidor na porta especificada
     this.server.listen(PORT, () => {
       console.log(`Running on port ${PORT}`); // Exibe uma mensagem no console
+      this.playbackMonitor.start();
     });
   }
 }

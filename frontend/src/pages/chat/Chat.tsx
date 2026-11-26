@@ -46,7 +46,7 @@ const Chat: React.FC<Props> = ({ token }) => {
     showVotePopup,
     setShowVotePopup,
     isLoading,
-  } = useFetchPlaybackData(token);
+  } = useFetchPlaybackData();
 
   const chatData = useFetchChatData(token, dj, djs, trackId, ownerDJId);
   const {

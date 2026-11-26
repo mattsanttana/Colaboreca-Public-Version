@@ -3,6 +3,12 @@ import { GetTopTracksInBrazilResponse, GetTrackBySearchResponse } from '../inter
 
 // Classe util para manipular ações do Spotify
 export default class SpotifyActions {
+  private static accessTokenCache = new Map<string, { token: string; expiresAt: number }>();
+
+  static invalidateAccessToken(refreshToken: string) {
+    this.accessTokenCache.delete(refreshToken);
+  }
+
   // Método para pegar o token de acesso
   static async getAccessToken(code: string) {
     try {
@@ -45,8 +51,13 @@ export default class SpotifyActions {
   }
 
   // Método para atualizar o token de acesso
-  static async refreshAccessToken(refreshToken: string) {
+  static async refreshAccessToken(refreshToken: string): Promise<string> {
     try {
+      const cachedToken = this.accessTokenCache.get(refreshToken);
+      if (cachedToken && cachedToken.expiresAt > Date.now()) {
+        return cachedToken.token;
+      }
+
       const clientId = process.env.COLABORECA_API_CLIENT_ID; // ID do cliente
       const clientSecret = process.env.COLABORECA_API_CLIENT_SECRET; // Chave secreta
 
@@ -68,19 +79,27 @@ export default class SpotifyActions {
 
       // Se a resposta não for 200, exibir o erro
       if (response.status !== 200) {
-        console.log('Error response from Spotify:', response.data);
-        return;
+        throw new Error(`Spotify token refresh failed with status ${response.status}`);
       }
 
-      return response.data.access_token; // Retornar o token de acesso
-    } catch (error) {
-      // Se ocorrer um erro, exiba no console e retorne uma mensagem de erro
-      console.error(error);
-      if (error instanceof Error) {
-        return { status: 'ERROR', data: { message: error.message } };
-      } else {
-        return { status: 'ERROR', data: { message: 'An unknown error occurred' } };
+      const accessToken = response.data.access_token;
+      const expiresIn = Number(response.data.expires_in);
+
+      if (typeof accessToken !== 'string') {
+        throw new Error('Spotify did not return an access token');
       }
+
+      if (Number.isFinite(expiresIn) && expiresIn > 0) {
+        this.accessTokenCache.set(refreshToken, {
+          token: accessToken,
+          expiresAt: Date.now() + Math.max(expiresIn - 60, 1) * 1000,
+        });
+      }
+
+      return accessToken; // Retornar o token de acesso
+    } catch (error) {
+      console.error(error);
+      throw error instanceof Error ? error : new Error('Unknown Spotify token refresh error');
     }
   }
 
